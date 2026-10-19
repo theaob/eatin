@@ -1,0 +1,1572 @@
+<title>Eat In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Nunito:wght@600;800&display=swap">
+<style>
+/* Layout: full-bleed 3D city, HUD pinned to the corners, one centered card for start and results. */
+:root {
+  --ink: #1f2638;
+  --paper: #fffaf1;
+  --hot: #ff5a6e;
+  --mint: #23c2b0;
+  --sun: #ffc73d;
+  --glass: rgba(31, 38, 56, 0.78);
+  --glass-line: rgba(255, 255, 255, 0.14);
+  --muted: #8a93a8;
+  --font-display: 'Pixelify Sans', 'Courier New', monospace;
+  --pix: polygon(20% 0, 80% 0, 80% 14%, 92% 14%, 92% 30%, 100% 30%, 100% 70%, 92% 70%, 92% 86%, 80% 86%, 80% 100%, 20% 100%, 20% 86%, 8% 86%, 8% 70%, 0 70%, 0 30%, 8% 30%, 8% 14%, 20% 14%);
+  --font-body: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color-scheme: light;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; overflow: hidden; background: #bfe4fb; }
+body { font-family: var(--font-body); font-weight: 600; color: var(--paper); user-select: none; -webkit-user-select: none; touch-action: none; }
+#game { position: fixed; inset: 0; width: 100%; height: 100%; display: block; outline: none; }
+
+.hud { position: fixed; z-index: 5; pointer-events: none; }
+.panel { background: var(--glass); border: 2px solid var(--glass-line); border-radius: 3px; box-shadow: 4px 4px 0 rgba(20,24,40,.25); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+
+#me { top: calc(12px + env(safe-area-inset-top, 0px)); left: calc(12px + env(safe-area-inset-left, 0px)); padding: 10px 14px; min-width: 132px; }
+.label { font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 800; }
+#myScore { font-family: var(--font-display); font-size: 30px; line-height: 1; color: var(--sun); font-variant-numeric: tabular-nums; }
+#mySize { font-size: 13px; margin-top: 4px; font-variant-numeric: tabular-nums; }
+#sizeBar { height: 8px; border-radius: 0; background: rgba(255,255,255,.12); margin-top: 6px; overflow: hidden; }
+#sizeFill { height: 100%; width: 0; background: repeating-linear-gradient(90deg, var(--mint) 0 6px, #1aa999 6px 8px); border-radius: 0; transition: width .25s; }
+#nextUp { font-size: 11px; color: var(--muted); margin-top: 5px; }
+
+#timer { top: calc(12px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); padding: 6px 18px; font-family: var(--font-display); font-size: 28px; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
+#timer.low { color: var(--hot); }
+
+#board { top: calc(12px + env(safe-area-inset-top, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); padding: 8px 12px; min-width: 150px; font-size: 13px; }
+#board ol { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 3px; }
+#board li { display: grid; font-variant-numeric: tabular-nums; grid-template-columns: 14px 10px 1fr auto; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+#board li.you { color: var(--sun); font-weight: 800; }
+#board li.out { opacity: .45; }
+.dot { width: 10px; height: 10px; border-radius: 0; }
+.rk { color: var(--muted); font-size: 11px; }
+
+.tag { position: fixed; z-index: 4; transform: translate(-50%, -100%); font-family: var(--font-display); font-weight: 700; font-size: 14px; padding: 1px 7px; border-radius: 2px; background: var(--glass); color: var(--paper); white-space: nowrap; pointer-events: none; }
+.pop { position: fixed; z-index: 6; transform: translate(-50%, -50%); font-family: var(--font-display); font-size: 22px; color: var(--sun); text-shadow: 0 2px 0 var(--ink); pointer-events: none; animation: rise .9s ease-out forwards; }
+@keyframes rise { from { opacity: 1; margin-top: 0; } to { opacity: 0; margin-top: -60px; } }
+#toast { left: 50%; bottom: calc(28px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); padding: 10px 18px; font-weight: 800; font-size: 15px; text-align: center; max-width: calc(100% - 32px); }
+
+#stick, #knob { position: fixed; z-index: 6; border-radius: 50%; pointer-events: none; transform: translate(-50%, -50%); }
+#stick { width: 110px; height: 110px; clip-path: var(--pix); border: 2px solid rgba(255,255,255,.55); background: rgba(31,38,56,.18); }
+#knob { width: 46px; height: 46px; clip-path: var(--pix); background: rgba(255,255,255,.8); }
+
+#sound { position: fixed; z-index: 7; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); font: 800 12px var(--font-body); color: var(--paper); padding: 8px 12px; cursor: pointer; }
+#sound:focus-visible, .btn:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
+
+.overlay { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 16px; background: radial-gradient(ellipse at center, rgba(31,38,56,.35), rgba(31,38,56,.7)); }
+.card { background: var(--paper); color: var(--ink); border-radius: 4px; border: 3px solid var(--ink); padding: 26px 26px 22px; width: min(420px, 100%); box-sizing: border-box; box-shadow: 10px 10px 0 rgba(20,24,40,.45); display: grid; gap: 14px; }
+.logo { font-family: var(--font-display); font-weight: 700; font-size: clamp(54px, 15vw, 76px); line-height: .9; margin: 0; letter-spacing: .01em; display: flex; align-items: center; gap: 12px; }
+.logo .o { position: relative; display: inline-block; width: .9em; height: .58em; background: var(--mint); clip-path: var(--pix); transform: translateY(.06em); }
+.logo .o::after { content: ""; position: absolute; inset: 6px; background: linear-gradient(#3a4560 0 30%, var(--ink) 30%); clip-path: var(--pix); }
+.lede { margin: 0; font-size: 16px; line-height: 1.45; color: #4a5268; text-wrap: pretty; }
+.how { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 14px; color: #4a5268; }
+.how b { color: var(--ink); }
+.btn { font: 700 24px var(--font-display); letter-spacing: .03em; color: var(--paper); background: var(--hot); border: 3px solid var(--ink); border-radius: 2px; padding: 12px 18px; cursor: pointer; box-shadow: 0 5px 0 #c63a4d; }
+.btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #c63a4d; }
+.results { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; font-size: 15px; }
+.results li { display: grid; grid-template-columns: 22px 12px 1fr auto; gap: 8px; align-items: center; padding: 5px 8px; border-radius: 0; font-variant-numeric: tabular-nums; }
+.results li.you { background: #fff0c4; font-weight: 800; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat { background: #f1ece2; border-radius: 0; border: 2px solid #e2dbcc; padding: 8px 10px; }
+.stat b { display: block; font-family: var(--font-display); font-weight: 700; font-size: 22px; }
+.stat span { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: #7a8196; font-weight: 800; }
+h2.big { font-family: var(--font-display); font-weight: 700; font-size: 40px; margin: 0; line-height: 1; }
+
+@media (max-width: 560px) {
+  #me { min-width: 0; padding: 8px 10px; }
+  #myScore { font-size: 24px; }
+  #nextUp { display: none; }
+  #timer { top: auto; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); font-size: 24px; }
+  #board { font-size: 12px; min-width: 128px; }
+  #board li:nth-child(n+5):not(.you) { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .pop { animation-duration: .01s; } }
+</style>
+
+<canvas id="game" tabindex="0" aria-label="Game view"></canvas>
+
+<div class="hud panel" id="me">
+  <div class="label">Points</div>
+  <div id="myScore">0</div>
+  <div id="mySize">Hole 2.4 m wide</div>
+  <div id="sizeBar"><div id="sizeFill"></div></div>
+  <div id="nextUp">Next: cars at 4.4 m</div>
+</div>
+<div class="hud panel" id="timer">2:00</div>
+<div class="hud panel" id="board"><div class="label">Biggest holes</div><ol id="boardList"></ol></div>
+<div class="hud panel" id="toast" hidden></div>
+<div id="stick" hidden></div><div id="knob" hidden></div>
+<button class="panel" id="sound" type="button" aria-pressed="true">Sound on</button>
+
+<div class="overlay" id="startScreen">
+  <div class="card">
+    <h1 class="logo">Eat <span class="o" aria-hidden="true"></span>In</h1>
+    <p class="lede">You are a hole in the street. Swallow anything that fits, grow wider, and be the biggest hole in town when the two minutes are up.</p>
+    <ul class="how">
+      <li><b>Steer:</b> point with the mouse, drag on touch, or use WASD and the arrow keys.</li>
+      <li><b>Grow:</b> people and cones first, then cars, houses and finally the towers.</li>
+      <li><b>Watch out:</b> a bigger hole can swallow you. A smaller one is lunch.</li>
+    </ul>
+    <button class="btn" id="playBtn" type="button">Play</button>
+  </div>
+</div>
+
+<div class="overlay" id="endScreen" hidden>
+  <div class="card">
+    <h2 class="big" id="endTitle">Time's up</h2>
+    <div class="stats">
+      <div class="stat"><b id="stRank">#1</b><span>Rank</span></div>
+      <div class="stat"><b id="stPts">0</b><span>Points</span></div>
+      <div class="stat"><b id="stSize">0 m</b><span>Width</span></div>
+    </div>
+    <p class="lede" id="stBiggest"></p>
+    <ol class="results" id="endList"></ol>
+    <button class="btn" id="againBtn" type="button">Play again</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+'use strict';
+
+// ---------- constants ----------
+const ROUND = 120;              // seconds per round
+const HALF = 200;               // city spans -HALF..HALF on x and z (10 x 10 blocks)
+const ROADS = Array.from({ length: HALF / 20 + 1 }, (_, i) => -HALF + i * 40);
+const EDGE = HALF + 4;          // outer edge of the paved city
+const ROAD_HALF = 4;
+const TIME_DILATION = 0.75;     // how much a full-size black hole slows time at its rim
+const START_R = 1.2;
+const GROW = 0.15;              // radius² gained per (volume^0.6)
+const FIT = 0.92;               // an object fits if its radius < hole radius * FIT
+// Difficulty: the player gets a head start over the rival holes.
+const EASY = {
+  playerFit: 0.97, playerGrow: 1.25, playerSpeed: 7.8,
+  botGrow: 0.8, botSpeed: 5.4, botThink: [0.5, 1.0], botSight: 30, botChasePlayer: 0.3,
+  eatPlayerRatio: 1.35, playerEatRatio: 1.1, holeEatRatio: 1.15,
+  respawnKeep: 0.75, respawnTime: 2, shield: 3
+};
+const fitOf = h => (h.player ? EASY.playerFit : FIT);
+const PIT_DEPTH = 70;
+
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = arr => arr[(Math.random() * arr.length) | 0];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+// ---------- renderer / scene ----------
+const canvas = document.getElementById('game');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, stencil: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+const scene = new THREE.Scene();
+const SKY = 0xbfe4fb;
+scene.background = new THREE.Color(SKY);
+scene.fog = new THREE.Fog(SKY, 140, 340);
+const camera = new THREE.PerspectiveCamera(50, 1, 0.5, 800);
+const hemi = new THREE.HemisphereLight(0xeaf6ff, 0x8f9b7c, 0.62);
+scene.add(hemi);
+// The sun casts real shadows in a box that follows the camera, so cost stays flat on a big map.
+const sun = new THREE.DirectionalLight(0xffffff, 0.75);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1536, 1536);
+sun.shadow.bias = -0.0008;
+sun.shadow.normalBias = 0.04;
+scene.add(sun, sun.target);
+
+// ---------- time of day ----------
+// Each round runs from afternoon to dusk: the sun drops and warms, the sky fades to blue hour,
+// and windows, street lamps and headlights switch on.
+const SKY_KEYS = [  // t, sky, sun colour, sun intensity, hemi sky, hemi ground, hemi intensity, sun elevation (deg)
+  [0.00, '#bfe4fb', '#fff6e8', 0.85, '#eaf6ff', '#8f9b7c', 0.60, 55],
+  [0.55, '#ffd9a8', '#ffcf8a', 0.80, '#ffe6c8', '#8a8a74', 0.55, 28],
+  [0.80, '#f39a72', '#ff9a5c', 0.55, '#c9a6c8', '#6d6a6a', 0.45, 22],
+  [1.00, '#3b3f72', '#ff7a4a', 0.22, '#6f7ab8', '#3a3a4a', 0.42, 17]
+];
+const _c1 = new THREE.Color(), _c2 = new THREE.Color();
+const lerpHex = (a, b, k, out) => out.copy(_c1.set(a)).lerp(_c2.set(b), k);
+const LIGHTS = { night: 0 };   // 0 = daylight, 1 = all city lights on
+function applyTimeOfDay(t) {
+  let i = 0;
+  while (i < SKY_KEYS.length - 2 && t > SKY_KEYS[i + 1][0]) i++;
+  const a = SKY_KEYS[i], b = SKY_KEYS[i + 1], k = clamp((t - a[0]) / (b[0] - a[0]), 0, 1);
+  lerpHex(a[1], b[1], k, scene.background); scene.fog.color.copy(scene.background);
+  lerpHex(a[2], b[2], k, sun.color); sun.intensity = a[3] + (b[3] - a[3]) * k;
+  lerpHex(a[4], b[4], k, hemi.color); lerpHex(a[5], b[5], k, hemi.groundColor);
+  hemi.intensity = a[6] + (b[6] - a[6]) * k;
+  const el = (a[7] + (b[7] - a[7]) * k) * Math.PI / 180;
+  sun.userData.dir = new THREE.Vector3(Math.cos(el) * 0.75, Math.sin(el), Math.cos(el) * 0.66).normalize();
+  LIGHTS.night = clamp((t - 0.55) / 0.35, 0, 1);
+}
+function placeSun(x, z, r) {
+  const span = 34 + r * 5;                       // shadow box grows with the view
+  const cam = sun.shadow.camera;
+  if (cam.right !== span) { cam.left = cam.bottom = -span; cam.right = cam.top = span; cam.near = 1; cam.far = 400; cam.updateProjectionMatrix(); }
+  const d = sun.userData.dir || new THREE.Vector3(0.4, 0.8, 0.3);
+  // snap to whole texels so shadows don't shimmer while the camera glides
+  const texel = (2 * span) / sun.shadow.mapSize.x;
+  x = Math.round(x / texel) * texel; z = Math.round(z / texel) * texel;
+  sun.target.position.set(x, 0, z);
+  sun.position.set(x + d.x * 150, d.y * 150, z + d.z * 150);
+}
+
+function updateBlackHole(h, r, dt) {
+  const bh = h.bh = h.alive || h.vanish > 0 ? bhFactor(r) : 0;
+  // the pit darkens at dusk, and a black hole swallows the light inside it
+  h.pit.material.color.setScalar((1 - LIGHTS.night * 0.45) * (1 - 0.6 * bh));
+  h.disk.visible = h.disk2.visible = h.sparks.visible = bh > 0.01;
+  if (bh <= 0.01) return;
+  // inner wall glow shifts from the hole's colour toward accretion orange
+  h.inner.material.color.set(h.color).lerp(_c1.set('#ffb36b'), bh * 0.75);
+  const day = 1 - LIGHTS.night;                 // additive light washes out on a bright street, so hold back in daylight
+  h.disk.material.opacity = bh * (0.9 - 0.35 * day + h.bump * 2);
+  h.disk2.material.opacity = bh * (0.5 - 0.2 * day);
+  h.disk.rotation.y -= dt * 0.9;               // inner matter orbits faster than the outer layer
+  h.disk2.rotation.y -= dt * 0.35;
+  const pos = h.sparks.geometry.attributes.position;
+  for (let i = 0; i < SPARKS; i++) {
+    const sp = h.sparkState[i];
+    sp.a -= dt * 2.4 / sp.d;                     // faster as they get closer
+    sp.d -= dt * (0.25 + 0.5 / sp.d);
+    if (sp.d < 1.0) { sp.d = DISK_OUT * rand(0.8, 1); sp.a = rand(0, Math.PI * 2); }
+    pos.setXYZ(i, h.x + Math.cos(sp.a) * sp.d * r, sp.h * (sp.d - 0.9) * 0.6 * Math.sqrt(r), h.z + Math.sin(sp.a) * sp.d * r);
+  }
+  pos.needsUpdate = true;
+  h.sparks.material.opacity = bh;
+  h.sparks.material.size = 0.5 + r * 0.12;
+}
+
+function resize() {
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize);
+resize();
+
+// ---------- ground (texture drawn from the block layout) ----------
+const GSIZE = 2 * HALF + 100, GPX = 2 * GSIZE, S = GPX / GSIZE;   // 2 texels per metre, drawn as hard pixels
+const gx = v => (v + GSIZE / 2) * S;
+const groundCanvas = document.createElement('canvas');
+groundCanvas.width = groundCanvas.height = GPX;
+const gctx = groundCanvas.getContext('2d');
+const groundTex = new THREE.CanvasTexture(groundCanvas);
+groundTex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+groundTex.magFilter = THREE.NearestFilter;
+const groundMat = new THREE.MeshLambertMaterial({
+  map: groundTex,
+  stencilWrite: true, stencilRef: 1, stencilFunc: THREE.NotEqualStencilFunc,
+  stencilFail: THREE.KeepStencilOp, stencilZFail: THREE.KeepStencilOp, stencilZPass: THREE.KeepStencilOp
+});
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(GSIZE, GSIZE), groundMat);
+ground.rotation.x = -Math.PI / 2;
+ground.renderOrder = -5;
+ground.receiveShadow = true;
+scene.add(ground);
+// Countryside out to the horizon, so the camera never sees past the ground's edge into the pits below.
+// It obeys the same stencil as the city ground, so it never covers a hole.
+const countryside = new THREE.Mesh(new THREE.PlaneGeometry(8000, 8000), new THREE.MeshLambertMaterial({
+  color: 0x8ccf8a,
+  stencilWrite: true, stencilRef: 1, stencilFunc: THREE.NotEqualStencilFunc,
+  stencilFail: THREE.KeepStencilOp, stencilZFail: THREE.KeepStencilOp, stencilZPass: THREE.KeepStencilOp
+}));
+countryside.rotation.x = -Math.PI / 2;
+countryside.position.y = -0.05;
+countryside.renderOrder = -5;
+countryside.receiveShadow = true;
+scene.add(countryside);
+
+const LOT_COLORS = { downtown: '#d8d3ca', residential: '#c9e2ab', park: '#86c97f', plaza: '#efdcbc' };
+function drawGround(blocks) {
+  const c = gctx;
+  const px = (x, y, w, h) => c.fillRect(Math.round(x), Math.round(y), Math.max(1, Math.round(w)), Math.max(1, Math.round(h)));
+  c.fillStyle = '#8ccf8a'; px(0, 0, GPX, GPX);
+  c.fillStyle = '#e9e3d7'; px(gx(-EDGE), gx(-EDGE), 2 * EDGE * S, 2 * EDGE * S);
+  for (const b of blocks) {
+    c.fillStyle = LOT_COLORS[b.type];
+    px(gx(b.cx - 13.5), gx(b.cz - 13.5), 27 * S, 27 * S);
+    if (b.type === 'park') {
+      c.fillStyle = '#e7dcc0';
+      px(gx(b.cx - 1.2), gx(b.cz - 13.5), 2.4 * S, 27 * S);
+      px(gx(b.cx - 13.5), gx(b.cz - 1.2), 27 * S, 2.4 * S);
+    } else if (b.type === 'plaza') {
+      c.fillStyle = 'rgba(160,120,80,.16)';
+      for (let i = -13; i < 13.5; i += 2) for (let j = -13; j < 13.5; j += 2)
+        if (((i + j) / 2) % 2 === 0) px(gx(b.cx + i), gx(b.cz + j), S, S);
+    }
+  }
+  c.fillStyle = '#525a70';
+  for (const r of ROADS) {
+    px(gx(-EDGE), gx(r - ROAD_HALF), 2 * EDGE * S, ROAD_HALF * 2 * S);
+    px(gx(r - ROAD_HALF), gx(-EDGE), ROAD_HALF * 2 * S, 2 * EDGE * S);
+  }
+  // lane dashes between intersections
+  c.fillStyle = '#f3efe4';
+  for (const r of ROADS) {
+    for (let i = 0; i < ROADS.length - 1; i++) {
+      for (let t = ROADS[i] + ROAD_HALF + 3; t < ROADS[i + 1] - ROAD_HALF - 4; t += 4) {
+        px(gx(t), gx(r - 0.25), 2 * S, 0.5 * S);
+        px(gx(r - 0.25), gx(t), 0.5 * S, 2 * S);
+      }
+    }
+  }
+  // zebra crossings on every side of every intersection
+  c.fillStyle = 'rgba(255,255,255,.85)';
+  for (const rx of ROADS) for (const rz of ROADS) {
+    for (let k = -3; k <= 3; k += 1.5) {
+      for (const s of [-1, 1]) {
+        px(gx(rx + s * (ROAD_HALF + 1.5) - 1), gx(rz + k - 0.5), 2 * S, 1 * S);
+        px(gx(rx + k - 0.5), gx(rz + s * (ROAD_HALF + 1.5) - 1), 1 * S, 2 * S);
+      }
+    }
+  }
+  // per-texel brightness jitter so the ground reads as tiles
+  const img = c.getImageData(0, 0, GPX, GPX), d = img.data;
+  for (let i = 0; i < d.length; i += 4) {
+    const j = (Math.random() - 0.5) * 14;
+    d[i] += j; d[i + 1] += j; d[i + 2] += j;
+  }
+  c.putImageData(img, 0, 0);
+  groundTex.needsUpdate = true;
+}
+
+// ---------- voxel materials ----------
+// Every object is built from boxes merged into one geometry with vertex colours,
+// textured with a tiny pixel-noise tile so surfaces read as blocks.
+function pixelTexture(size, paint) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  paint(c.getContext('2d'));
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.magFilter = THREE.NearestFilter;
+  t.minFilter = THREE.NearestMipmapLinearFilter;
+  return t;
+}
+const grainTex = pixelTexture(16, c => {
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+    let v = 222 + ((Math.random() * 34) | 0);
+    if (x === 0 || y === 0) v -= 26;              // block seam
+    c.fillStyle = `rgb(${v},${v},${v})`; c.fillRect(x, y, 1, 1);
+  }
+});
+const winTex = pixelTexture(16, c => {
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+    const v = 232 + ((Math.random() * 22) | 0);
+    c.fillStyle = `rgb(${v},${v},${v})`; c.fillRect(x, y, 1, 1);
+  }
+  c.fillStyle = '#7f97b3'; c.fillRect(2, 4, 5, 8); c.fillRect(9, 4, 5, 8);
+  c.fillStyle = '#b9cde0'; c.fillRect(2, 4, 5, 2); c.fillRect(9, 4, 5, 2);
+  c.fillStyle = '#c4c4c4'; c.fillRect(0, 15, 16, 1);
+});
+const voxMat = new THREE.MeshLambertMaterial({ vertexColors: true, map: grainTex });
+// Lit windows: same layout as winTex, a random mix of warm and dark panes, used as an emissive map at dusk.
+const winGlowTex = pixelTexture(16, c => {
+  c.fillStyle = '#000'; c.fillRect(0, 0, 16, 16);
+  for (const x of [2, 9]) {
+    const on = Math.random();
+    c.fillStyle = on < 0.75 ? '#ffd27a' : on < 0.9 ? '#ffe9b8' : '#000';
+    c.fillRect(x, 4, 5, 8);
+  }
+});
+const winMat = new THREE.MeshLambertMaterial({ vertexColors: true, map: winTex, emissive: 0xffffff, emissiveMap: winGlowTex, emissiveIntensity: 0 });
+
+// Soft round glow used for lamp pools, headlights and the hole halos.
+function glowTexture(inner, stops) {
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const g = c.getContext('2d'), grad = g.createRadialGradient(32, 32, inner, 32, 32, 32);
+  stops.forEach(([o, a]) => grad.addColorStop(o, `rgba(255,255,255,${a})`));
+  g.fillStyle = grad; g.fillRect(0, 0, 64, 64);
+  return new THREE.CanvasTexture(c);
+}
+const glowTex = glowTexture(0, [[0, 1], [0.25, 0.55], [1, 0]]);
+const poolTex = glowTexture(0, [[0, 0.9], [0.5, 0.35], [1, 0]]);
+const onGround = { stencilWrite: true, stencilRef: 1, stencilFunc: THREE.NotEqualStencilFunc };   // never draw over a hole
+const additive = { transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, fog: false };
+const lampPoolMat = new THREE.MeshBasicMaterial(Object.assign({ map: poolTex, color: 0xffc46b, opacity: 0 }, additive, onGround));
+const lampGlowMat = new THREE.SpriteMaterial(Object.assign({ map: glowTex, color: 0xffd98a, opacity: 0 }, additive));
+const headPoolMat = new THREE.MeshBasicMaterial(Object.assign({ map: poolTex, color: 0xfff1c9, opacity: 0 }, additive, onGround));
+const headGlowMat = new THREE.SpriteMaterial(Object.assign({ map: glowTex, color: 0xfff6dc, opacity: 0 }, additive));
+const tailGlowMat = new THREE.SpriteMaterial(Object.assign({ map: glowTex, color: 0xff3b3b, opacity: 0 }, additive));
+const flatQuad = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
+function groundGlow(mat, x, z, sx, sz) {
+  const m = new THREE.Mesh(flatQuad, mat);
+  m.position.set(x, 0.05, z); m.scale.set(sx, 1, sz); m.renderOrder = 2; m.userData.glow = true;
+  return m;
+}
+function sprite(mat, x, y, z, s) {
+  const m = new THREE.Sprite(mat);
+  m.position.set(x, y, z); m.scale.set(s, s, 1); m.userData.glow = true;
+  return m;
+}
+function updateCityLights() {
+  const n = LIGHTS.night;
+  winMat.emissiveIntensity = n * 0.95;
+  lampPoolMat.opacity = n * 0.55; lampGlowMat.opacity = n * 0.9;
+  headPoolMat.opacity = n * 0.35; headGlowMat.opacity = n * 0.9; tailGlowMat.opacity = n * 0.8;
+}
+
+const UNIT = new THREE.BoxGeometry(1, 1, 1);
+const colorCache = new Map();
+const col = c => { if (c instanceof THREE.Color) return c; if (!colorCache.has(c)) colorCache.set(c, new THREE.Color(c)); return colorCache.get(c); };
+
+class Voxels {
+  constructor() { this.p = []; this.n = []; this.uv = []; this.c = []; this.i = []; }
+  // y is the bottom of the box. uvMode 'grain' tiles the noise every 2 m, 'win' tiles windows every 3 m x 3.2 m.
+  box(color, sx, sy, sz, x, y, z, rotY, uvMode) {
+    const pos = UNIT.attributes.position, nor = UNIT.attributes.normal, uv = UNIT.attributes.uv;
+    const base = this.p.length / 3, cl = col(color);
+    const cs = Math.cos(rotY || 0), sn = Math.sin(rotY || 0);
+    for (let k = 0; k < 24; k++) {
+      const lx = pos.getX(k) * sx, ly = pos.getY(k) * sy + sy / 2, lz = pos.getZ(k) * sz;
+      this.p.push(x + lx * cs + lz * sn, y + ly, z - lx * sn + lz * cs);
+      const nx = nor.getX(k), nz = nor.getZ(k);
+      this.n.push(nx * cs + nz * sn, nor.getY(k), -nx * sn + nz * cs);
+      const f = (k / 4) | 0;
+      const [a, b] = f < 2 ? [sz, sy] : f < 4 ? [sx, sz] : [sx, sy];
+      if (uvMode === 'win') {
+        if (f === 2 || f === 3) this.uv.push(0.05, 0.95);
+        else this.uv.push(uv.getX(k) * Math.max(1, Math.round(a / 3)), uv.getY(k) * Math.max(1, Math.round(b / 3.2)));
+      } else this.uv.push(uv.getX(k) * Math.max(0.25, a / 2), uv.getY(k) * Math.max(0.25, b / 2));
+      this.c.push(cl.r, cl.g, cl.b);
+    }
+    const idx = UNIT.index;
+    for (let k = 0; k < idx.count; k++) this.i.push(idx.getX(k) + base);
+    return this;
+  }
+  geometry() {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(this.p, 3));
+    g.setAttribute('normal', new THREE.Float32BufferAttribute(this.n, 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute(this.uv, 2));
+    g.setAttribute('color', new THREE.Float32BufferAttribute(this.c, 3));
+    g.setIndex(this.i);
+    g.computeBoundingSphere();
+    return g;
+  }
+  mesh(mat) { return new THREE.Mesh(this.geometry(), mat || voxMat); }
+}
+
+// Small things come in a handful of cached variants so they share geometry.
+const variantCache = new Map();
+function variant(key, n, build) {
+  if (!variantCache.has(key)) variantCache.set(key, Array.from({ length: n }, () => build().geometry()));
+  return pick(variantCache.get(key));
+}
+const shade = (hex, k) => col(hex).clone().multiplyScalar(k);
+
+const BUILDING_COLORS = ['#f4b6a6', '#f7d68e', '#a9d7ea', '#c7b8ef', '#f1a3bb', '#b7e2c3', '#f2eee4', '#ffc9a0'];
+const HOUSE_COLORS = ['#fbe3c2', '#f7f3ea', '#cfe6f2', '#f6d2d9', '#e3f0d0'];
+const ROOF_COLORS = ['#c94a43', '#8d5a46', '#4f6b8e', '#5f8a5b'];
+const CAR_COLORS = ['#ff5a6e', '#23c2b0', '#ffc73d', '#4f7cff', '#ffffff', '#2f3648', '#ff8f3d'];
+const SHIRTS = ['#ff5a6e', '#4f7cff', '#ffc73d', '#23c2b0', '#9b6bff', '#2f3648', '#ffffff', '#ff8f3d'];
+const PANTS = ['#2f3e66', '#3a3a44', '#6b4f3a', '#24504a'];
+const SKIN = ['#f2c7a5', '#c98e67', '#8a5a3c', '#f5d6bd'];
+const HAIR = ['#2b1d14', '#6b4423', '#d9b36c', '#1c1c1c', '#a33b22'];
+const C = { glass: '#2c3a52', trunk: '#7a5235', leaf: '#4caa52', leaf2: '#6cc060', leaf3: '#3f8f4a', pole: '#4a5266',
+  bulb: '#fff1a0', wood: '#b77a4a', red: '#e2413f', orange: '#ff7a1a', white: '#ffffff', bin: '#4d7a62',
+  stone: '#d9d4c8', water: '#5fbde9', grey: '#a7adb9', dark: '#262a33', bus: '#ffc73d', kiosk: '#ff5a6e', door: '#8a5a3c' };
+
+// ---------- object kinds ----------
+// Each maker returns { mesh, r (footprint radius), h (height), label }
+const mk = geo => new THREE.Mesh(geo, voxMat);
+const MAKERS = {
+  person() {
+    return { mesh: mk(variant('person', 16, () => {
+      const v = new Voxels(), shirt = pick(SHIRTS), skin = pick(SKIN), pants = pick(PANTS);
+      v.box(pants, 0.22, 0.7, 0.26, -0.12, 0, 0).box(pants, 0.22, 0.7, 0.26, 0.12, 0, 0);
+      v.box(shirt, 0.5, 0.65, 0.28, 0, 0.7, 0);
+      v.box(shirt, 0.16, 0.3, 0.26, -0.33, 1.05, 0).box(shirt, 0.16, 0.3, 0.26, 0.33, 1.05, 0);
+      v.box(skin, 0.16, 0.35, 0.24, -0.33, 0.7, 0).box(skin, 0.16, 0.35, 0.24, 0.33, 0.7, 0);
+      v.box(skin, 0.44, 0.44, 0.44, 0, 1.35, 0);
+      v.box(pick(HAIR), 0.48, 0.14, 0.48, 0, 1.73, 0);
+      v.box(C.dark, 0.08, 0.08, 0.02, -0.1, 1.55, 0.225).box(C.dark, 0.08, 0.08, 0.02, 0.1, 1.55, 0.225);
+      return v;
+    })), r: 0.35, h: 1.87, label: 'Pedestrian' };
+  },
+  cone() {
+    return { mesh: mk(variant('cone', 1, () => new Voxels()
+      .box(C.orange, 0.6, 0.1, 0.6, 0, 0, 0).box(C.orange, 0.4, 0.22, 0.4, 0, 0.1, 0)
+      .box(C.white, 0.32, 0.14, 0.32, 0, 0.32, 0).box(C.orange, 0.22, 0.24, 0.22, 0, 0.46, 0))), r: 0.3, h: 0.7, label: 'Traffic cone' };
+  },
+  hydrant() {
+    return { mesh: mk(variant('hydrant', 1, () => new Voxels()
+      .box(C.red, 0.44, 0.1, 0.44, 0, 0, 0).box(C.red, 0.32, 0.6, 0.32, 0, 0.1, 0)
+      .box(C.red, 0.22, 0.14, 0.22, 0, 0.7, 0).box(C.red, 0.6, 0.12, 0.12, 0, 0.42, 0))), r: 0.3, h: 0.84, label: 'Fire hydrant' };
+  },
+  bin() {
+    return { mesh: mk(variant('bin', 1, () => new Voxels()
+      .box(C.bin, 0.6, 0.85, 0.6, 0, 0, 0).box(shade(C.bin, 0.7), 0.68, 0.1, 0.68, 0, 0.85, 0))), r: 0.42, h: 0.95, label: 'Trash can' };
+  },
+  bench() {
+    return { mesh: mk(variant('bench', 1, () => new Voxels()
+      .box(C.wood, 1.8, 0.12, 0.55, 0, 0.45, 0).box(C.wood, 1.8, 0.36, 0.1, 0, 0.62, -0.24)
+      .box(C.pole, 0.12, 0.45, 0.5, -0.75, 0, 0).box(C.pole, 0.12, 0.45, 0.5, 0.75, 0, 0))), r: 0.95, h: 1.0, label: 'Bench' };
+  },
+  lamp() {
+    const mesh = mk(variant('lamp', 1, () => new Voxels()
+      .box(C.pole, 0.4, 0.2, 0.4, 0, 0, 0).box(C.pole, 0.18, 4, 0.18, 0, 0, 0)
+      .box(C.pole, 0.8, 0.14, 0.14, 0.32, 3.86, 0).box(C.bulb, 0.4, 0.22, 0.4, 0.62, 3.66, 0)));
+    mesh.add(groundGlow(lampPoolMat, 0.62, 0, 7, 7), sprite(lampGlowMat, 0.62, 3.6, 0, 2.2));
+    return { mesh, r: 0.4, h: 4.0, label: 'Street lamp' };
+  },
+  tree() {
+    const s = rand(0.85, 1.2);
+    const mesh = mk(variant('tree', 8, () => {
+      const v = new Voxels(), q = 0.9;
+      v.box(C.trunk, 0.5, 2.0, 0.5, 0, 0, 0);
+      for (let x = -1; x <= 1; x++) for (let y = 0; y <= 2; y++) for (let z = -1; z <= 1; z++) {
+        const corner = Math.abs(x) + Math.abs(z) + (y === 2 ? 1 : 0);
+        if (corner >= 3 || (corner === 2 && Math.random() < 0.45)) continue;
+        v.box(pick([C.leaf, C.leaf2, C.leaf3]), q, q, q, x * q, 1.6 + y * q, z * q);
+      }
+      return v;
+    }));
+    mesh.scale.setScalar(s);
+    return { mesh, r: 1.35 * s, h: 4.3 * s, label: 'Tree' };
+  },
+  flower() {
+    return { mesh: mk(variant('flower', 10, () => {
+      const v = new Voxels(), petal = pick(['#ff5a6e', '#ffc73d', '#ffffff', '#9b6bff', '#ff8fc8', '#ff8f3d']);
+      v.box('#3f8f4a', 0.08, 0.4, 0.08, 0, 0, 0).box('#4caa52', 0.22, 0.06, 0.08, 0.08, 0.15, 0);
+      v.box(petal, 0.3, 0.1, 0.1, 0, 0.42, 0).box(petal, 0.1, 0.1, 0.3, 0, 0.42, 0).box(petal, 0.1, 0.24, 0.1, 0, 0.36, 0);
+      v.box('#ffd23d', 0.12, 0.12, 0.12, 0, 0.47, 0);
+      return v;
+    })), r: 0.2, h: 0.6, label: 'Flower' };
+  },
+  bush() {
+    return { mesh: mk(variant('bush', 4, () => {
+      const v = new Voxels(), q = 0.45;
+      for (let x = -1; x <= 0; x++) for (let z = -1; z <= 0; z++) for (let y = 0; y <= 1; y++)
+        if (y === 0 || Math.random() < 0.6) v.box(pick([C.leaf, C.leaf2, C.leaf3]), q, q, q, (x + 0.5) * q, y * q, (z + 0.5) * q);
+      if (Math.random() < 0.6) v.box(pick(['#ff5a6e', '#ffffff', '#ffc73d']), 0.12, 0.12, 0.12, 0.1, 0.88, 0.12);
+      return v;
+    })), r: 0.5, h: 0.9, label: 'Bush' };
+  },
+  fence() {
+    return { mesh: mk(variant('fence', 1, () => {
+      const v = new Voxels(), wood = '#f2eee4', post = '#d8cfbd';
+      for (const x of [-0.9, 0, 0.9]) v.box(post, 0.16, 0.8, 0.16, x, 0, 0).box(post, 0.2, 0.08, 0.2, x, 0.8, 0);
+      v.box(wood, 2.0, 0.12, 0.08, 0, 0.3, 0).box(wood, 2.0, 0.12, 0.08, 0, 0.58, 0);
+      return v;
+    })), r: 1.0, h: 0.9, label: 'Fence' };
+  },
+  kiosk() {
+    return { mesh: mk(variant('kiosk', 1, () => {
+      const v = new Voxels().box(C.white, 2.2, 1.9, 1.6, 0, 0, 0).box(C.wood, 2.3, 0.15, 0.4, 0, 1.0, 0.95);
+      for (let i = 0; i < 4; i++) v.box(i % 2 ? C.white : C.kiosk, 0.66, 0.3, 2.1, -0.99 + i * 0.66, 1.9, 0.15);
+      return v;
+    })), r: 1.45, h: 2.2, label: 'Food kiosk' };
+  },
+  car() {
+    const mesh = mk(variant('car', 10, () => {
+      const v = new Voxels(), body = pick(CAR_COLORS);
+      v.box(body, 3.8, 0.8, 1.8, 0, 0.3, 0);
+      v.box(C.glass, 2.0, 0.65, 1.62, -0.2, 1.1, 0).box(body, 2.0, 0.14, 1.66, -0.2, 1.75, 0);
+      v.box(C.bulb, 0.06, 0.2, 0.3, 1.9, 0.75, 0.6).box(C.bulb, 0.06, 0.2, 0.3, 1.9, 0.75, -0.6);
+      v.box(C.red, 0.06, 0.2, 0.3, -1.9, 0.75, 0.6).box(C.red, 0.06, 0.2, 0.3, -1.9, 0.75, -0.6);
+      for (const x of [-1.2, 1.2]) for (const z of [-0.85, 0.85]) v.box(C.dark, 0.7, 0.7, 0.3, x, 0, z);
+      return v;
+    }));
+    mesh.add(groundGlow(headPoolMat, 5.2, 0, 6.5, 3.6),
+      sprite(headGlowMat, 2.0, 0.85, 0.6, 0.9), sprite(headGlowMat, 2.0, 0.85, -0.6, 0.9),
+      sprite(tailGlowMat, -2.0, 0.85, 0.6, 0.6), sprite(tailGlowMat, -2.0, 0.85, -0.6, 0.6));
+    return { mesh, r: 1.95, h: 1.9, label: 'Car' };
+  },
+  bus() {
+    return { mesh: mk(variant('bus', 1, () => {
+      const v = new Voxels().box(C.bus, 8, 2.2, 2.4, 0, 0.45, 0).box(C.glass, 7.6, 0.8, 2.46, 0, 1.45, 0)
+        .box(C.glass, 0.06, 1.2, 2.0, 4.0, 1.0, 0).box(shade(C.bus, 0.85), 8.1, 0.15, 2.5, 0, 2.65, 0);
+      for (const x of [-2.8, 2.8]) for (const z of [-1.1, 1.1]) v.box(C.dark, 1.0, 1.0, 0.35, x, 0, z);
+      return v;
+    })), r: 4.0, h: 2.8, label: 'City bus' };
+  },
+  fountain() {
+    return { mesh: mk(variant('fountain', 1, () => new Voxels()
+      .box(C.stone, 5.4, 0.6, 5.4, 0, 0, 0).box(C.water, 4.6, 0.1, 4.6, 0, 0.55, 0)
+      .box(C.stone, 0.8, 1.6, 0.8, 0, 0.6, 0).box(C.stone, 2.0, 0.3, 2.0, 0, 1.8, 0)
+      .box(C.water, 1.6, 0.1, 1.6, 0, 2.05, 0).box(C.water, 0.4, 0.6, 0.4, 0, 2.1, 0))), r: 3.2, h: 2.7, label: 'Fountain' };
+  },
+  house() {
+    const v = new Voxels();
+    const w = Math.round(rand(4.5, 6) * 2) / 2, d = Math.round(rand(4.5, 6) * 2) / 2, h = rand(2.8, 3.6);
+    const wall = pick(HOUSE_COLORS), roof = pick(ROOF_COLORS);
+    v.box(wall, w, h, d, 0, 0, 0);
+    const steps = 4, rise = 0.5;
+    for (let k = 0; k < steps; k++) v.box(k % 2 ? shade(roof, 0.88) : roof, w + 0.5 - k * (w / steps), rise, d + 0.5, 0, h + k * rise, 0);
+    v.box(C.door, 0.9, 1.7, 0.1, -w * 0.22, 0, d / 2);
+    v.box(C.glass, 1.0, 0.9, 0.1, w * 0.22, h * 0.45, d / 2).box(C.white, 1.2, 0.12, 0.14, w * 0.22, h * 0.45 - 0.1, d / 2);
+    v.box(C.glass, 0.1, 0.9, 1.0, w / 2, h * 0.45, 0).box(C.glass, 0.1, 0.9, 1.0, -w / 2, h * 0.45, 0);
+    v.box(shade(wall, 0.7), 0.6, 1.4, 0.6, w * 0.28, h + 0.6, -d * 0.2);
+    return { mesh: v.mesh(), r: Math.max(w, d) * 0.55, h: h + steps * rise, label: 'House' };
+  },
+  building(w, d, h) {
+    w = Math.round(w); d = Math.round(d);
+    const color = pick(BUILDING_COLORS), trim = shade(color, 0.78);
+    const g = new THREE.Group();
+    g.add(new Voxels().box(color, w, h, d, 0, 0, 0, 0, 'win').mesh(winMat));
+    const v = new Voxels();
+    const t = 0.4;                                      // parapet around the roof
+    v.box(trim, w + 0.2, 0.6, t, 0, h, d / 2 - t / 2 + 0.1).box(trim, w + 0.2, 0.6, t, 0, h, -d / 2 + t / 2 - 0.1);
+    v.box(trim, t, 0.6, d + 0.2, w / 2 - t / 2 + 0.1, h, 0).box(trim, t, 0.6, d + 0.2, -w / 2 + t / 2 - 0.1, h, 0);
+    v.box(C.grey, Math.max(1, w * 0.25), 1.0, Math.max(1, d * 0.25), w * 0.18, h, -d * 0.12);
+    v.box(C.grey, 1, 0.8, 1, -w * 0.22, h, d * 0.18);
+    v.box(trim, w + 0.1, 0.5, d + 0.1, 0, 0, 0);       // plinth
+    v.box(C.glass, Math.min(3, w * 0.4), 2.2, 0.12, 0, 0, d / 2 + 0.05);
+    v.box(trim, Math.min(3.6, w * 0.5), 0.2, 1.0, 0, 2.3, d / 2 + 0.45);
+    g.add(v.mesh());
+    const label = h > 30 ? 'Office tower' : h > 16 ? 'Apartment block' : 'Shop building';
+    return { mesh: g, r: Math.max(w, d) * 0.55, h: h + 1.0, label };
+  }
+};
+
+// ---------- world ----------
+let objects = [];
+let blocks = [];
+
+function addObj(made, x, z, rotY, move) {
+  made.mesh.position.set(x, 0, z);
+  made.mesh.rotation.y = rotY || 0;
+  made.mesh.traverse(c => { if (c.isMesh && !c.userData.glow) { c.castShadow = true; c.receiveShadow = true; } });
+  scene.add(made.mesh);
+  const vol = Math.PI * made.r * made.r * made.h;
+  const o = {
+    mesh: made.mesh, label: made.label, r: made.r, h: made.h, x, z, y: 0,
+    vol, grow: GROW * Math.pow(vol, 0.6), points: Math.max(1, Math.round(Math.pow(vol, 0.6) * 2)),
+    alive: true, falling: false, vy: 0, hole: null, move: move || null, spin: 0,
+    yaw: rotY || 0, lean: 0, leanX: 0, leanZ: 0
+  };
+  objects.push(o);
+  return o;
+}
+
+function perimeterWalker(cx, cz) {
+  const off = 14.8, side = off * 2, per = side * 4;
+  return { type: 'ring', cx, cz, off, side, per, s: rand(0, per), speed: rand(1.0, 1.6) * (Math.random() < 0.5 ? 1 : -1) };
+}
+function roamer(cx, cz, lim) {
+  const a = rand(0, Math.PI * 2), sp = rand(0.8, 1.4);
+  return { type: 'roam', cx, cz, lim, vx: Math.cos(a) * sp, vz: Math.sin(a) * sp, t: rand(1, 4) };
+}
+
+function genBlock(b) {
+  const { cx, cz, type } = b;
+  // sidewalk furniture
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) addObj(MAKERS.lamp(), cx + sx * 15, cz + sz * 15);
+  const edge = () => { const t = rand(-11, 11), s = pick([-1, 1]); return Math.random() < 0.5 ? [cx + t, cz + s * 15.2] : [cx + s * 15.2, cz + t]; };
+  for (let i = 0; i < 2; i++) { const [x, z] = edge(); addObj(MAKERS.hydrant(), x, z); }
+  { const [x, z] = edge(); addObj(MAKERS.bin(), x, z); }
+  if (Math.random() < 0.5) for (let i = 0; i < 3; i++) { const [x, z] = edge(); addObj(MAKERS.cone(), x, z); }
+  for (let i = 0; i < 5; i++) addObj(MAKERS.person(), cx, cz, 0, perimeterWalker(cx, cz));
+
+  if (type === 'downtown') {
+    const layout = pick([1, 2, 4, 4, 4]);
+    if (layout === 1) {
+      const w = rand(15, 19);
+      addObj(MAKERS.building(w, w, rand(32, 46)), cx, cz);
+      for (const s of [-1, 1]) addObj(MAKERS.tree(), cx + s * 11.5, cz + 11.5);
+    } else if (layout === 2) {
+      for (const s of [-1, 1]) addObj(MAKERS.building(rand(20, 24), rand(9, 11), rand(14, 30)), cx, cz + s * 6.5);
+    } else {
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+        addObj(MAKERS.building(rand(7, 10.5), rand(7, 10.5), rand(8, 26)), cx + sx * 6.5, cz + sz * 6.5);
+      }
+    }
+  } else if (type === 'residential') {
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      addObj(MAKERS.house(), cx + sx * 7 + rand(-1, 1), cz + sz * 7 + rand(-1, 1), pick([0, Math.PI / 2, Math.PI, -Math.PI / 2]));
+    }
+    for (let i = 0; i < 4; i++) addObj(MAKERS.tree(), cx + rand(-2, 2), cz + rand(-12, 12));
+    addObj(MAKERS.bench(), cx + rand(-11, 11), cz + 1.5);
+    for (let i = 0; i < 2; i++) addObj(MAKERS.person(), cx, cz, 0, roamer(cx, cz, 12));
+  } else if (type === 'park') {
+    addObj(MAKERS.fountain(), cx, cz);
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      for (let i = 0; i < 2; i++) addObj(MAKERS.tree(), cx + sx * rand(5, 11), cz + sz * rand(5, 11));
+      addObj(MAKERS.bench(), cx + sx * 4.5, cz + sz * 1.8, 0);
+    }
+    // picket fence round the lawn, with gaps where the paths come out
+    for (let t = -12; t <= 12; t += 2) {
+      if (Math.abs(t) < 2) continue;
+      addObj(MAKERS.fence(), cx + t, cz - 13, 0); addObj(MAKERS.fence(), cx + t, cz + 13, 0);
+      addObj(MAKERS.fence(), cx - 13, cz + t, Math.PI / 2); addObj(MAKERS.fence(), cx + 13, cz + t, Math.PI / 2);
+    }
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      addObj(MAKERS.bush(), cx + sx * 12, cz + sz * 12);
+      addObj(MAKERS.bush(), cx + sx * 2.2, cz + sz * 11.5);
+      // a small flower bed in each quadrant, near the fountain
+      const bx = cx + sx * 4.2, bz = cz + sz * 4.2;
+      for (let i = 0; i < 6; i++) addObj(MAKERS.flower(), bx + rand(-1, 1), bz + rand(-1, 1));
+      for (let i = 0; i < 3; i++) addObj(MAKERS.flower(), cx + sx * rand(3, 11), cz + sz * rand(9.5, 11.5));
+    }
+    for (let i = 0; i < 6; i++) addObj(MAKERS.person(), cx, cz, 0, roamer(cx, cz, 12));
+  } else {
+    for (const sx of [-1, 1]) addObj(MAKERS.kiosk(), cx + sx * 7, cz - 7, 0);
+    addObj(MAKERS.fountain(), cx, cz + 4);
+    for (let i = 0; i < 4; i++) addObj(MAKERS.tree(), cx + pick([-11, 11]), cz + rand(-11, 11));
+    for (let i = 0; i < 6; i++) addObj(MAKERS.bin(), cx + rand(-12, 12), cz + pick([-12, 12]));
+    for (let i = 0; i < 9; i++) addObj(MAKERS.person(), cx, cz, 0, roamer(cx, cz, 12));
+  }
+}
+
+function genTraffic() {
+  for (const r of ROADS) {
+    for (const axis of ['x', 'z']) {
+      const n = 4;
+      for (let i = 0; i < n; i++) {
+        const dir = i % 2 ? 1 : -1;
+        const lane = r + dir * 2 * (axis === 'x' ? 1 : -1);
+        let along;
+        do along = rand(-HALF + 2, HALF - 2); while (ROADS.some(c => Math.abs(along - c) < ROAD_HALF + 3));
+        const isBus = Math.random() < 0.12;
+        const made = isBus ? MAKERS.bus() : MAKERS.car();
+        const x = axis === 'x' ? along : lane, z = axis === 'x' ? lane : along;
+        const rot = axis === 'x' ? (dir > 0 ? 0 : Math.PI) : (dir > 0 ? -Math.PI / 2 : Math.PI / 2);
+        addObj(made, x, z, rot, { type: 'drive', axis, dir, speed: isBus ? rand(4, 6) : rand(6, 10), v: 0 });
+      }
+    }
+  }
+}
+
+function buildWorld() {
+  for (const o of objects) scene.remove(o.mesh);
+  objects = [];
+  blocks = [];
+  const centers = [];
+  for (let i = 0; i < ROADS.length - 1; i++) centers.push((ROADS[i] + ROADS[i + 1]) / 2);
+  for (const cx of centers) for (const cz of centers) {
+    const centrality = Math.max(Math.abs(cx), Math.abs(cz));
+    // downtown in the middle, houses and parks on the edges
+    const type = centrality < HALF * 0.3 ? pick(['downtown', 'downtown', 'plaza'])
+      : centrality < HALF * 0.65 ? pick(['downtown', 'downtown', 'residential', 'park', 'plaza'])
+      : pick(['residential', 'residential', 'park', 'downtown']);
+    blocks.push({ cx, cz, type });
+  }
+  drawGround(blocks);
+  for (const b of blocks) genBlock(b);
+  genTraffic();
+}
+
+// ---------- holes ----------
+const stencilMat = new THREE.MeshBasicMaterial({
+  colorWrite: false, depthWrite: false,
+  stencilWrite: true, stencilRef: 1, stencilFunc: THREE.AlwaysStencilFunc, stencilZPass: THREE.ReplaceStencilOp
+});
+// The hole is a pixelated circle: grid cells fully inside the unit circle form the opening,
+// the next ring of cells forms the coloured rim.
+function pixelCells(cells, keep) {
+  const cs = 1 / cells, p = [], idx = [];
+  for (let i = -cells - 2; i <= cells + 1; i++) for (let j = -cells - 2; j <= cells + 1; j++) {
+    const x0 = i * cs, z0 = j * cs, x1 = x0 + cs, z1 = z0 + cs;
+    const far = Math.sqrt(Math.max(x0 * x0, x1 * x1) + Math.max(z0 * z0, z1 * z1));
+    const nx = Math.max(x0, Math.min(0, x1)), nz = Math.max(z0, Math.min(0, z1));
+    if (!keep(far, Math.hypot(nx, nz))) continue;
+    const b = p.length / 3;
+    p.push(x0, 0, z0, x0, 0, z1, x1, 0, z1, x1, 0, z0);
+    idx.push(b, b + 1, b + 2, b, b + 2, b + 3);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(p, 3));
+  g.setIndex(idx);
+  return g;
+}
+const HOLE_CELLS = 9;
+const discGeo = pixelCells(HOLE_CELLS, far => far <= 1.0001);
+// The pit wall is a cross-section of the street: a paving layer, soil, then stone courses,
+// textured in pixels and fading to black with depth.
+const PIT_FADE = 6.5;                 // metres for the light to drop to ~37% (for the starting hole)
+// The pit is stretched downward as the hole grows so its walls stay readable from the higher camera.
+const pitScale = r => 1 + Math.max(0, r - START_R) * 0.2;
+const PIT_TEX_DEPTH = 16;             // metres covered by one copy of the wall texture
+const pitTex = pixelTexture(16, () => {});
+(() => {
+  const c = document.createElement('canvas'); c.width = 16; c.height = 128;
+  const g = c.getContext('2d'), px = 128 / PIT_TEX_DEPTH;  // 8 px per metre
+  const jitter = (hex, y, x) => { const k = 0.88 + Math.random() * 0.2; const cc = new THREE.Color(hex).multiplyScalar(k); g.fillStyle = '#' + cc.getHexString(); g.fillRect(x, y, 1, 1); };
+  for (let y = 0; y < 128; y++) for (let x = 0; x < 16; x++) {
+    const m = y / px;
+    if (m < 0.25) jitter('#8a8f9c', y, x);                       // paving
+    else if (m < 0.5) jitter('#5d6170', y, x);                   // base course
+    else if (m < 2.2) jitter(Math.random() < 0.12 ? '#8a6a48' : '#6e4b30', y, x);   // soil with pebbles
+    else {                                                        // stone courses, offset every row
+      const row = Math.floor((y - 2.2 * px) / 6), bx = (x + (row % 2) * 4) % 8;
+      const mortar = (y - Math.floor(2.2 * px)) % 6 === 0 || bx === 0;
+      jitter(mortar ? '#3e3b3a' : (row % 3 ? '#6b665f' : '#5f5a54'), y, x);
+    }
+  }
+  pitTex.image = c; pitTex.needsUpdate = true;
+})();
+const pitGeo = (() => {
+  const geo = new THREE.CylinderGeometry(1, 1, PIT_DEPTH, 48, 40, true);
+  geo.translate(0, -PIT_DEPTH / 2, 0);
+  const pos = geo.attributes.position, uv = geo.attributes.uv, cols = [];
+  for (let i = 0; i < pos.count; i++) {
+    const y = pos.getY(i);
+    uv.setXY(i, uv.getX(i) * 14, 1 + y / PIT_TEX_DEPTH);
+    // the top lip catches some daylight, then it gets dark quickly
+    const k = Math.exp(y / PIT_FADE) * (y > -0.6 ? 1 : 0.82);
+    cols.push(k, k, k * 1.05);
+  }
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+  return geo;
+})();
+const pitMat = new THREE.MeshBasicMaterial({ vertexColors: true, map: pitTex, side: THREE.BackSide, fog: false });
+// a black floor far down, so nothing ever shows through the bottom
+const pitFloorGeo = new THREE.CircleGeometry(1, 32).rotateX(-Math.PI / 2).translate(0, -PIT_DEPTH + 0.5, 0);
+const pitFloorMat = new THREE.MeshBasicMaterial({ color: 0x000000, fog: false });
+const ringGeo = pixelCells(HOLE_CELLS, (far, near) => far > 1.0001 && near < 1.0 + 0.6 / HOLE_CELLS);
+
+// ---------- black hole look ----------
+// As a hole grows (bh: 0 at 2.5 m radius, 1 at 9 m) it turns into a black hole:
+// a spinning accretion disk, sparks spiralling in, a photon ring and gravitational lensing (post pass below).
+const bhFactor = r => { const t = clamp((r - 2.5) / 6.5, 0, 1); return t * t * (3 - 2 * t); };
+const DISK_OUT = 2.6;
+const diskTex = (() => {
+  const S = 256, c = document.createElement('canvas'); c.width = c.height = S;
+  const g = c.getContext('2d'), mid = S / 2, rin = mid * 1.03 / DISK_OUT;
+  g.globalCompositeOperation = 'lighter';
+  const hot = [255, 244, 214], warm = [255, 150, 60], cool = [170, 40, 70];
+  for (let i = 0; i < 1400; i++) {
+    const t = Math.pow(Math.random(), 1.7), rr = rin + t * (mid - rin - 2);
+    const colr = t < 0.35 ? hot.map((v, j) => v + (warm[j] - v) * t / 0.35) : warm.map((v, j) => v + (cool[j] - v) * (t - 0.35) / 0.65);
+    const a0 = Math.random() * Math.PI * 2, len = 0.15 + Math.random() * (1.4 - t);
+    g.strokeStyle = `rgba(${colr.map(Math.round).join(',')},${(Math.pow(1 - t, 1.3) * (0.15 + Math.random() * 0.6)).toFixed(3)})`;
+    g.lineWidth = 0.6 + Math.random() * 2.2;
+    g.beginPath(); g.arc(mid, mid, rr, a0, a0 + len); g.stroke();
+  }
+  return new THREE.CanvasTexture(c);
+})();
+const diskGeo = new THREE.RingGeometry(1.03, DISK_OUT, 96, 1).rotateX(-Math.PI / 2);
+const SPARKS = 18;
+const haloTex = (() => {
+  // radial falloff from the rim (u=0) outward (u=1), drawn into a strip and wrapped round a ring
+  const c = document.createElement('canvas'); c.width = 64; c.height = 4;
+  const g = c.getContext('2d'), grad = g.createLinearGradient(0, 0, 64, 0);
+  grad.addColorStop(0, 'rgba(255,255,255,1)'); grad.addColorStop(0.35, 'rgba(255,255,255,.35)'); grad.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grad; g.fillRect(0, 0, 64, 4);
+  return new THREE.CanvasTexture(c);
+})();
+const haloGeo = (() => {
+  const geo = new THREE.RingGeometry(1.0, 1.9, 64, 1).rotateX(-Math.PI / 2);
+  const pos = geo.attributes.position, uv = geo.attributes.uv;
+  for (let i = 0; i < pos.count; i++) uv.setXY(i, (Math.hypot(pos.getX(i), pos.getZ(i)) - 1.0) / 0.9, 0.5);
+  return geo;
+})();
+const innerGlowGeo = (() => {
+  const geo = new THREE.CylinderGeometry(0.985, 0.985, 3, 48, 6, true).translate(0, -1.5, 0);
+  const pos = geo.attributes.position, cols = [];
+  for (let i = 0; i < pos.count; i++) { const k = Math.pow(1 + pos.getY(i) / 3, 2); cols.push(k, k, k); }
+  geo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
+  return geo;
+})();
+const HOLE_DEFS = [
+  { name: 'You', color: '#23c2b0', player: true },
+  { name: 'Pothole', color: '#ff5a6e' },
+  { name: 'Manhole', color: '#ffc73d' },
+  { name: 'Sinkhole', color: '#9b6bff' },
+  { name: 'Donut', color: '#ff8f3d' },
+  { name: 'Black Hole', color: '#4f7cff' },
+  { name: 'Crater', color: '#3cc45a' },
+  { name: 'Wormhole', color: '#ff5fd2' }
+];
+const SPAWNS = [[0, 0], [-120, -120], [120, -120], [-120, 120], [120, 120], [0, -120], [-120, 0], [120, 0]];
+const holes = HOLE_DEFS.map((d, i) => {
+  const group = new THREE.Group();
+  const disc = new THREE.Mesh(discGeo, stencilMat);
+  disc.position.y = 0.01; disc.renderOrder = -10;
+  const pit = new THREE.Mesh(pitGeo, pitMat.clone());
+  const ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color: d.color }));
+  ring.position.y = 0.04;
+  const floor = new THREE.Mesh(pitFloorGeo, pitFloorMat);
+  // a soft halo on the street around the rim, and the rim colour bleeding down the top of the pit wall
+  const halo = new THREE.Mesh(haloGeo, new THREE.MeshBasicMaterial(Object.assign({ map: haloTex, color: d.color, opacity: 0.5 }, additive, onGround)));
+  halo.position.y = 0.03; halo.renderOrder = 2;
+  const inner = new THREE.Mesh(innerGlowGeo, new THREE.MeshBasicMaterial(Object.assign({ color: d.color, vertexColors: true, side: THREE.BackSide, opacity: 0.6 }, additive)));
+  const disk = new THREE.Mesh(diskGeo, new THREE.MeshBasicMaterial(Object.assign({ map: diskTex, opacity: 0 }, additive, onGround)));
+  const disk2 = new THREE.Mesh(diskGeo, disk.material.clone());
+  disk.position.y = 0.06; disk2.position.y = 0.07; disk.renderOrder = disk2.renderOrder = 3;
+  group.add(disc, pit, floor, ring, halo, inner, disk, disk2);
+  // sparks spiralling into the hole, in world space so they keep their round shape
+  const sparkGeo = new THREE.BufferGeometry();
+  sparkGeo.setAttribute('position', new THREE.Float32BufferAttribute(new Float32Array(SPARKS * 3), 3));
+  const sparks = new THREE.Points(sparkGeo, new THREE.PointsMaterial(Object.assign({ map: glowTex, color: 0xffc27a, size: 1, opacity: 0 }, additive)));
+  sparks.frustumCulled = false;
+  scene.add(sparks);
+  const sparkState = Array.from({ length: SPARKS }, () => ({ a: rand(0, Math.PI * 2), d: rand(1.1, DISK_OUT), h: rand(0.1, 0.6) }));
+  scene.add(group);
+  const tag = document.createElement('div');
+  tag.className = 'tag'; tag.textContent = d.name;
+  tag.style.boxShadow = `inset 0 0 0 2px ${d.color}`;
+  document.body.appendChild(tag);
+  return {
+    i, name: d.name, color: d.color, player: !!d.player, group, tag, ring, pit, floor, halo, inner, disk, disk2, sparks, sparkState, bh: 0, bump: 0, vanish: 0,
+    x: 0, z: 0, vx: 0, vz: 0, r: START_R, r2: START_R * START_R, points: 0,
+    alive: true, respawn: 0, eaten: 0, biggest: null,
+    ai: { t: 0, tx: 0, tz: 0, mode: 'wander' }
+  };
+});
+const player = holes[0];
+
+function placeHole(h, i) {
+  const [x, z] = SPAWNS[i];
+  h.x = x; h.z = z; h.vx = h.vz = 0;
+  h.r = START_R; h.r2 = START_R * START_R; h.points = 0; h.alive = true; h.respawn = 0;
+  h.eaten = 0; h.biggest = null; h.group.visible = true; h.shield = 0;
+}
+
+function respawnSpot() {
+  for (let tries = 0; tries < 30; tries++) {
+    const x = pick(ROADS.slice(1, -1)) + rand(-2, 2), z = rand(-HALF + 10, HALF - 10);
+    const [px, pz] = Math.random() < 0.5 ? [x, z] : [z, x];
+    if (holes.every(o => !o.alive || o.r < 2.5 || Math.hypot(o.x - px, o.z - pz) > o.r + 30)) return [px, pz];
+  }
+  return [rand(-HALF + 20, HALF - 20), rand(-HALF + 20, HALF - 20)];
+}
+
+// ---------- input ----------
+const keys = new Set();
+const ptr = { mouse: false, mx: 0, my: 0, touch: false, sx: 0, sy: 0, tx: 0, ty: 0, id: null };
+const stick = document.getElementById('stick'), knob = document.getElementById('knob');
+window.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  if (['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(k)) { keys.add(k); e.preventDefault(); }
+});
+window.addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
+window.addEventListener('blur', () => keys.clear());
+canvas.addEventListener('pointermove', e => {
+  if (e.pointerType === 'mouse') { ptr.mouse = true; ptr.mx = e.clientX; ptr.my = e.clientY; }
+  else if (ptr.touch && e.pointerId === ptr.id) { ptr.tx = e.clientX; ptr.ty = e.clientY; }
+});
+canvas.addEventListener('pointerdown', e => {
+  canvas.focus();
+  if (e.pointerType !== 'mouse') {
+    ptr.touch = true; ptr.id = e.pointerId; ptr.sx = ptr.tx = e.clientX; ptr.sy = ptr.ty = e.clientY;
+    stick.hidden = knob.hidden = false;
+  }
+});
+const endTouch = e => { if (e.pointerId === ptr.id) { ptr.touch = false; ptr.id = null; stick.hidden = knob.hidden = true; } };
+canvas.addEventListener('pointerup', endTouch);
+canvas.addEventListener('pointercancel', endTouch);
+canvas.addEventListener('mouseleave', () => { ptr.mouse = false; });
+
+const tmpV = new THREE.Vector3();
+function toScreen(x, y, z) {
+  tmpV.set(x, y, z).project(camera);
+  return [(tmpV.x + 1) / 2 * window.innerWidth, (1 - tmpV.y) / 2 * window.innerHeight, tmpV.z < 1];
+}
+
+function playerIntent() {
+  let dx = 0, dz = 0, mag = 0;
+  if (keys.size) {
+    if (keys.has('w') || keys.has('arrowup')) dz -= 1;
+    if (keys.has('s') || keys.has('arrowdown')) dz += 1;
+    if (keys.has('a') || keys.has('arrowleft')) dx -= 1;
+    if (keys.has('d') || keys.has('arrowright')) dx += 1;
+    mag = dx || dz ? 1 : 0;
+  } else if (ptr.touch) {
+    let ox = ptr.tx - ptr.sx, oy = ptr.ty - ptr.sy;
+    const len = Math.hypot(ox, oy), max = 50;
+    if (len > max) { ox *= max / len; oy *= max / len; }
+    stick.style.left = ptr.sx + 'px'; stick.style.top = ptr.sy + 'px';
+    knob.style.left = ptr.sx + ox + 'px'; knob.style.top = ptr.sy + oy + 'px';
+    dx = ox; dz = oy; mag = clamp((len - 6) / max, 0, 1);
+  } else if (ptr.mouse) {
+    const [sx, sy] = toScreen(player.x, 0, player.z);
+    dx = ptr.mx - sx; dz = ptr.my - sy;
+    mag = clamp((Math.hypot(dx, dz) - 15) / 140, 0, 1);
+  }
+  const l = Math.hypot(dx, dz) || 1;
+  return [dx / l * mag, dz / l * mag];
+}
+
+// ---------- bots ----------
+function botThink(h) {
+  const ai = h.ai;
+  let threat = null, prey = null;
+  for (const o of holes) {
+    if (o === h || !o.alive) continue;
+    const d = Math.hypot(o.x - h.x, o.z - h.z);
+    if (o.r > h.r * 1.15 && d < o.r + 14 && (!threat || d < threat.d)) threat = { o, d };
+    if (h.r > o.r * (o.player ? EASY.eatPlayerRatio + 0.05 : 1.2) && !(o.shield > 0) && d < h.r + 18 && (!prey || d < prey.d)) prey = { o, d };
+  }
+  if (threat) {
+    ai.mode = 'flee';
+    ai.tx = h.x + (h.x - threat.o.x) * 3; ai.tz = h.z + (h.z - threat.o.z) * 3;
+    return;
+  }
+  if (prey && Math.random() < (prey.o.player ? EASY.botChasePlayer : 0.8)) { ai.mode = 'chase'; ai.target = prey.o; return; }
+  let best = null, bestScore = 0;
+  for (const o of objects) {
+    if (!o.alive || o.falling || o.r >= h.r * fitOf(h)) continue;
+    const dx = o.x - h.x, dz = o.z - h.z;
+    if (Math.abs(dx) > EASY.botSight || Math.abs(dz) > EASY.botSight) continue;
+    const s = Math.pow(o.vol, 0.6) / Math.pow(Math.hypot(dx, dz) + 4, 1.4);
+    if (s > bestScore) { bestScore = s; best = o; }
+  }
+  if (best) { ai.mode = 'eat'; ai.tx = best.x; ai.tz = best.z; }
+  else if (ai.mode !== 'wander' || Math.hypot(ai.tx - h.x, ai.tz - h.z) < 4) {
+    ai.mode = 'wander'; ai.tx = rand(-HALF + 10, HALF - 10); ai.tz = rand(-HALF + 10, HALF - 10);
+  }
+}
+function botIntent(h, dt) {
+  const ai = h.ai;
+  ai.t -= dt;
+  if (ai.t <= 0) { ai.t = rand(EASY.botThink[0], EASY.botThink[1]); botThink(h); }
+  let tx = ai.tx, tz = ai.tz;
+  if (ai.mode === 'chase' && ai.target && ai.target.alive) { tx = ai.target.x; tz = ai.target.z; }
+  const dx = tx - h.x, dz = tz - h.z, l = Math.hypot(dx, dz);
+  if (l < 0.3) return [0, 0];
+  const m = ai.mode === 'eat' ? clamp(l / 3, 0.35, 0.9) : 0.9;
+  return [dx / l * m, dz / l * m];
+}
+
+// ---------- audio ----------
+let audio = null, soundOn = true, lastGulp = 0;
+const soundBtn = document.getElementById('sound');
+try { soundOn = localStorage.getItem('eatin-sound') !== 'off'; } catch (e) {}
+function syncSound() { soundBtn.textContent = soundOn ? 'Sound on' : 'Sound off'; soundBtn.setAttribute('aria-pressed', soundOn); }
+syncSound();
+soundBtn.addEventListener('click', () => {
+  soundOn = !soundOn; syncSound();
+  try { localStorage.setItem('eatin-sound', soundOn ? 'on' : 'off'); } catch (e) {}
+});
+function gulp(size) {
+  if (!soundOn || !audio) return;
+  const now = audio.currentTime;
+  if (now - lastGulp < 0.06) return;
+  lastGulp = now;
+  const o = audio.createOscillator(), g = audio.createGain();
+  const f = clamp(700 / Math.sqrt(size + 0.5), 90, 700);
+  o.type = 'sine';
+  o.frequency.setValueAtTime(f, now);
+  o.frequency.exponentialRampToValueAtTime(f * 0.35, now + 0.14);
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(0.12, now + 0.015);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+  o.connect(g).connect(audio.destination);
+  o.start(now); o.stop(now + 0.18);
+}
+
+// ---------- HUD ----------
+const $ = id => document.getElementById(id);
+const hud = { score: $('myScore'), size: $('mySize'), fill: $('sizeFill'), next: $('nextUp'), timer: $('timer'), list: $('boardList'), toast: $('toast') };
+const MILESTONES = [[0.21, 'flowers'], [0.35, 'people'], [1.35, 'trees'], [1.95, 'cars'], [3.3, 'houses'], [4.0, 'buses'], [5.5, 'shops'], [8, 'apartment blocks'], [10.5, 'office towers']];
+let hudT = 0, toastT = 0;
+function showToast(text, secs) { hud.toast.textContent = text; hud.toast.hidden = false; toastT = secs || 2.5; }
+function popText(text) {
+  const [x, y] = toScreen(player.x, 0, player.z);
+  const el = document.createElement('div');
+  el.className = 'pop'; el.textContent = text;
+  el.style.left = x + rand(-20, 20) + 'px'; el.style.top = y - 30 + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 950);
+}
+function ranking() { return holes.slice().sort((a, b) => b.points - a.points || b.r - a.r); }
+function updateHud() {
+  hud.score.textContent = player.points.toLocaleString();
+  hud.size.textContent = `Hole ${(player.r * 2).toFixed(1)} m wide`;
+  const next = MILESTONES.find(m => m[0] >= player.r * EASY.playerFit);
+  if (next) {
+    const need = next[0] / EASY.playerFit;
+    const prev = MILESTONES[MILESTONES.indexOf(next) - 1];
+    const from = prev ? prev[0] / EASY.playerFit : START_R;
+    hud.fill.style.width = clamp((player.r - from) / (need - from), 0, 1) * 100 + '%';
+    hud.next.textContent = `Next: ${next[1]} at ${(need * 2).toFixed(1)} m`;
+  } else { hud.fill.style.width = '100%'; hud.next.textContent = 'Nothing is too big now'; }
+  const t = Math.max(0, Math.ceil(timeLeft));
+  hud.timer.textContent = `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
+  hud.timer.classList.toggle('low', t <= 10 && state === 'play');
+  hud.list.innerHTML = ranking().map((h, i) =>
+    `<li class="${h.player ? 'you' : ''} ${h.alive ? '' : 'out'}"><span class="rk">${i + 1}</span><span class="dot" style="background:${h.color}"></span><span>${h.name}</span><span>${h.points.toLocaleString()}</span></li>`
+  ).join('');
+}
+
+// ---------- game state ----------
+let state = 'menu', timeLeft = ROUND, autoPlayer = false, timeScale = 1;
+
+function startGame() {
+  buildWorld();
+  holes.forEach(placeHole);
+  timeLeft = ROUND;
+  state = 'play';
+  $('startScreen').hidden = true; $('endScreen').hidden = true;
+  if (!audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audio = null; } }
+  if (audio && audio.state === 'suspended') audio.resume();
+  showToast('Swallow the small stuff first', 2.5);
+  canvas.focus();
+}
+function endGame() {
+  state = 'over';
+  const rk = ranking();
+  const pos = rk.indexOf(player) + 1;
+  $('endTitle').textContent = pos === 1 ? 'Biggest hole in town' : "Time's up";
+  $('stRank').textContent = '#' + pos;
+  $('stPts').textContent = player.points.toLocaleString();
+  $('stSize').textContent = (player.r * 2).toFixed(1) + ' m';
+  $('stBiggest').textContent = player.biggest
+    ? `You swallowed ${player.eaten} things. The biggest was a ${player.biggest.label.toLowerCase()}.`
+    : 'You did not swallow anything this time.';
+  $('endList').innerHTML = rk.map((h, i) =>
+    `<li class="${h.player ? 'you' : ''}"><span>${i + 1}</span><span class="dot" style="background:${h.color}"></span><span>${h.name}</span><span>${h.points.toLocaleString()}</span></li>`
+  ).join('');
+  $('endScreen').hidden = false;
+  setTimeout(() => $('againBtn').focus(), 50);
+}
+$('playBtn').addEventListener('click', startGame);
+$('againBtn').addEventListener('click', startGame);
+
+// ---------- simulation ----------
+// ---------- time dilation: clocks near a big black hole run slow ----------
+let dilHoles = [];
+function dilation(x, z) {
+  let f = 1;
+  for (const h of dilHoles) {
+    const reach = h.r * 2.5, dx = x - h.x, dz = z - h.z;
+    if (Math.abs(dx) > reach || Math.abs(dz) > reach) continue;
+    const s = clamp(1 - (Math.hypot(dx, dz) - h.r) / (h.r * 1.5), 0, 1);
+    f = Math.min(f, 1 - TIME_DILATION * h.bh * s * s);
+  }
+  return f;
+}
+
+// ---------- traffic: keep a gap to the car ahead, give way at junctions ----------
+const WRAP = 2 * (EDGE + 2), BRAKE = 12;
+const alongOf = o => o.move.axis === 'x' ? o.x : o.z, latOf = o => o.move.axis === 'x' ? o.z : o.x;
+function junctionGap(o, c) {   // distance from the car's nose to the junction box at c on its own road
+  return (c - alongOf(o)) * o.move.dir - ROAD_HALF - o.r;
+}
+function trafficSpeeds(cars) {
+  for (const a of cars) {
+    const m = a.move, at = alongOf(a), lat = latOf(a);
+    let want = m.speed;
+    const toEdge = HALF - at * m.dir;              // slow down for the U-turn at the edge of the city
+    if (m.turn != null) want = Math.min(want, 4);
+    else if (toEdge < 12) want = Math.min(want, 4 + Math.sqrt(2 * BRAKE * Math.max(0, toEdge)));
+    // the next junction ahead, if close
+    const road = ROADS.reduce((p, c) => Math.abs(c - lat) < Math.abs(p - lat) ? c : p);
+    let jc = null, je = 0;
+    for (const c of ROADS) { const e = junctionGap(a, c); if (e > 0 && e < 8) { jc = c; je = e; } }
+    for (const b of cars) {
+      if (b === a) continue;
+      const n = b.move;
+      if (n.axis === m.axis) {
+        const turning = n.turn != null && n.dir === m.dir && Math.abs(latOf(b) - road) < ROAD_HALF;   // a car U-turning ahead blocks both lanes
+        if (!turning && (n.dir !== m.dir || Math.abs(latOf(b) - lat) > 1)) continue;
+        const ahead = (((alongOf(b) - at) * m.dir) % WRAP + WRAP) % WRAP;
+        if (ahead > 30) continue;
+        const room = ahead - a.r - b.r - 1.2;
+        want = Math.min(want, room <= 0 ? 0 : n.v * b.dil + Math.sqrt(2 * BRAKE * room));
+      } else if (jc !== null && Math.abs(latOf(b) - jc) < ROAD_HALF) {
+        // b drives along the crossing road: wait while it is in the junction, or about to be and it has priority
+        const inBox = Math.abs(alongOf(b) - road) < ROAD_HALF + b.r - 0.2;   // a car waiting at its stop line is not in it
+        const eb = junctionGap(b, road);
+        if (inBox || (m.axis === 'z' && eb > 0 && eb < 8)) want = Math.min(want, Math.sqrt(2 * BRAKE * Math.max(0, je - 1)));
+      }
+    }
+    m.want = want;
+  }
+}
+
+function moveObjects(dt) {
+  dilHoles = holes.filter(h => h.bh > 0.01);
+  const cars = [];
+  for (const o of objects) {
+    if (!o.alive || o.falling || !o.move) continue;
+    o.dil = dilHoles.length ? dilation(o.x, o.z) : 1;
+    if (o.move.type === 'drive') cars.push(o);
+  }
+  trafficSpeeds(cars);
+  for (const o of objects) {
+    if (!o.alive || o.falling || !o.move) continue;
+    const m = o.move, px0 = o.x, pz0 = o.z, odt = dt;
+    dt = odt * o.dil;
+    if (m.type === 'drive') {
+      m.v = m.want < m.v ? Math.max(m.want, m.v - 2.2 * BRAKE * dt) : Math.min(m.want, m.v + 6 * dt);
+      if (m.turn == null && alongOf(o) * m.dir >= HALF) {   // reached the edge road: U-turn into the other lane
+        const lat = latOf(o);
+        m.turn = 0; m.road = ROADS.reduce((p, c) => Math.abs(c - lat) < Math.abs(p - lat) ? c : p); m.side = lat - m.road;
+      }
+      if (m.turn != null) {
+        m.turn = Math.min(Math.PI, m.turn + m.v * dt / Math.abs(m.side));
+        const t = m.turn, al = m.dir * HALF + m.dir * Math.abs(m.side) * Math.sin(t), la = m.road + m.side * Math.cos(t);
+        const da = m.dir * Math.cos(t), dl = -Math.sign(m.side) * Math.sin(t);
+        if (m.axis === 'x') { o.x = al; o.z = la; o.yaw = Math.atan2(-dl, da); }
+        else { o.z = al; o.x = la; o.yaw = Math.atan2(-da, dl); }
+        o.mesh.rotation.y = o.yaw;
+        if (t >= Math.PI) { m.dir = -m.dir; m.turn = null; }
+      } else if (m.axis === 'x') o.x += m.dir * m.v * dt;
+      else o.z += m.dir * m.v * dt;
+    } else if (m.type === 'ring') {
+      m.s = (m.s + m.speed * dt + m.per) % m.per;
+      const seg = Math.floor(m.s / m.side), t = m.s - seg * m.side - m.off;
+      const pts = [[t, -m.off], [m.off, t], [-t, m.off], [-m.off, -t]][seg];
+      o.x = m.cx + pts[0]; o.z = m.cz + pts[1];
+      const fw = [[1, 0], [0, 1], [-1, 0], [0, -1]][seg], sg = Math.sign(m.speed);
+      o.yaw = Math.atan2(fw[0] * sg, fw[1] * sg);      // face along the side being walked
+      o.mesh.rotation.y = o.yaw;
+    } else {
+      m.t -= dt;
+      if (m.t <= 0) { const a = rand(0, Math.PI * 2), sp = rand(0.8, 1.4); m.vx = Math.cos(a) * sp; m.vz = Math.sin(a) * sp; m.t = rand(1.5, 4); }
+      o.x += m.vx * dt; o.z += m.vz * dt;
+      if (Math.abs(o.x - m.cx) > m.lim) { m.vx *= -1; o.x = m.cx + Math.sign(o.x - m.cx) * m.lim; }
+      if (Math.abs(o.z - m.cz) > m.lim) { m.vz *= -1; o.z = m.cz + Math.sign(o.z - m.cz) * m.lim; }
+      o.yaw = Math.atan2(m.vx, m.vz);
+      o.mesh.rotation.y = o.yaw;
+    }
+    o.mesh.position.x = o.x; o.mesh.position.z = o.z;
+    o.mvx = (o.x - px0) / odt; o.mvz = (o.z - pz0) / odt;
+    if (Math.abs(o.mvx) > 30 || Math.abs(o.mvz) > 30) o.mvx = o.mvz = 0;   // wrapped round the map edge
+    dt = odt;
+  }
+}
+
+// Pose = tilt toward (dx, dz) by angle, applied on top of the object's heading.
+const _qTilt = new THREE.Quaternion(), _qYaw = new THREE.Quaternion(), _axis = new THREE.Vector3(), _up = new THREE.Vector3(0, 1, 0);
+function setPose(o, dx, dz, angle) {
+  _qYaw.setFromAxisAngle(_up, o.yaw);
+  _axis.set(dz, 0, -dx);            // up × direction: tips the top toward (dx, dz)
+  _qTilt.setFromAxisAngle(_axis, angle);
+  o.mesh.quaternion.multiplyQuaternions(_qTilt, _qYaw);
+}
+
+// Falling has two phases.
+// pivot: the object rests on the rim and rotates about the contact point while its base slides over the lip.
+// drop:  ballistic flight with gravity, keeping its momentum, bouncing off the pit walls and tumbling.
+function swallow(h, o) {
+  o.falling = true; o.hole = h;
+  const dx = o.x - h.x, dz = o.z - h.z, d = Math.hypot(dx, dz);
+  if (d > 0.01) { o.dirX = -dx / d; o.dirZ = -dz / d; }
+  else { const a = rand(0, Math.PI * 2); o.dirX = Math.cos(a); o.dirZ = Math.sin(a); }
+  o.rel = o.r / h.r;                              // 0 = crumb, ~0.95 = barely fits
+  o.vx = o.mvx || 0; o.vz = o.mvz || 0; o.vy = 0;
+  o.tip = o.lean; o.tipV = 0;
+  // tall things are kept from swinging their top out through the far wall
+  o.maxTip = o.rel < 0.3 ? Infinity : Math.min(Math.PI * 0.62, Math.asin(Math.min(1, h.r * 1.4 / o.h)) + 0.3);
+  o.spin = rand(-1, 1) * (0.3 + (1 - o.rel) * 2.2);
+  if (o.rel < 0.3 || d < 0.4) {
+    o.phase = 'drop';
+    o.vx += o.dirX * 1.2; o.vz += o.dirZ * 1.2; o.vy = rand(0.5, 2);   // little hop as the ground goes
+    o.tipV = rand(1.5, 4);
+  } else {
+    o.phase = 'pivot';
+    o.L = Math.max(0.05, h.r - d);                // base centre's distance past the rim
+    // momentum toward the middle helps it over the lip
+    o.slideV = Math.max(0.3, (o.vx * o.dirX + o.vz * o.dirZ) * 0.6 + 0.6);
+    o.tipV = 0.3;
+  }
+  o.prevX = o.x; o.prevY = 0; o.prevZ = o.z;
+  o.mats = [];
+  o.mesh.traverse(c => { if (c.isMesh) { c.material = c.material.clone(); o.mats.push([c.material, c.material.color.clone()]); } });
+  h.bump = Math.max(h.bump || 0, 0.03 + o.rel * 0.12);
+}
+
+function finishSwallow(o) {
+  const h = o.hole;
+  o.alive = false; scene.remove(o.mesh);
+  for (const [m] of o.mats) m.dispose();
+  h.r2 += o.grow * (h.player ? EASY.playerGrow : EASY.botGrow);
+  h.points += o.points;
+  h.eaten++;
+  if (!h.biggest || o.vol > h.biggest.vol) h.biggest = o;
+  if (h.player && state === 'play') {
+    gulp(o.r);
+    if (o.points >= 3) popText('+' + o.points);
+  }
+}
+
+function step(dt) {
+  const playing = state === 'play';
+  if (playing) {
+    timeLeft -= dt;
+    if (timeLeft <= 0) { timeLeft = 0; endGame(); }
+  }
+  moveObjects(dt);
+
+  if (playing) {
+    // steer holes
+    for (const h of holes) {
+      if (!h.alive) {
+        h.respawn -= dt;
+        if (h.respawn <= 0) {
+          const [x, z] = respawnSpot();
+          h.x = x; h.z = z; h.vx = h.vz = 0; h.alive = true; h.vanish = 0; h.group.visible = true; h.tag.hidden = false;
+          h.shield = h.player ? EASY.shield : 0;
+          if (h.player) showToast('Back in the street, safe for 3 seconds.', 2.5);
+        }
+        continue;
+      }
+      const [ix, iz] = h.player && !autoPlayer ? playerIntent() : botIntent(h, dt);
+      const speed = (h.player ? EASY.playerSpeed : EASY.botSpeed) + h.r * 0.9;
+      if (h.shield > 0) h.shield -= dt;
+      const k = Math.min(1, dt * 8);
+      h.vx += (ix * speed - h.vx) * k; h.vz += (iz * speed - h.vz) * k;
+      h.x = clamp(h.x + h.vx * dt, -EDGE + 1, EDGE - 1);
+      h.z = clamp(h.z + h.vz * dt, -EDGE + 1, EDGE - 1);
+      h.r += (Math.sqrt(h.r2) - h.r) * Math.min(1, dt * 3);
+    }
+
+    // capture objects; things hanging over a rim lean in (or wobble if too big)
+    for (const o of objects) {
+      if (!o.alive || o.falling) continue;
+      let lean = 0, lx = o.leanX, lz = o.leanZ, lL = o.leanL || 0, caught = null;
+      for (const h of holes) {
+        if (!h.alive) continue;
+        const dx = o.x - h.x, dz = o.z - h.z, reach = h.r + o.r * 0.6;
+        if (Math.abs(dx) > reach || Math.abs(dz) > reach) continue;
+        const d = Math.hypot(dx, dz);
+        if (d >= reach) continue;
+        const fits = o.r < h.r * fitOf(h);
+        if (fits && d < h.r - o.r * 0.35) { caught = h; break; }
+        const over = clamp((reach - d) / (o.r * 1.2 + 0.01), 0, 1);
+        const size = Math.min(1, 2 * h.r / o.r);
+        const shove = Math.min(1, Math.hypot(h.vx, h.vz) / 9);          // a fast hole rattles what it hits
+        const want = fits ? over * 0.45 : over * size * (0.06 + (0.035 + 0.04 * shove) * Math.sin(elapsed * 22 + o.x * 3));
+        if (want > lean && d > 0.01) { lean = want; lx = -dx / d; lz = -dz / d; lL = h.r - d; }
+      }
+      if (caught) { swallow(caught, o); continue; }
+      o.leanX = lx; o.leanZ = lz; o.leanL = lL;
+      o.lean += (lean - o.lean) * Math.min(1, dt * 12);
+      if (o.lean > 0.002) {
+        // pivot on the rim: the side over the hole dips, the far side lifts
+        const L = clamp(o.leanL, -o.r, o.r), c = Math.cos(o.lean), sn = Math.sin(o.lean);
+        o.mesh.position.set(o.x - lx * L * (1 - c), -L * sn, o.z - lz * L * (1 - c));
+        setPose(o, o.leanX, o.leanZ, o.lean); o.posed = true;
+      } else if (o.posed) { o.lean = 0; o.posed = false; o.mesh.rotation.set(0, o.yaw, 0); o.mesh.position.set(o.x, 0, o.z); }
+    }
+
+    // holes swallowing holes
+    for (const a of holes) for (const b of holes) {
+      if (a === b || !a.alive || !b.alive || b.shield > 0) continue;
+      const ratio = b.player ? EASY.eatPlayerRatio : a.player ? EASY.playerEatRatio : EASY.holeEatRatio;
+      if (a.r < b.r * ratio) continue;
+      if (Math.hypot(a.x - b.x, a.z - b.z) < a.r - b.r * (b.player ? 0.8 : 0.4)) {
+        b.alive = false; b.vanish = 1; b.vanishR = b.r; b.tag.hidden = true; b.respawn = b.player ? EASY.respawnTime : 3;
+        a.r2 += b.r2 * 0.5; a.points += 20 + Math.round(b.points * 0.25);
+        b.r2 = Math.max(START_R * START_R, b.r2 * (b.player ? EASY.respawnKeep : 0.36)); b.r = Math.sqrt(b.r2);
+        b.vx = b.vz = 0;
+        if (b.player) showToast(`${a.name} swallowed you`, 2.8);
+        else if (a.player) { showToast(`You swallowed ${b.name}`, 2); popText('+' + (20 + Math.round(b.points * 0.25))); gulp(4); }
+      }
+    }
+  }
+
+  // falling objects
+  for (const o of objects) {
+    if (!o.falling || !o.alive) continue;
+    const h = o.hole, fdt = dt * Math.max(0.55, dilation(o.x, o.z));   // falls slow too, but not so much that eating stalls
+    if (o.phase === 'pivot') {
+      // torque grows with how far the weight hangs past the rim and with the lean itself
+      o.tipV += (1.5 + 12 * o.L / (o.r + 0.2) + 6 * Math.sin(o.tip)) * fdt;
+      o.tip = Math.min(o.tip + o.tipV * fdt, o.maxTip);
+      o.slideV += (2 + 9 * Math.sin(o.tip)) * fdt;
+      o.L += o.slideV * fdt;
+      const R = h.r, c = Math.cos(o.tip);
+      o.x = h.x - o.dirX * R + o.dirX * o.L * c;
+      o.z = h.z - o.dirZ * R + o.dirZ * o.L * c;
+      o.y = -o.L * Math.sin(o.tip);
+      if (o.L > o.r * 1.05 || o.tip >= o.maxTip - 0.01) {
+        // leaves the lip: carry the pivot's motion into free flight
+        o.phase = 'drop';
+        const k = 1 / Math.max(fdt, 1e-3);
+        o.vx = (o.x - o.prevX) * k; o.vy = (o.y - o.prevY) * k; o.vz = (o.z - o.prevZ) * k;
+        o.tipV *= 0.6;
+      }
+    } else {
+      o.vy -= 30 * fdt;
+      const drag = Math.exp(-0.8 * fdt);
+      o.vx *= drag; o.vz *= drag;
+      o.x += o.vx * fdt; o.y += o.vy * fdt; o.z += o.vz * fdt;
+      o.tip += o.tipV * fdt; o.tipV *= Math.exp(-0.5 * fdt);
+      if (o.tip > o.maxTip) { o.tip = o.maxTip; o.tipV = 0; }
+      // the pit wall: once below ground, objects bounce off it and get carried along by a moving hole
+      const wall = Math.max(0, h.r - o.r * 0.6);
+      const dx = o.x - h.x, dz = o.z - h.z, d = Math.hypot(dx, dz);
+      if (o.y < -0.2 && d > wall) {
+        const nx = dx / d, nz = dz / d;
+        o.x = h.x + nx * wall; o.z = h.z + nz * wall;
+        const vr = (o.vx - h.vx) * nx + (o.vz - h.vz) * nz;
+        if (vr > 0) {
+          o.vx -= 1.35 * vr * nx; o.vz -= 1.35 * vr * nz;
+          o.tipV += Math.min(3, vr * 0.4); o.spin += rand(-1, 1) * vr * 0.2;
+        }
+      }
+    }
+    o.prevX = o.x; o.prevY = o.y; o.prevZ = o.z;
+    o.yaw += o.spin * fdt;
+    o.mesh.position.set(o.x, o.y, o.z);
+    setPose(o, o.dirX, o.dirZ, o.tip);
+    // darken to match the pit walls at the object's middle
+    const mid = o.y + o.h * 0.5 * Math.max(0, Math.cos(Math.min(o.tip, Math.PI)));
+    const ds = pitScale(h.r);
+    const shade = Math.max(0.05, Math.min(1, Math.exp(mid / (PIT_FADE * ds)) * 1.05));
+    for (const [m, c] of o.mats) m.color.copy(c).multiplyScalar(shade);
+    // gone once it has faded into the dark (top below ~2 fade lengths), or near the floor
+    if (o.y + o.h * Math.max(0.3, Math.cos(Math.min(o.tip, Math.PI))) < -Math.max(3, PIT_FADE * ds * 1.9) || o.y < -PIT_DEPTH * ds + 5) finishSwallow(o);
+  }
+
+  // hole visuals: rim pulses on each gulp, swallowed holes shrink away
+  for (const h of holes) {
+    h.bump = (h.bump || 0) * Math.exp(-dt * 7);
+    let r = h.r;
+    if (!h.alive) {
+      h.vanish = Math.max(0, (h.vanish || 0) - dt * 3);
+      r = (h.vanishR || h.r) * h.vanish;
+      if (h.vanish <= 0) h.group.visible = false;
+    }
+    h.group.position.set(h.x, 0, h.z);
+    h.group.scale.set(r, 1, r);
+    h.pit.scale.y = h.floor.scale.y = pitScale(h.r);
+    h.ring.scale.set(1 + h.bump, 1, 1 + h.bump);
+    h.ring.visible = !(h.shield > 0) || Math.floor(elapsed * 8) % 2 === 0;   // blink while protected
+    const glow = 0.28 + LIGHTS.night * 0.45 + h.bump * 4 + (h.player ? 0.12 : 0);
+    h.halo.material.opacity = Math.min(1, glow);
+    h.halo.scale.set(1 + h.bump * 2, 1, 1 + h.bump * 2);
+    h.inner.material.opacity = Math.min(1, glow * 1.1);
+    updateBlackHole(h, r, dt);
+  }
+}
+
+// ---------- camera & labels ----------
+const camPos = new THREE.Vector3(0, 30, 24);
+const camLook = new THREE.Vector3();
+function updateCamera(dt, t) {
+  let tx = player.x, tz = player.z, r = player.r;
+  if (state === 'menu') { tx = Math.sin(t * 0.05) * 30; tz = Math.cos(t * 0.05) * 30; r = 6; }
+  const want = new THREE.Vector3(tx, 17 + r * 3.6, tz + 13 + r * 2.9);
+  const k = Math.min(1, dt * 3);
+  camPos.lerp(want, k);
+  camLook.lerp(new THREE.Vector3(tx, 0, tz - r * 0.2), k);
+  camera.position.copy(camPos);
+  camera.lookAt(camLook);
+}
+function updateLabels() {
+  for (const h of holes) {
+    if (!h.alive || state === 'menu') { h.tag.hidden = true; continue; }
+    const [x, y, ok] = toScreen(h.x, 0, h.z - h.r - 0.4);
+    const off = x < -60 || x > window.innerWidth + 60 || y < -20 || y > window.innerHeight + 40;
+    h.tag.hidden = !ok || off;
+    if (!h.tag.hidden) { h.tag.style.left = x + 'px'; h.tag.style.top = y + 'px'; }
+  }
+}
+
+// ---------- loop ----------
+// ---------- gravitational lensing ----------
+// When a black-hole-sized hole is on screen, the scene renders into a texture and a full-screen pass
+// bends the street around each hole, swirls it with the spin and adds a thin photon ring at the rim.
+const MAX_LENS = 8;
+const lens = (() => {
+  const RT = renderer.capabilities.isWebGL2 && THREE.WebGLMultisampleRenderTarget ? THREE.WebGLMultisampleRenderTarget : THREE.WebGLRenderTarget;
+  const rt = new RT(1, 1, { depthBuffer: true, stencilBuffer: true });
+  if ('samples' in rt) rt.samples = 4;
+  const mat = new THREE.ShaderMaterial({
+    uniforms: {
+      tScene: { value: rt.texture }, res: { value: new THREE.Vector2(1, 1) }, count: { value: 0 },
+      holes: { value: Array.from({ length: MAX_LENS }, () => new THREE.Vector4()) },
+      shapes: { value: Array.from({ length: MAX_LENS }, () => new THREE.Vector2(1, 1)) }
+    },
+    vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
+    fragmentShader: `
+      uniform sampler2D tScene; uniform vec2 res; uniform int count;
+      uniform vec4 holes[${MAX_LENS}]; uniform vec2 shapes[${MAX_LENS}];
+      varying vec2 vUv;
+      void main() {
+        vec2 p = vUv * res, src = p;
+        vec3 glow = vec3(0.0);
+        for (int i = 0; i < ${MAX_LENS}; i++) {
+          if (i >= count) break;
+          vec2 c = holes[i].xy; float bh = holes[i].z;
+          vec2 ax = shapes[i];
+          vec2 q = (p - c) / ax; float d = length(q);
+          if (d > 1.0) {
+            float fall = smoothstep(2.8, 1.1, d);
+            float pull = 0.14 * bh / (d * d) * fall;          // sample further out: the street bends toward the hole
+            float ang = 0.25 * bh / (d * d) * fall;           // frame dragging swirl
+            vec2 qs = q * (1.0 + pull);
+            float cs = cos(ang), sn = sin(ang);
+            qs = vec2(cs * qs.x - sn * qs.y, sn * qs.x + cs * qs.y);
+            src += (c + qs * ax) - p;
+            float ring = exp(-pow((d - 1.05) / 0.035, 2.0));
+            glow += vec3(1.0, 0.88, 0.66) * ring * bh;
+            glow += vec3(1.0, 0.5, 0.2) * exp(-(d - 1.0) * 4.0) * 0.22 * bh;
+          }
+        }
+        gl_FragColor = vec4(texture2D(tScene, clamp(src / res, 0.0, 1.0)).rgb + glow, 1.0);
+      }`,
+    depthTest: false, depthWrite: false, toneMapped: false
+  });
+  const quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), mat);
+  quad.frustumCulled = false;
+  const sc = new THREE.Scene(); sc.add(quad);
+  return { rt, mat, scene: sc, cam: new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1), size: new THREE.Vector2() };
+})();
+function renderWithLensing() {
+  const u = lens.mat.uniforms, pr = renderer.getPixelRatio(), H = window.innerHeight;
+  let n = 0;
+  for (const h of holes) {
+    if (n >= MAX_LENS || h.bh <= 0.02 || !h.group.visible) continue;
+    const [cx, cy, ok] = toScreen(h.x, 0, h.z);
+    if (!ok) continue;
+    const [ex] = toScreen(h.x + h.r, 0, h.z);
+    const [, fy] = toScreen(h.x, 0, h.z - h.r), [, ny] = toScreen(h.x, 0, h.z + h.r);
+    const rx = Math.abs(ex - cx), ry = Math.abs(ny - fy) / 2;
+    if (cx + rx * 5 < 0 || cx - rx * 5 > window.innerWidth || cy + ry * 5 < 0 || cy - ry * 5 > H) continue;
+    u.holes.value[n].set(cx * pr, (H - (fy + ny) / 2) * pr, h.bh, 0);
+    u.shapes.value[n].set(Math.max(1, rx * pr), Math.max(1, ry * pr));
+    n++;
+  }
+  if (!n) { renderer.render(scene, camera); return; }
+  renderer.getDrawingBufferSize(lens.size);
+  if (lens.rt.width !== lens.size.x || lens.rt.height !== lens.size.y) lens.rt.setSize(lens.size.x, lens.size.y);
+  u.res.value.copy(lens.size); u.count.value = n;
+  renderer.setRenderTarget(lens.rt);
+  renderer.render(scene, camera);
+  renderer.setRenderTarget(null);
+  renderer.render(lens.scene, lens.cam);
+}
+
+let last = performance.now(), elapsed = 0;
+// If the first seconds of play run slowly, turn real-time shadows off (everything else stays).
+const perf = { frames: 0, time: 0, checked: false };
+function watchPerformance(rawDt) {
+  if (perf.checked || state !== 'play') return;
+  perf.frames++; perf.time += rawDt;
+  if (perf.time < 4) return;
+  perf.checked = true;
+  if (perf.frames / perf.time < 28 && renderer.shadowMap.enabled) {
+    renderer.shadowMap.enabled = false; sun.castShadow = false;
+    scene.traverse(o => { if (o.material) o.material.needsUpdate = true; });
+  }
+}
+function frame(now) {
+  watchPerformance((now - last) / 1000);
+  const dt = Math.min(0.05, (now - last) / 1000) * timeScale;
+  last = now; elapsed += dt;
+  step(dt);
+  updateCamera(dt, elapsed);
+  updateLabels();
+  hudT -= dt;
+  if (hudT <= 0) { hudT = 0.2; updateHud(); }
+  if (toastT > 0) { toastT -= dt; if (toastT <= 0) hud.toast.hidden = true; }
+  applyTimeOfDay(state === 'play' ? 1 - timeLeft / ROUND : state === 'over' ? 1 : 0.2);
+  placeSun(camLook.x, camLook.z, state === 'menu' ? 6 : player.r);
+  updateCityLights();
+  renderWithLensing();
+  requestAnimationFrame(frame);
+}
+
+buildWorld();
+holes.forEach(placeHole);
+updateHud();
+requestAnimationFrame(frame);
+
+// test hook
+window.__eatIn = { holes, get objects() { return objects; }, botIntent, startGame, get state() { return state; }, set auto(v) { autoPlayer = v; }, set timeScale(v) { timeScale = v; }, set keepShadows(v) { perf.checked = v; }, get shadows() { return renderer.shadowMap.enabled; }, set time(v) { timeLeft = v; } };
+})();
+</script>

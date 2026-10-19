@@ -1,0 +1,9 @@
+# Android build tools (download them, see android/README.md)
+android/tools/
+# Build output
+android/build/
+android/app/build/
+android/app/assets/
+android/*.apk
+# Signing key: kept out of the repo
+android/debug.keystore
