@@ -4,6 +4,12 @@ A Hole.io-style browser game in blocky voxel 3D: steer a hole around a city,
 swallow everything smaller than you, and grow into a black hole before the
 round ends.
 
+Four maps (City, Beach, Theme park, Snow) with landmarks, four modes
+(Classic, Clean-up, Battle, Daily city), power-ups, combos, coins and hole
+skins, daily challenges, a collection book, music and a shareable result card.
+The shared daily leaderboard only works when the game runs as a Claude
+artifact; elsewhere it is hidden.
+
 ## Play
 
 The whole game is one file, `index.html` (Three.js r128 loaded from cdnjs and

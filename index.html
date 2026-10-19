@@ -56,7 +56,7 @@ body { font-family: var(--font-body); font-weight: 600; color: var(--paper); use
 #sound { position: fixed; z-index: 7; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); font: 800 12px var(--font-body); color: var(--paper); padding: 8px 12px; cursor: pointer; }
 #sound:focus-visible, .btn:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
 
-.overlay { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 16px; background: radial-gradient(ellipse at center, rgba(31,38,56,.35), rgba(31,38,56,.7)); }
+.overlay { position: fixed; inset: 0; z-index: 10; display: grid; align-items: safe center; justify-items: center; overflow-y: auto; padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px)); box-sizing: border-box; background: radial-gradient(ellipse at center, rgba(31,38,56,.35), rgba(31,38,56,.7)); touch-action: pan-y; }
 .card { background: var(--paper); color: var(--ink); border-radius: 4px; border: 3px solid var(--ink); padding: 26px 26px 22px; width: min(420px, 100%); box-sizing: border-box; box-shadow: 10px 10px 0 rgba(20,24,40,.45); display: grid; gap: 14px; }
 .logo { font-family: var(--font-display); font-weight: 700; font-size: clamp(54px, 15vw, 76px); line-height: .9; margin: 0; letter-spacing: .01em; display: flex; align-items: center; gap: 12px; }
 .logo .o { position: relative; display: inline-block; width: .9em; height: .58em; background: var(--mint); clip-path: var(--pix); transform: translateY(.06em); }
@@ -74,12 +74,61 @@ body { font-family: var(--font-body); font-weight: 600; color: var(--paper); use
 .stat b { display: block; font-family: var(--font-display); font-weight: 700; font-size: 22px; }
 .stat span { font-size: 11px; text-transform: uppercase; letter-spacing: .1em; color: #7a8196; font-weight: 800; }
 h2.big { font-family: var(--font-display); font-weight: 700; font-size: 40px; margin: 0; line-height: 1; }
+.wallet { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: #4a5268; font-weight: 800; }
+.wallet b { font-family: var(--font-display); font-size: 18px; color: var(--ink); }
+.coin { display: inline-block; width: 12px; height: 12px; background: var(--sun); border: 2px solid #c99a1c; margin-right: 5px; vertical-align: -1px; }
+.field { display: grid; gap: 4px; }
+.field input { font: 700 16px var(--font-body); color: var(--ink); background: #fff; border: 2px solid #d6cfbf; border-radius: 2px; padding: 8px 10px; min-width: 0; }
+.field input:focus-visible { outline: 3px solid var(--sun); outline-offset: 1px; }
+.pickrow { display: grid; gap: 5px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: 800 13px var(--font-body); color: var(--ink); background: #f1ece2; border: 2px solid #e2dbcc; border-radius: 2px; padding: 6px 10px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.chip:disabled { opacity: .45; cursor: default; }
+.chip:focus-visible, .btn2:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
+.hint { margin: 0; font-size: 13px; color: #6a7286; line-height: 1.4; min-height: 1.4em; }
+.menu-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 6px; }
+.btn2 { font: 700 15px var(--font-display); color: var(--ink); background: #fff; border: 2px solid var(--ink); border-radius: 2px; padding: 8px 6px; cursor: pointer; box-shadow: 0 3px 0 var(--ink); }
+.btn2:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+.btn2 .dot { display: inline-block; width: 8px; height: 8px; background: var(--hot); margin-left: 4px; vertical-align: 2px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.row2 .btn { font-size: 20px; padding: 10px 8px; }
+.btn.alt { background: var(--paper); color: var(--ink); box-shadow: 0 5px 0 var(--ink); }
+.list { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; font-size: 14px; color: #4a5268; }
+.list li { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: center; background: #f1ece2; border: 2px solid #e2dbcc; padding: 8px 10px; }
+.list li.done { background: #e2f5e9; border-color: #b9e3c6; }
+.list li.lock { color: #9aa1b2; }
+.list b { color: var(--ink); }
+.swatch { width: 34px; height: 34px; clip-path: var(--pix); position: relative; }
+.swatch::after { content: ""; position: absolute; inset: 6px; clip-path: var(--pix); background: var(--pit, #1f2638); }
+.bar { height: 6px; background: #e2dbcc; margin-top: 4px; }
+.bar i { display: block; height: 100%; background: var(--mint); }
+.book { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; }
+.book li { background: #f1ece2; border: 2px solid #e2dbcc; padding: 6px 8px; font-size: 13px; color: var(--ink); font-weight: 800; }
+.book li span { display: block; font-size: 11px; color: #7a8196; font-weight: 700; }
+.book li.lock { color: #a8aebb; background: #f6f2ea; }
+.sub { margin: 0; font-size: 13px; color: #6a7286; }
+.reward { margin: 0; padding: 8px 10px; background: #fff0c4; border: 2px solid #f1d27a; font-size: 14px; color: var(--ink); font-weight: 800; line-height: 1.45; }
+.panel-body { display: grid; gap: 10px; max-height: min(60vh, 520px); overflow-y: auto; }
+#shareImg { max-width: 100%; max-height: 44vh; height: auto; border: 2px solid var(--ink); display: block; margin: 0 auto; }
+#combo { font-family: var(--font-display); font-size: 15px; color: var(--hot); margin-top: 4px; }
+#buffs { font-size: 12px; margin-top: 3px; color: var(--paper); }
+#buffs:empty, #combo:empty { display: none; }
+#goal { top: calc(62px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); padding: 6px 12px; font-size: 13px; min-width: 160px; text-align: center; white-space: nowrap; }
+#goal .bar { background: rgba(255,255,255,.15); }
+#music { position: fixed; z-index: 7; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); right: calc(104px + env(safe-area-inset-right, 0px)); font: 800 12px var(--font-body); color: var(--paper); padding: 8px 12px; cursor: pointer; }
+#music:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
 
 @media (max-width: 560px) {
   #me { min-width: 0; padding: 8px 10px; }
   #myScore { font-size: 24px; }
   #nextUp { display: none; }
   #timer { top: auto; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); font-size: 24px; }
+  #goal { top: auto; bottom: calc(62px + env(safe-area-inset-bottom, 0px)); }
+  #toast { bottom: calc(112px + env(safe-area-inset-bottom, 0px)); }
+  #sound, #music { bottom: auto; top: calc(12px + env(safe-area-inset-top, 0px) + 150px); right: calc(12px + env(safe-area-inset-right, 0px)); }
+  #music { top: calc(12px + env(safe-area-inset-top, 0px) + 188px); }
+  .card { padding: 20px 16px 18px; gap: 12px; }
   #board { font-size: 12px; min-width: 128px; }
   #board li:nth-child(n+5):not(.you) { display: none; }
 }
@@ -94,23 +143,34 @@ h2.big { font-family: var(--font-display); font-weight: 700; font-size: 40px; ma
   <div id="mySize">Hole 2.4 m wide</div>
   <div id="sizeBar"><div id="sizeFill"></div></div>
   <div id="nextUp">Next: cars at 4.4 m</div>
+  <div id="combo"></div>
+  <div id="buffs"></div>
 </div>
+<div class="hud panel" id="goal" hidden></div>
 <div class="hud panel" id="timer">2:00</div>
 <div class="hud panel" id="board"><div class="label">Biggest holes</div><ol id="boardList"></ol></div>
 <div class="hud panel" id="toast" hidden></div>
 <div id="stick" hidden></div><div id="knob" hidden></div>
 <button class="panel" id="sound" type="button" aria-pressed="true">Sound on</button>
+<button class="panel" id="music" type="button" aria-pressed="true">Music on</button>
 
 <div class="overlay" id="startScreen">
   <div class="card">
     <h1 class="logo">Eat <span class="o" aria-hidden="true"></span>In</h1>
-    <p class="lede">You are a hole in the street. Swallow anything that fits, grow wider, and be the biggest hole in town when the two minutes are up.</p>
-    <ul class="how">
-      <li><b>Steer:</b> point with the mouse, drag on touch, or use WASD and the arrow keys.</li>
-      <li><b>Grow:</b> people and cones first, then cars, houses and finally the towers.</li>
-      <li><b>Watch out:</b> a bigger hole can swallow you. A smaller one is lunch.</li>
-    </ul>
+    <p class="lede">You are a hole in the street. Swallow anything that fits and grow. Steer with the mouse, drag on touch, or use WASD.</p>
+    <div class="wallet"><span><span class="coin" aria-hidden="true"></span><b id="coinTxt">0</b> coins</span><span>Best <b id="bestTxt">0</b></span><span>Widest <b id="widestTxt">0 m</b></span></div>
+    <label class="field"><span class="label">Your hole's name</span><input id="nameIn" maxlength="12" autocomplete="off" spellcheck="false" placeholder="You"></label>
+    <div class="pickrow"><span class="label">Mode</span><div class="chips" id="modeChips"></div></div>
+    <div class="pickrow"><span class="label">Map</span><div class="chips" id="mapChips"></div></div>
+    <div class="pickrow"><span class="label">Time</span><div class="chips" id="timeChips"></div></div>
+    <p class="hint" id="modeHint"></p>
     <button class="btn" id="playBtn" type="button">Play</button>
+    <div class="menu-row">
+      <button class="btn2" type="button" data-panel="skins">Skins</button>
+      <button class="btn2" type="button" data-panel="challenges" id="chalBtn">Challenges</button>
+      <button class="btn2" type="button" data-panel="book">Book</button>
+      <button class="btn2" type="button" data-panel="leaders" id="leadersBtn" hidden>Leaders</button>
+    </div>
   </div>
 </div>
 
@@ -123,8 +183,18 @@ h2.big { font-family: var(--font-display); font-weight: 700; font-size: 40px; ma
       <div class="stat"><b id="stSize">0 m</b><span>Width</span></div>
     </div>
     <p class="lede" id="stBiggest"></p>
+    <p class="reward" id="stReward"></p>
     <ol class="results" id="endList"></ol>
-    <button class="btn" id="againBtn" type="button">Play again</button>
+    <div class="row2"><button class="btn" id="againBtn" type="button">Play again</button><button class="btn alt" id="menuBtn" type="button">Menu</button></div>
+    <button class="btn2" id="shareBtn" type="button">Make a share card</button>
+  </div>
+</div>
+
+<div class="overlay" id="panelScreen" hidden>
+  <div class="card">
+    <h2 class="big" id="panelTitle"></h2>
+    <div class="panel-body" id="panelBody"></div>
+    <button class="btn" id="panelBack" type="button">Back</button>
   </div>
 </div>
 
@@ -134,7 +204,6 @@ h2.big { font-family: var(--font-display); font-weight: 700; font-size: 40px; ma
 'use strict';
 
 // ---------- constants ----------
-const ROUND = 120;              // seconds per round
 const HALF = 200;               // city spans -HALF..HALF on x and z (10 x 10 blocks)
 const ROADS = Array.from({ length: HALF / 20 + 1 }, (_, i) => -HALF + i * 40);
 const EDGE = HALF + 4;          // outer edge of the paved city
@@ -153,9 +222,41 @@ const EASY = {
 const fitOf = h => (h.player ? EASY.playerFit : FIT);
 const PIT_DEPTH = 70;
 
-const rand = (a, b) => a + Math.random() * (b - a);
-const pick = arr => arr[(Math.random() * arr.length) | 0];
+// World generation draws from `random`, which the Daily city swaps for a seeded generator.
+let random = Math.random;
+const rand = (a, b) => a + random() * (b - a);
+const pick = arr => arr[(random() * arr.length) | 0];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function seeded(seed) {   // mulberry32
+  return () => {
+    seed = (seed + 0x6D2B79F5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const hashStr = str => { let h = 2166136261; for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619); return h >>> 0; };
+const today = () => new Date().toISOString().slice(0, 10);   // UTC, so everyone shares one daily city and board
+const plural = w => /(s|sh|ch|x)$/.test(w) ? w + 'es' : /[^aeiou]y$/.test(w) ? w.slice(0, -1) + 'ies' : w + 's';
+const esc = str => String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+// ---------- saved progress (this device) ----------
+const SAVE_KEY = 'eatin-save';
+const save = Object.assign({
+  coins: 0, name: '', skin: 'mint', owned: ['mint'], mode: 'classic', map: 'city', time: 'day', music: true,
+  rec: { points: 0, width: 0, bigVol: 0, bigLabel: '', rounds: 0, wins: 0, combo: 0 },
+  book: {}, daily: null
+}, (() => { try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; } catch (e) { return {}; } })());
+function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} }
+
+// ---------- modes ----------
+const MODES = {
+  classic: { name: 'Classic', time: 120, rivals: true, respawn: true, events: true, hint: 'Two minutes against 7 rival holes. Most points wins.' },
+  cleanup: { name: 'Clean-up', time: 150, rivals: false, respawn: true, events: false, target: 0.35, hint: 'No rivals. Swallow 35% of the city before the clock runs out.' },
+  battle: { name: 'Battle', time: 180, rivals: true, respawn: false, events: false, hint: 'No second chances. Be the last hole standing.' },
+  daily: { name: 'Daily city', time: 120, rivals: true, respawn: true, events: true, hint: 'Same city for everyone today. Your best score goes on the daily board.' }
+};
+let MODE = MODES.classic;
 
 // ---------- renderer / scene ----------
 const canvas = document.getElementById('game');
@@ -187,7 +288,9 @@ const SKY_KEYS = [  // t, sky, sun colour, sun intensity, hemi sky, hemi ground,
   [0.00, '#bfe4fb', '#fff6e8', 0.85, '#eaf6ff', '#8f9b7c', 0.60, 55],
   [0.55, '#ffd9a8', '#ffcf8a', 0.80, '#ffe6c8', '#8a8a74', 0.55, 28],
   [0.80, '#f39a72', '#ff9a5c', 0.55, '#c9a6c8', '#6d6a6a', 0.45, 22],
-  [1.00, '#3b3f72', '#ff7a4a', 0.22, '#6f7ab8', '#3a3a4a', 0.42, 17]
+  [1.00, '#3b3f72', '#ff7a4a', 0.22, '#6f7ab8', '#3a3a4a', 0.42, 17],
+  [1.15, '#1b2150', '#9fb4ff', 0.20, '#4d5a9c', '#262632', 0.40, 35],   // night rounds run from 1.1 to 1.35
+  [1.35, '#121738', '#9fb4ff', 0.18, '#3e4a88', '#20202c', 0.38, 45]
 ];
 const _c1 = new THREE.Color(), _c2 = new THREE.Color();
 const lerpHex = (a, b, k, out) => out.copy(_c1.set(a)).lerp(_c2.set(b), k);
@@ -283,32 +386,71 @@ countryside.renderOrder = -5;
 countryside.receiveShadow = true;
 scene.add(countryside);
 
-const LOT_COLORS = { downtown: '#d8d3ca', residential: '#c9e2ab', park: '#86c97f', plaza: '#efdcbc' };
+// ---------- maps ----------
+// Each map is a palette, a set of block types by distance from the centre (inner, middle, outer ring)
+// and one landmark: the biggest thing in town.
+const MAPS = {
+  city: { name: 'City', outside: '#8ccf8a', far: '#8ccf8a', pave: '#e9e3d7', road: '#525a70', dash: '#f3efe4', tree: 'tree', landmark: 'stadium',
+    lots: { downtown: '#d8d3ca', residential: '#c9e2ab', park: '#86c97f', plaza: '#efdcbc', landmark: '#cfc8bb' },
+    zones: [['downtown', 'downtown', 'plaza'], ['downtown', 'downtown', 'residential', 'park', 'plaza'], ['residential', 'residential', 'park', 'downtown']],
+    music: { bpm: 112, root: 57, scale: [0, 2, 4, 7, 9], wave: 'square' } },
+  beach: { name: 'Beach town', outside: '#f2dc9e', far: '#4fb3e3', pave: '#efe6d2', road: '#5f6577', dash: '#ffffff', tree: 'palm', landmark: 'lighthouse',
+    lots: { downtown: '#e6dccb', residential: '#e9e0b8', park: '#9fd68a', plaza: '#f3dfb8', sand: '#f4e2ad', boardwalk: '#c99a66', landmark: '#f0dca8' },
+    zones: [['downtown', 'plaza', 'downtown'], ['residential', 'boardwalk', 'plaza', 'residential', 'downtown'], ['sand', 'sand', 'boardwalk', 'residential']],
+    music: { bpm: 100, root: 55, scale: [0, 4, 5, 7, 11], wave: 'triangle' } },
+  fair: { name: 'Theme park', outside: '#8ccf8a', far: '#8ccf8a', pave: '#efe4d6', road: '#6b5f7a', dash: '#ffd23d', tree: 'tree', landmark: 'ferris',
+    lots: { rides: '#b9e39c', foodcourt: '#f4d9b0', parking: '#a3a9b5', park: '#86c97f', plaza: '#f3c6c6', landmark: '#e8d7f0' },
+    zones: [['rides', 'rides', 'foodcourt'], ['rides', 'foodcourt', 'park', 'plaza', 'rides'], ['parking', 'parking', 'park', 'rides']],
+    music: { bpm: 132, root: 60, scale: [0, 2, 4, 5, 7, 9], wave: 'square' } },
+  snow: { name: 'Snow village', outside: '#f3f7fb', far: '#eef4f9', pave: '#dfe5ec', road: '#6f7787', dash: '#ffffff', tree: 'pine', landmark: 'icecastle', snowy: true,
+    lots: { downtown: '#e3e8ef', residential: '#f4f8fc', park: '#eef4f8', plaza: '#e6edf3', rink: '#cdeaf8', landmark: '#eef3f8' },
+    zones: [['downtown', 'plaza', 'rink'], ['residential', 'downtown', 'park', 'rink', 'residential'], ['residential', 'residential', 'park']],
+    music: { bpm: 92, root: 62, scale: [0, 3, 5, 7, 10], wave: 'triangle' } }
+};
+let MAP = MAPS.city;
 function drawGround(blocks) {
   const c = gctx;
   const px = (x, y, w, h) => c.fillRect(Math.round(x), Math.round(y), Math.max(1, Math.round(w)), Math.max(1, Math.round(h)));
-  c.fillStyle = '#8ccf8a'; px(0, 0, GPX, GPX);
-  c.fillStyle = '#e9e3d7'; px(gx(-EDGE), gx(-EDGE), 2 * EDGE * S, 2 * EDGE * S);
+  c.fillStyle = MAP.outside; px(0, 0, GPX, GPX);
+  if (MAP.far !== MAP.outside) {   // the sea: a sand strip round the town, then water
+    c.fillStyle = MAP.far; const w = EDGE + 26;
+    px(0, 0, GPX, gx(-w)); px(0, gx(w), GPX, GPX - gx(w)); px(0, 0, gx(-w), GPX); px(gx(w), 0, GPX - gx(w), GPX);
+    c.fillStyle = '#e8f6fb';
+    for (let t = -w; t < w; t += 3) { px(gx(t), gx(-w) - 2, 4, 2); px(gx(t), gx(w), 4, 2); px(gx(-w) - 2, gx(t), 2, 4); px(gx(w), gx(t), 2, 4); }
+  }
+  c.fillStyle = MAP.pave; px(gx(-EDGE), gx(-EDGE), 2 * EDGE * S, 2 * EDGE * S);
   for (const b of blocks) {
-    c.fillStyle = LOT_COLORS[b.type];
+    c.fillStyle = MAP.lots[b.type];
     px(gx(b.cx - 13.5), gx(b.cz - 13.5), 27 * S, 27 * S);
     if (b.type === 'park') {
-      c.fillStyle = '#e7dcc0';
+      c.fillStyle = MAP.snowy ? '#d9e2ea' : '#e7dcc0';
       px(gx(b.cx - 1.2), gx(b.cz - 13.5), 2.4 * S, 27 * S);
       px(gx(b.cx - 13.5), gx(b.cz - 1.2), 27 * S, 2.4 * S);
-    } else if (b.type === 'plaza') {
+    } else if (b.type === 'plaza' || b.type === 'landmark') {
       c.fillStyle = 'rgba(160,120,80,.16)';
       for (let i = -13; i < 13.5; i += 2) for (let j = -13; j < 13.5; j += 2)
         if (((i + j) / 2) % 2 === 0) px(gx(b.cx + i), gx(b.cz + j), S, S);
+    } else if (b.type === 'boardwalk') {
+      c.fillStyle = 'rgba(90,55,25,.35)';
+      for (let j = -13; j < 13.5; j += 1.5) px(gx(b.cx - 13.5), gx(b.cz + j), 27 * S, 1);
+    } else if (b.type === 'sand') {
+      for (let i = 0; i < 160; i++) { c.fillStyle = random() < 0.5 ? '#e8cf8f' : '#fbefc6'; px(gx(b.cx + rand(-13, 13)), gx(b.cz + rand(-13, 13)), S, S); }
+    } else if (b.type === 'parking') {
+      c.fillStyle = '#f3efe4';
+      for (const row of [-7, 6]) for (let i = -12; i <= 12; i += 3) px(gx(b.cx + i), gx(b.cz + row - 2.5), 0.4 * S, 5 * S);
+    } else if (b.type === 'rink') {
+      c.fillStyle = '#e9f7fd'; px(gx(b.cx - 10), gx(b.cz - 7), 20 * S, 14 * S);
+      c.fillStyle = 'rgba(120,170,200,.35)';
+      for (let i = 0; i < 40; i++) px(gx(b.cx + rand(-9, 9)), gx(b.cz + rand(-6, 6)), rand(2, 6) * S, 1);
     }
   }
-  c.fillStyle = '#525a70';
+  c.fillStyle = MAP.road;
   for (const r of ROADS) {
     px(gx(-EDGE), gx(r - ROAD_HALF), 2 * EDGE * S, ROAD_HALF * 2 * S);
     px(gx(r - ROAD_HALF), gx(-EDGE), ROAD_HALF * 2 * S, 2 * EDGE * S);
   }
   // lane dashes between intersections
-  c.fillStyle = '#f3efe4';
+  c.fillStyle = MAP.dash;
   for (const r of ROADS) {
     for (let i = 0; i < ROADS.length - 1; i++) {
       for (let t = ROADS[i] + ROAD_HALF + 3; t < ROADS[i + 1] - ROAD_HALF - 4; t += 4) {
@@ -457,7 +599,11 @@ class Voxels {
 // Small things come in a handful of cached variants so they share geometry.
 const variantCache = new Map();
 function variant(key, n, build) {
-  if (!variantCache.has(key)) variantCache.set(key, Array.from({ length: n }, () => build().geometry()));
+  if (!variantCache.has(key)) {   // built from Math.random so a seeded city draws the same numbers however many variants exist yet
+    const keep = random; random = Math.random;
+    variantCache.set(key, Array.from({ length: n }, () => build().geometry()));
+    random = keep;
+  }
   return pick(variantCache.get(key));
 }
 const shade = (hex, k) => col(hex).clone().multiplyScalar(k);
@@ -597,7 +743,7 @@ const MAKERS = {
   house() {
     const v = new Voxels();
     const w = Math.round(rand(4.5, 6) * 2) / 2, d = Math.round(rand(4.5, 6) * 2) / 2, h = rand(2.8, 3.6);
-    const wall = pick(HOUSE_COLORS), roof = pick(ROOF_COLORS);
+    const wall = pick(HOUSE_COLORS), roof = MAP.snowy ? (random() < 0.5 ? '#f4f8fc' : '#e8eef5') : pick(ROOF_COLORS);
     v.box(wall, w, h, d, 0, 0, 0);
     const steps = 4, rise = 0.5;
     for (let k = 0; k < steps; k++) v.box(k % 2 ? shade(roof, 0.88) : roof, w + 0.5 - k * (w / steps), rise, d + 0.5, 0, h + k * rise, 0);
@@ -624,8 +770,245 @@ const MAKERS = {
     g.add(v.mesh());
     const label = h > 30 ? 'Office tower' : h > 16 ? 'Apartment block' : 'Shop building';
     return { mesh: g, r: Math.max(w, d) * 0.55, h: h + 1.0, label };
+  },
+
+  // ----- beach -----
+  palm() {
+    const s = rand(0.9, 1.15);
+    const mesh = mk(variant('palm', 6, () => {
+      const v = new Voxels(), lean = rand(0.25, 0.5);
+      let x = 0;
+      for (let i = 0; i < 7; i++) { v.box(i % 2 ? '#8a6038' : '#a57446', 0.45, 0.72, 0.45, x, i * 0.7, 0); x += lean * 0.3; }
+      const top = 4.9;
+      for (let k = 0; k < 6; k++) {
+        const a = k * Math.PI / 3 + 0.3;
+        for (let j = 1; j <= 3; j++) v.box(j === 3 ? C.leaf3 : C.leaf, 0.72, 0.18, 0.5, x + Math.cos(a) * j * 0.6, top - j * j * 0.1, Math.sin(a) * j * 0.6, -a);
+      }
+      v.box('#6b4423', 0.3, 0.3, 0.3, x + 0.25, top - 0.4, 0.1).box('#6b4423', 0.3, 0.3, 0.3, x - 0.1, top - 0.45, -0.25);
+      return v;
+    }));
+    mesh.scale.setScalar(s);
+    return { mesh, r: 1.4 * s, h: 5.2 * s, label: 'Palm tree' };
+  },
+  umbrella() {
+    return { mesh: mk(variant('umbrella', 5, () => {
+      const v = new Voxels(), a = pick(['#ff5a6e', '#4f7cff', '#23c2b0', '#ffc73d', '#9b6bff']);
+      v.box(C.white, 0.1, 2.2, 0.1, 0, 0, 0);
+      for (let i = 0; i < 4; i++) v.box(i % 2 ? C.white : a, 0.6, 0.2, 2.4, -0.9 + i * 0.6, 2.1 - Math.abs(i - 1.5) * 0.12, 0);
+      return v;
+    })), r: 1.25, h: 2.4, label: 'Beach umbrella' };
+  },
+  towel() {
+    return { mesh: mk(variant('towel', 5, () => {
+      const v = new Voxels(), a = pick(['#ff5a6e', '#4f7cff', '#23c2b0', '#ffc73d', '#ff8fc8']);
+      for (let i = 0; i < 5; i++) v.box(i % 2 ? C.white : a, 0.36, 0.05, 0.9, -0.72 + i * 0.36, 0, 0);
+      return v;
+    })), r: 0.5, h: 0.1, label: 'Beach towel' };
+  },
+  ball() {
+    return { mesh: mk(variant('ball', 3, () => new Voxels()
+      .box(C.white, 0.5, 0.5, 0.5, 0, 0, 0).box(pick(['#ff5a6e', '#4f7cff']), 0.52, 0.5, 0.18, 0, 0, 0).box('#ffc73d', 0.18, 0.5, 0.52, 0, 0, 0))), r: 0.28, h: 0.5, label: 'Beach ball' };
+  },
+  sandcastle() {
+    return { mesh: mk(variant('sandcastle', 2, () => {
+      const v = new Voxels(), sand = '#e2c27c';
+      v.box(sand, 1.2, 0.45, 1.2, 0, 0, 0);
+      for (const x of [-0.5, 0.5]) for (const z of [-0.5, 0.5]) v.box(shade(sand, 0.92), 0.36, 0.8, 0.36, x, 0, z);
+      v.box(shade(sand, 1.05), 0.5, 0.9, 0.5, 0, 0.3, 0).box(C.red, 0.04, 0.3, 0.2, 0, 1.2, 0.1);
+      return v;
+    })), r: 0.7, h: 1.3, label: 'Sandcastle' };
+  },
+  surfboard() {
+    return { mesh: mk(variant('surf', 4, () => {
+      const v = new Voxels(), a = pick(['#ff8f3d', '#23c2b0', '#4f7cff', '#ff5fd2']);
+      v.box(a, 0.5, 1.9, 0.12, 0, 0, 0).box(a, 0.3, 0.3, 0.12, 0, 1.9, 0).box(C.white, 0.08, 1.9, 0.14, 0, 0, 0);
+      return v;
+    })), r: 0.32, h: 2.2, label: 'Surfboard' };
+  },
+  lifeguard() {
+    return { mesh: mk(variant('lifeguard', 1, () => {
+      const v = new Voxels();
+      for (const x of [-0.9, 0.9]) for (const z of [-0.9, 0.9]) v.box(C.white, 0.2, 2.0, 0.2, x, 0, z);
+      v.box(C.wood, 2.4, 0.2, 2.4, 0, 2.0, 0).box(C.red, 1.8, 1.3, 1.6, 0, 2.2, -0.2).box(C.glass, 1.6, 0.6, 0.06, 0, 2.7, 0.62);
+      v.box(C.white, 2.2, 0.2, 2.0, 0, 3.5, -0.2).box(C.wood, 0.6, 0.12, 1.6, 0, 1.0, 1.6);
+      return v;
+    })), r: 1.6, h: 3.7, label: 'Lifeguard tower' };
+  },
+  icecream() {
+    return { mesh: mk(variant('icecream', 2, () => {
+      const v = new Voxels(), a = pick(['#ff8fc8', '#9fe6ff']);
+      v.box(C.white, 1.6, 0.9, 0.9, 0, 0.3, 0).box(a, 1.62, 0.2, 0.92, 0, 0.75, 0);
+      for (const x of [-0.6, 0.6]) v.box(C.dark, 0.3, 0.3, 0.92, x, 0, 0);
+      v.box(C.pole, 0.08, 1.2, 0.08, 0.5, 1.2, 0);
+      for (let i = 0; i < 3; i++) v.box(i % 2 ? C.white : a, 0.5, 0.15, 1.5, 0.0 + i * 0.5, 2.35, 0);
+      v.box('#f2c48a', 0.2, 0.3, 0.2, -0.5, 1.2, 0).box(a, 0.26, 0.2, 0.26, -0.5, 1.5, 0);
+      return v;
+    })), r: 1.1, h: 2.5, label: 'Ice cream cart' };
+  },
+  lighthouse() {
+    const v = new Voxels(), rock = '#8d9097';
+    for (let i = 0; i < 26; i++) { const a = rand(0, Math.PI * 2), d = rand(4, 10), sz = rand(2.5, 4.5); v.box(shade(rock, rand(0.8, 1.1)), sz, rand(1.2, 2.6), sz, Math.cos(a) * d, 0, Math.sin(a) * d, a); }
+    v.box(rock, 11, 2.2, 11, 0, 0, 0);
+    let y = 2.2;
+    for (let i = 0; i < 8; i++) { const w = 6.4 - i * 0.35; v.box(i % 2 ? C.white : C.red, w, 3.2, w, 0, y, 0); y += 3.2; }
+    v.box(C.dark, 5.6, 0.5, 5.6, 0, y, 0).box(C.glass, 3.4, 2.4, 3.4, 0, y + 0.5, 0).box(C.bulb, 2, 1.6, 2, 0, y + 0.9, 0);
+    v.box(C.red, 4.2, 0.8, 4.2, 0, y + 2.9, 0).box(C.red, 2.4, 0.8, 2.4, 0, y + 3.7, 0).box(C.dark, 0.4, 1.2, 0.4, 0, y + 4.5, 0);
+    v.box(C.door, 1.4, 2.4, 0.2, 0, 2.2, 3.2);
+    return { mesh: v.mesh(), r: 11.5, h: y + 5.7, label: 'Lighthouse', landmark: true };
+  },
+
+  // ----- theme park -----
+  carousel() {
+    const v = new Voxels(), roof = pick(['#ff5a6e', '#9b6bff', '#23c2b0']);
+    v.box('#f2eee4', 8, 0.5, 8, 0, 0, 0).box('#e9d9b5', 6.4, 0.6, 6.4, 0, 0, 0, Math.PI / 4).box(C.bulb, 1, 4.4, 1, 0, 0.5, 0);
+    for (let k = 0; k < 8; k++) {
+      const a = k * Math.PI / 4, x = Math.cos(a) * 3, z = Math.sin(a) * 3;
+      v.box('#ffd23d', 0.14, 4.0, 0.14, x, 0.5, z);
+      v.box(pick(['#ffffff', '#d9b36c', '#2b1d14', '#ff8fc8']), 1.2, 0.7, 0.4, x, 1.4 + (k % 2) * 0.5, z, -a + Math.PI / 2);
+      v.box(pick(['#ffffff', '#d9b36c']), 0.35, 0.6, 0.35, x + Math.cos(a + Math.PI / 2) * 0.55, 2.0 + (k % 2) * 0.5, z + Math.sin(a + Math.PI / 2) * 0.55);
+    }
+    for (let i = 0; i < 4; i++) { const w = 8.4 - i * 2; v.box(i % 2 ? C.white : roof, w, 0.5, w, 0, 4.5 + i * 0.5, 0, i % 2 ? Math.PI / 4 : 0); }
+    v.box('#ffd23d', 0.5, 0.8, 0.5, 0, 6.5, 0);
+    return { mesh: v.mesh(), r: 4.6, h: 7.3, label: 'Carousel' };
+  },
+  teacup() {
+    return { mesh: mk(variant('teacup', 4, () => {
+      const v = new Voxels(), a = pick(['#ff8fc8', '#9fe6ff', '#ffc73d', '#b7e2c3']);
+      v.box(shade(a, 0.8), 1.0, 0.2, 1.0, 0, 0, 0).box(a, 1.6, 0.8, 1.6, 0, 0.2, 0).box(C.white, 1.64, 0.12, 1.64, 0, 0.8, 0).box(a, 0.3, 0.5, 0.2, 0.95, 0.35, 0);
+      return v;
+    })), r: 0.95, h: 1.0, label: 'Teacup' };
+  },
+  droptower() {
+    const v = new Voxels(), h = rand(24, 30);
+    v.box(C.grey, 4.4, 0.6, 4.4, 0, 0, 0).box('#c7ccd6', 1.4, h, 1.4, 0, 0.6, 0);
+    for (let y = 2; y < h; y += 2) v.box('#ff5a6e', 1.5, 0.15, 1.5, 0, y, 0);
+    const seat = rand(4, h - 6);
+    v.box('#ffc73d', 3.6, 1.0, 3.6, 0, seat, 0).box(C.dark, 3.8, 0.2, 3.8, 0, seat + 1, 0);
+    v.box('#ff5a6e', 2.6, 1.6, 2.6, 0, h + 0.6, 0).box(C.bulb, 0.5, 0.5, 0.5, 0, h + 2.2, 0);
+    return { mesh: v.mesh(), r: 2.4, h: h + 2.7, label: 'Drop tower' };
+  },
+  coaster() {
+    const v = new Voxels(), rail = pick(['#ff5a6e', '#4f7cff', '#23c2b0']);
+    const N = 40;
+    for (let i = 0; i < N; i++) {
+      const t = i / N * Math.PI * 2, x = Math.cos(t) * 9, z = Math.sin(t * 2) * 5.5;
+      const y = 3 + 4 * (1 + Math.sin(t * 3 + 0.6));
+      const t2 = (i + 1) / N * Math.PI * 2, dx = Math.cos(t2) * 9 - x, dz = Math.sin(t2 * 2) * 5.5 - z;
+      v.box(rail, Math.hypot(dx, dz) + 0.2, 0.3, 1.2, x + dx / 2, y, z + dz / 2, -Math.atan2(dz, dx));
+      if (i % 3 === 0) v.box('#f2eee4', 0.3, y, 0.3, x, 0, z);
+    }
+    for (let i = 0; i < 3; i++) { const t = 0.2 + i * 0.09, x = Math.cos(t * Math.PI * 2) * 9, z = Math.sin(t * Math.PI * 4) * 5.5; v.box(pick(['#ffc73d', '#ffffff']), 1.4, 0.8, 1.1, x, 3 + 4 * (1 + Math.sin(t * Math.PI * 6 + 0.6)) + 0.3, z); }
+    return { mesh: v.mesh(), r: 9.4, h: 11.5, label: 'Roller coaster' };
+  },
+  bumper() {
+    return { mesh: mk(variant('bumper', 5, () => {
+      const v = new Voxels(), a = pick(CAR_COLORS);
+      v.box(C.dark, 1.5, 0.3, 1.1, 0, 0, 0).box(a, 1.3, 0.5, 0.9, 0, 0.3, 0).box(C.pole, 0.06, 1.4, 0.06, -0.5, 0.8, 0);
+      return v;
+    })), r: 0.85, h: 2.2, label: 'Bumper car' };
+  },
+  picnic() {
+    return { mesh: mk(variant('picnic', 1, () => new Voxels()
+      .box(C.wood, 1.8, 0.1, 0.8, 0, 0.7, 0).box(C.wood, 1.8, 0.08, 0.3, 0, 0.42, 0.65).box(C.wood, 1.8, 0.08, 0.3, 0, 0.42, -0.65)
+      .box(shade(C.wood, 0.8), 0.12, 0.7, 1.6, -0.7, 0, 0).box(shade(C.wood, 0.8), 0.12, 0.7, 1.6, 0.7, 0, 0))), r: 1.0, h: 0.8, label: 'Picnic table' };
+  },
+  balloon() {
+    return { mesh: mk(variant('balloon', 6, () => new Voxels()
+      .box('#f2eee4', 0.03, 1.6, 0.03, 0, 0, 0).box(pick(['#ff5a6e', '#ffc73d', '#4f7cff', '#23c2b0', '#ff5fd2', '#9b6bff']), 0.5, 0.6, 0.5, 0, 1.6, 0))), r: 0.25, h: 2.2, label: 'Balloon' };
+  },
+  mascot() {
+    return { mesh: mk(variant('mascot', 4, () => {
+      const v = new Voxels(), fur = pick(['#d9a066', '#ffffff', '#ff8fc8', '#9fe6ff']);
+      v.box(fur, 0.3, 0.8, 0.34, -0.17, 0, 0).box(fur, 0.3, 0.8, 0.34, 0.17, 0, 0).box(fur, 0.75, 0.75, 0.5, 0, 0.8, 0);
+      v.box(fur, 0.2, 0.55, 0.3, -0.48, 0.95, 0).box(fur, 0.2, 0.55, 0.3, 0.48, 0.95, 0);
+      v.box(fur, 0.8, 0.7, 0.7, 0, 1.55, 0).box(fur, 0.22, 0.3, 0.12, -0.28, 2.25, 0).box(fur, 0.22, 0.3, 0.12, 0.28, 2.25, 0);
+      v.box(C.dark, 0.1, 0.1, 0.02, -0.17, 1.95, 0.36).box(C.dark, 0.1, 0.1, 0.02, 0.17, 1.95, 0.36).box('#ff5a6e', 0.16, 0.1, 0.04, 0, 1.75, 0.36);
+      return v;
+    })), r: 0.45, h: 2.5, label: 'Mascot' };
+  },
+  ferris() {
+    const v = new Voxels(), R = 10.5, cy = 12.5;
+    v.box(C.grey, 16, 0.8, 7, 0, 0, 0);
+    for (const z of [-2.2, 2.2]) for (let i = 0; i < 14; i++) {   // A-frame legs
+      const t = i / 13, y = 0.8 + t * (cy - 0.8);
+      v.box('#f2eee4', 0.5, 1.0, 0.5, -6 + t * 6, y, z).box('#f2eee4', 0.5, 1.0, 0.5, 6 - t * 6, y, z);
+    }
+    for (let k = 0; k < 48; k++) { const a = k / 48 * Math.PI * 2; v.box('#ff5a6e', 1.5, 0.5, 0.5, Math.cos(a) * R, cy + Math.sin(a) * R - 0.25, 0, 0); }
+    for (let k = 0; k < 12; k++) {
+      const a = k / 12 * Math.PI * 2;
+      for (let d = 1; d < R; d += 1.2) v.box('#f2eee4', 0.25, 0.25, 0.25, Math.cos(a) * d, cy + Math.sin(a) * d, 0);
+      const x = Math.cos(a) * R, y = cy + Math.sin(a) * R;
+      v.box(pick(['#ffc73d', '#23c2b0', '#4f7cff', '#ff8fc8', '#9b6bff']), 1.6, 1.4, 1.6, x, y - 2.0, 1.4).box(C.glass, 1.64, 0.5, 1.2, x, y - 1.4, 1.4);
+    }
+    v.box('#ffd23d', 1.6, 1.6, 5, 0, cy - 0.8, 0);
+    return { mesh: v.mesh(), r: 11.8, h: cy + R + 0.5, label: 'Ferris wheel', landmark: true };
+  },
+
+  // ----- snow -----
+  pine() {
+    const s = rand(0.85, 1.25);
+    const mesh = mk(variant('pine', 5, () => {
+      const v = new Voxels();
+      v.box(C.trunk, 0.45, 1.0, 0.45, 0, 0, 0);
+      for (let i = 0; i < 4; i++) {
+        const w = 2.6 - i * 0.6, y = 0.9 + i * 0.8;
+        v.box(pick(['#2f7a48', '#3a8a55', '#2b6e41']), w, 0.8, w, 0, y, 0).box('#f6f9fc', w - 0.3, 0.16, w - 0.3, 0, y + 0.8, 0);
+      }
+      return v;
+    }));
+    mesh.scale.setScalar(s);
+    return { mesh, r: 1.3 * s, h: 4.3 * s, label: 'Pine tree' };
+  },
+  snowman() {
+    return { mesh: mk(variant('snowman', 3, () => {
+      const v = new Voxels(), snow = '#f6f9fc';
+      v.box(snow, 1.0, 0.8, 1.0, 0, 0, 0).box(snow, 0.75, 0.6, 0.75, 0, 0.8, 0).box(snow, 0.55, 0.5, 0.55, 0, 1.4, 0);
+      v.box(C.orange, 0.1, 0.1, 0.35, 0, 1.6, 0.4).box(C.dark, 0.08, 0.08, 0.02, -0.12, 1.72, 0.28).box(C.dark, 0.08, 0.08, 0.02, 0.12, 1.72, 0.28);
+      v.box(pick(['#ff5a6e', '#4f7cff', '#23c2b0']), 0.8, 0.15, 0.8, 0, 1.35, 0);
+      v.box(C.dark, 0.6, 0.08, 0.6, 0, 1.9, 0).box(C.dark, 0.4, 0.35, 0.4, 0, 1.98, 0);
+      return v;
+    })), r: 0.55, h: 2.3, label: 'Snowman' };
+  },
+  sled() {
+    return { mesh: mk(variant('sled', 3, () => new Voxels()
+      .box(pick(['#e2413f', '#4f7cff', C.wood]), 0.6, 0.12, 1.4, 0, 0.25, 0)
+      .box(C.grey, 0.06, 0.25, 1.5, -0.25, 0, 0).box(C.grey, 0.06, 0.25, 1.5, 0.25, 0, 0))), r: 0.7, h: 0.4, label: 'Sled' };
+  },
+  icecastle() {
+    const v = new Voxels(), ice = '#bfe6f6', ice2 = '#a6d8ef', trim = '#e9f7fd';
+    v.box(ice, 13, 9, 13, 0, 0, 0, 0, 'win');
+    for (let i = -6; i <= 6; i += 2) { v.box(trim, 1, 1, 1, i, 9, 6.2).box(trim, 1, 1, 1, i, 9, -6.2).box(trim, 1, 1, 1, 6.2, 9, i).box(trim, 1, 1, 1, -6.2, 9, i); }
+    for (const x of [-7, 7]) for (const z of [-7, 7]) {
+      v.box(ice2, 4.2, 15, 4.2, x, 0, z);
+      for (let i = 0; i < 4; i++) v.box(trim, 1, 1, 1, x + [-1.6, 1.6, -1.6, 1.6][i], 15, z + [-1.6, -1.6, 1.6, 1.6][i]);
+      v.box('#7fc4e6', 3, 2, 3, x, 15, z).box('#7fc4e6', 1.6, 2.2, 1.6, x, 17, z);
+    }
+    v.box(ice2, 5, 14, 5, 0, 0, 0).box('#7fc4e6', 3, 3, 3, 0, 14, 0).box('#ff5a6e', 0.2, 2, 0.2, 0, 17, 0).box('#ff5a6e', 1.2, 0.7, 0.1, 0.6, 18.2, 0);
+    v.box(C.glass, 3, 4, 0.3, 0, 0, 6.6);
+    return { mesh: v.mesh(), r: 11.5, h: 19.5, label: 'Ice castle', landmark: true };
+  },
+
+  // ----- city landmark and events -----
+  stadium() {
+    const v = new Voxels(), wall = '#e7e2d8', seat = ['#ff5a6e', '#4f7cff', '#ffc73d'];
+    v.box('#5aa65a', 15, 0.3, 10, 0, 0, 0).box(C.white, 0.2, 0.32, 10, 0, 0, 0);
+    for (let k = 0; k < 28; k++) {
+      const a = k / 28 * Math.PI * 2, cx = Math.cos(a), sz = Math.sin(a);
+      for (let r = 0; r < 4; r++) v.box(r === 3 ? wall : seat[k % 3], 3.2, 2 + r * 2.2, 2.2, cx * (8.5 + r * 1.2), 0, sz * (6.5 + r * 1.2), -a + Math.PI / 2);
+    }
+    for (const x of [-11, 11]) for (const z of [-8, 8]) v.box(C.pole, 0.5, 15, 0.5, x, 0, z).box(C.bulb, 2.4, 1.2, 0.6, x, 15, z);
+    return { mesh: v.mesh(), r: 11.8, h: 16.2, label: 'Stadium', landmark: true };
+  },
+  float() {
+    const v = new Voxels(), a = pick(['#ff5a6e', '#ffc73d', '#9b6bff', '#23c2b0']);
+    v.box(C.dark, 6, 0.6, 2.6, 0, 0.3, 0).box(a, 6.2, 1.2, 2.8, 0, 0.9, 0);
+    for (let i = 0; i < 6; i++) v.box(pick(['#ff8fc8', '#ffffff', '#ffd23d', '#9fe6ff']), 0.8, rand(0.8, 2.5), 0.8, -2.5 + i, 2.1, rand(-0.8, 0.8));
+    v.box(shade(a, 1.15), 2, 2, 2, 1.5, 2.1, 0).box(C.dark, 0.3, 0.3, 0.05, 1.1, 3.4, 1.02).box(C.dark, 0.3, 0.3, 0.05, 1.9, 3.4, 1.02);
+    for (const x of [-2, 2]) for (const z of [-1.2, 1.2]) v.box(C.dark, 0.8, 0.8, 0.3, x, 0, z);
+    return { mesh: v.mesh(), r: 3.1, h: 4.3, label: 'Parade float' };
   }
 };
+MAKERS.treeHere = () => MAKERS[MAP.tree]();
 
 // ---------- world ----------
 let objects = [];
@@ -638,7 +1021,7 @@ function addObj(made, x, z, rotY, move) {
   scene.add(made.mesh);
   const vol = Math.PI * made.r * made.r * made.h;
   const o = {
-    mesh: made.mesh, label: made.label, r: made.r, h: made.h, x, z, y: 0,
+    mesh: made.mesh, label: made.label, r: made.r, h: made.h, x, z, y: 0, landmark: !!made.landmark,
     vol, grow: GROW * Math.pow(vol, 0.6), points: Math.max(1, Math.round(Math.pow(vol, 0.6) * 2)),
     alive: true, falling: false, vy: 0, hole: null, move: move || null, spin: 0,
     yaw: rotY || 0, lean: 0, leanX: 0, leanZ: 0
@@ -649,7 +1032,7 @@ function addObj(made, x, z, rotY, move) {
 
 function perimeterWalker(cx, cz) {
   const off = 14.8, side = off * 2, per = side * 4;
-  return { type: 'ring', cx, cz, off, side, per, s: rand(0, per), speed: rand(1.0, 1.6) * (Math.random() < 0.5 ? 1 : -1) };
+  return { type: 'ring', cx, cz, off, side, per, s: rand(0, per), speed: rand(1.0, 1.6) * (random() < 0.5 ? 1 : -1) };
 }
 function roamer(cx, cz, lim) {
   const a = rand(0, Math.PI * 2), sp = rand(0.8, 1.4);
@@ -658,79 +1041,129 @@ function roamer(cx, cz, lim) {
 
 function genBlock(b) {
   const { cx, cz, type } = b;
+  const T = MAKERS.treeHere;
   // sidewalk furniture
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) addObj(MAKERS.lamp(), cx + sx * 15, cz + sz * 15);
-  const edge = () => { const t = rand(-11, 11), s = pick([-1, 1]); return Math.random() < 0.5 ? [cx + t, cz + s * 15.2] : [cx + s * 15.2, cz + t]; };
+  const edge = () => { const t = rand(-11, 11), s = pick([-1, 1]); return random() < 0.5 ? [cx + t, cz + s * 15.2] : [cx + s * 15.2, cz + t]; };
   for (let i = 0; i < 2; i++) { const [x, z] = edge(); addObj(MAKERS.hydrant(), x, z); }
   { const [x, z] = edge(); addObj(MAKERS.bin(), x, z); }
-  if (Math.random() < 0.5) for (let i = 0; i < 3; i++) { const [x, z] = edge(); addObj(MAKERS.cone(), x, z); }
+  if (random() < 0.5) for (let i = 0; i < 3; i++) { const [x, z] = edge(); addObj(MAP.snowy ? MAKERS.snowman() : MAKERS.cone(), x, z); }
   for (let i = 0; i < 5; i++) addObj(MAKERS.person(), cx, cz, 0, perimeterWalker(cx, cz));
+  const people = (n, lim) => { for (let i = 0; i < n; i++) addObj(MAKERS.person(), cx, cz, 0, roamer(cx, cz, lim || 12)); };
+  const at = (made, x, z, rot) => addObj(made, cx + x, cz + z, rot);
 
-  if (type === 'downtown') {
+  if (type === 'landmark') {
+    at(MAKERS[MAP.landmark](), 0, 0, MAP.landmark === 'ferris' ? Math.PI / 2 : 0);
+    people(10, 13);
+  } else if (type === 'downtown') {
     const layout = pick([1, 2, 4, 4, 4]);
     if (layout === 1) {
       const w = rand(15, 19);
-      addObj(MAKERS.building(w, w, rand(32, 46)), cx, cz);
-      for (const s of [-1, 1]) addObj(MAKERS.tree(), cx + s * 11.5, cz + 11.5);
+      at(MAKERS.building(w, w, rand(32, 46)), 0, 0);
+      for (const s of [-1, 1]) at(T(), s * 11.5, 11.5);
     } else if (layout === 2) {
-      for (const s of [-1, 1]) addObj(MAKERS.building(rand(20, 24), rand(9, 11), rand(14, 30)), cx, cz + s * 6.5);
+      for (const s of [-1, 1]) at(MAKERS.building(rand(20, 24), rand(9, 11), rand(14, 30)), 0, s * 6.5);
     } else {
-      for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-        addObj(MAKERS.building(rand(7, 10.5), rand(7, 10.5), rand(8, 26)), cx + sx * 6.5, cz + sz * 6.5);
-      }
+      for (const sx of [-1, 1]) for (const sz of [-1, 1]) at(MAKERS.building(rand(7, 10.5), rand(7, 10.5), rand(8, 26)), sx * 6.5, sz * 6.5);
     }
   } else if (type === 'residential') {
-    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-      addObj(MAKERS.house(), cx + sx * 7 + rand(-1, 1), cz + sz * 7 + rand(-1, 1), pick([0, Math.PI / 2, Math.PI, -Math.PI / 2]));
-    }
-    for (let i = 0; i < 4; i++) addObj(MAKERS.tree(), cx + rand(-2, 2), cz + rand(-12, 12));
-    addObj(MAKERS.bench(), cx + rand(-11, 11), cz + 1.5);
-    for (let i = 0; i < 2; i++) addObj(MAKERS.person(), cx, cz, 0, roamer(cx, cz, 12));
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) at(MAKERS.house(), sx * 7 + rand(-1, 1), sz * 7 + rand(-1, 1), pick([0, Math.PI / 2, Math.PI, -Math.PI / 2]));
+    for (let i = 0; i < 4; i++) at(T(), rand(-2, 2), rand(-12, 12));
+    at(MAP.snowy ? MAKERS.snowman() : MAKERS.bench(), rand(-11, 11), 1.5);
+    if (MAP.snowy) for (let i = 0; i < 2; i++) at(MAKERS.sled(), rand(-11, 11), rand(-11, 11), rand(0, 3));
+    people(2);
   } else if (type === 'park') {
-    addObj(MAKERS.fountain(), cx, cz);
+    at(MAP.snowy ? MAKERS.snowman() : MAKERS.fountain(), 0, 0);
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-      for (let i = 0; i < 2; i++) addObj(MAKERS.tree(), cx + sx * rand(5, 11), cz + sz * rand(5, 11));
-      addObj(MAKERS.bench(), cx + sx * 4.5, cz + sz * 1.8, 0);
+      for (let i = 0; i < 2; i++) at(T(), sx * rand(5, 11), sz * rand(5, 11));
+      at(MAKERS.bench(), sx * 4.5, sz * 1.8, 0);
     }
     // picket fence round the lawn, with gaps where the paths come out
     for (let t = -12; t <= 12; t += 2) {
       if (Math.abs(t) < 2) continue;
-      addObj(MAKERS.fence(), cx + t, cz - 13, 0); addObj(MAKERS.fence(), cx + t, cz + 13, 0);
-      addObj(MAKERS.fence(), cx - 13, cz + t, Math.PI / 2); addObj(MAKERS.fence(), cx + 13, cz + t, Math.PI / 2);
+      at(MAKERS.fence(), t, -13, 0); at(MAKERS.fence(), t, 13, 0);
+      at(MAKERS.fence(), -13, t, Math.PI / 2); at(MAKERS.fence(), 13, t, Math.PI / 2);
     }
     for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
-      addObj(MAKERS.bush(), cx + sx * 12, cz + sz * 12);
-      addObj(MAKERS.bush(), cx + sx * 2.2, cz + sz * 11.5);
+      at(MAKERS.bush(), sx * 12, sz * 12);
+      at(MAKERS.bush(), sx * 2.2, sz * 11.5);
+      if (MAP.snowy) { at(MAKERS.snowman(), sx * 4.2, sz * 4.2); continue; }
       // a small flower bed in each quadrant, near the fountain
-      const bx = cx + sx * 4.2, bz = cz + sz * 4.2;
-      for (let i = 0; i < 6; i++) addObj(MAKERS.flower(), bx + rand(-1, 1), bz + rand(-1, 1));
-      for (let i = 0; i < 3; i++) addObj(MAKERS.flower(), cx + sx * rand(3, 11), cz + sz * rand(9.5, 11.5));
+      const bx = sx * 4.2, bz = sz * 4.2;
+      for (let i = 0; i < 6; i++) at(MAKERS.flower(), bx + rand(-1, 1), bz + rand(-1, 1));
+      for (let i = 0; i < 3; i++) at(MAKERS.flower(), sx * rand(3, 11), sz * rand(9.5, 11.5));
     }
-    for (let i = 0; i < 6; i++) addObj(MAKERS.person(), cx, cz, 0, roamer(cx, cz, 12));
+    people(6);
+  } else if (type === 'sand') {
+    for (let i = 0; i < 6; i++) {
+      const x = rand(-11, 11), z = rand(-11, 11);
+      at(MAKERS.umbrella(), x, z); at(MAKERS.towel(), x + 1.4, z + rand(-0.5, 0.5), rand(-0.3, 0.3));
+    }
+    for (let i = 0; i < 4; i++) at(MAKERS.ball(), rand(-12, 12), rand(-12, 12));
+    for (let i = 0; i < 3; i++) at(MAKERS.sandcastle(), rand(-12, 12), rand(-12, 12));
+    for (let i = 0; i < 3; i++) at(MAKERS.surfboard(), rand(-12, 12), rand(-12, 12), rand(0, 3));
+    if (random() < 0.6) at(MAKERS.lifeguard(), rand(-6, 6), rand(-6, 6));
+    for (let i = 0; i < 2; i++) at(MAKERS.palm(), pick([-12, 12]), rand(-12, 12));
+    people(8);
+  } else if (type === 'boardwalk') {
+    for (const sx of [-1, 1]) at(MAKERS.kiosk(), sx * 7, -7, 0);
+    for (let i = 0; i < 3; i++) at(MAKERS.icecream(), rand(-10, 10), rand(-2, 10), rand(0, 3));
+    for (let i = 0; i < 4; i++) at(MAKERS.palm(), pick([-12, 12]), rand(-12, 12));
+    for (let i = 0; i < 3; i++) at(MAKERS.bench(), rand(-10, 10), 11.5, 0);
+    for (let i = 0; i < 2; i++) at(MAKERS.surfboard(), rand(-12, 12), rand(-12, 12), rand(0, 3));
+    people(9);
+  } else if (type === 'rides') {
+    const ride = pick(['carousel', 'coaster', 'tower', 'teacups', 'bumpers']);
+    if (ride === 'carousel') at(MAKERS.carousel(), 0, 0);
+    else if (ride === 'coaster') at(MAKERS.coaster(), 0, 0, pick([0, Math.PI / 2]));
+    else if (ride === 'tower') { at(MAKERS.droptower(), 0, 0); for (let i = 0; i < 4; i++) at(MAKERS.teacup(), rand(-10, 10), rand(6, 11)); }
+    else if (ride === 'teacups') for (let i = 0; i < 9; i++) at(MAKERS.teacup(), (i % 3 - 1) * 4.5 + rand(-0.5, 0.5), (((i / 3) | 0) - 1) * 4.5 + rand(-0.5, 0.5));
+    else {
+      for (let t = -8; t <= 8; t += 2) { at(MAKERS.fence(), t, -9, 0); at(MAKERS.fence(), t, 9, 0); at(MAKERS.fence(), -9, t, Math.PI / 2); at(MAKERS.fence(), 9, t, Math.PI / 2); }
+      for (let i = 0; i < 8; i++) at(MAKERS.bumper(), rand(-7, 7), rand(-7, 7), rand(0, 6));
+    }
+    for (let i = 0; i < 3; i++) at(MAKERS.balloon(), rand(-12, 12), pick([-12, 12]));
+    at(MAKERS.mascot(), rand(-11, 11), rand(-11, 11));
+    for (let i = 0; i < 2; i++) at(MAKERS.tree(), pick([-12, 12]), pick([-12, 12]));
+    people(ride === 'coaster' ? 4 : 8);
+  } else if (type === 'foodcourt') {
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) at(MAKERS.kiosk(), sx * 8, sz * 8, sz > 0 ? Math.PI : 0);
+    for (let i = 0; i < 6; i++) at(MAKERS.picnic(), (i % 3 - 1) * 4.5, i < 3 ? -2.5 : 2.5);
+    for (let i = 0; i < 4; i++) at(MAKERS.balloon(), rand(-12, 12), rand(-12, 12));
+    for (let i = 0; i < 2; i++) at(MAKERS.mascot(), rand(-11, 11), rand(-11, 11));
+    for (let i = 0; i < 6; i++) at(MAKERS.bin(), rand(-12, 12), pick([-12, 12]));
+    people(10);
+  } else if (type === 'parking') {
+    for (const row of [-7, 6]) for (let i = -10.5; i <= 10.5; i += 3) if (random() < 0.75) at(MAKERS.car(), i, row, Math.PI / 2 * (row < 0 ? 1 : -1));
+    people(3);
+  } else if (type === 'rink') {
+    for (let t = -10; t <= 10; t += 2) { at(MAKERS.fence(), t, -8, 0); at(MAKERS.fence(), t, 8, 0); }
+    for (let i = 0; i < 10; i++) addObj(MAKERS.person(), cx, cz, 0, roamer(cx, cz, 8));
+    for (let i = 0; i < 4; i++) at(MAKERS.pine(), pick([-12, 12]), rand(-12, 12));
+    for (let i = 0; i < 3; i++) at(MAKERS.snowman(), rand(-11, 11), pick([-11, 11]));
+    at(MAKERS.kiosk(), 0, 11.5, Math.PI);
   } else {
-    for (const sx of [-1, 1]) addObj(MAKERS.kiosk(), cx + sx * 7, cz - 7, 0);
-    addObj(MAKERS.fountain(), cx, cz + 4);
-    for (let i = 0; i < 4; i++) addObj(MAKERS.tree(), cx + pick([-11, 11]), cz + rand(-11, 11));
-    for (let i = 0; i < 6; i++) addObj(MAKERS.bin(), cx + rand(-12, 12), cz + pick([-12, 12]));
-    for (let i = 0; i < 9; i++) addObj(MAKERS.person(), cx, cz, 0, roamer(cx, cz, 12));
+    for (const sx of [-1, 1]) at(MAKERS.kiosk(), sx * 7, -7, 0);
+    at(MAP.snowy ? MAKERS.snowman() : MAKERS.fountain(), 0, 4);
+    for (let i = 0; i < 4; i++) at(T(), pick([-11, 11]), rand(-11, 11));
+    for (let i = 0; i < 6; i++) at(MAKERS.bin(), rand(-12, 12), pick([-12, 12]));
+    if (MAP === MAPS.fair) at(MAKERS.mascot(), rand(-8, 8), rand(-8, 8));
+    people(9);
   }
 }
 
+function spawnVehicle(r, axis, dir, bus, along) {
+  const lane = r + dir * 2 * (axis === 'x' ? 1 : -1);
+  const made = bus ? MAKERS.bus() : MAKERS.car();
+  const x = axis === 'x' ? along : lane, z = axis === 'x' ? lane : along;
+  const rot = axis === 'x' ? (dir > 0 ? 0 : Math.PI) : (dir > 0 ? -Math.PI / 2 : Math.PI / 2);
+  return addObj(made, x, z, rot, { type: 'drive', axis, dir, speed: bus ? rand(4, 6) : rand(6, 10), v: 0 });
+}
+const freeAlong = () => { let along; do along = rand(-HALF + 2, HALF - 2); while (ROADS.some(c => Math.abs(along - c) < ROAD_HALF + 3)); return along; };
 function genTraffic() {
   for (const r of ROADS) {
     for (const axis of ['x', 'z']) {
-      const n = 4;
-      for (let i = 0; i < n; i++) {
-        const dir = i % 2 ? 1 : -1;
-        const lane = r + dir * 2 * (axis === 'x' ? 1 : -1);
-        let along;
-        do along = rand(-HALF + 2, HALF - 2); while (ROADS.some(c => Math.abs(along - c) < ROAD_HALF + 3));
-        const isBus = Math.random() < 0.12;
-        const made = isBus ? MAKERS.bus() : MAKERS.car();
-        const x = axis === 'x' ? along : lane, z = axis === 'x' ? lane : along;
-        const rot = axis === 'x' ? (dir > 0 ? 0 : Math.PI) : (dir > 0 ? -Math.PI / 2 : Math.PI / 2);
-        addObj(made, x, z, rot, { type: 'drive', axis, dir, speed: isBus ? rand(4, 6) : rand(6, 10), v: 0 });
-      }
+      for (let i = 0; i < 4; i++) spawnVehicle(r, axis, i % 2 ? 1 : -1, random() < 0.12, freeAlong());
     }
   }
 }
@@ -741,17 +1174,33 @@ function buildWorld() {
   blocks = [];
   const centers = [];
   for (let i = 0; i < ROADS.length - 1; i++) centers.push((ROADS[i] + ROADS[i + 1]) / 2);
+  const lm = [pick([-1, 1]) * centers[centers.length / 2], pick([-1, 1]) * centers[centers.length / 2]];   // the landmark sits next to the middle
   for (const cx of centers) for (const cz of centers) {
     const centrality = Math.max(Math.abs(cx), Math.abs(cz));
     // downtown in the middle, houses and parks on the edges
-    const type = centrality < HALF * 0.3 ? pick(['downtown', 'downtown', 'plaza'])
-      : centrality < HALF * 0.65 ? pick(['downtown', 'downtown', 'residential', 'park', 'plaza'])
-      : pick(['residential', 'residential', 'park', 'downtown']);
+    const zone = centrality < HALF * 0.3 ? 0 : centrality < HALF * 0.65 ? 1 : 2;
+    const type = cx === lm[0] && cz === lm[1] ? 'landmark' : pick(MAP.zones[zone]);
     blocks.push({ cx, cz, type });
   }
   drawGround(blocks);
+  countryside.material.color.set(MAP.far);
   for (const b of blocks) genBlock(b);
   genTraffic();
+  buildMilestones();
+}
+
+// "Next: cars at 4.4 m": the smallest size at which each common kind of thing starts to fit
+let MILESTONES = [];
+function buildMilestones() {
+  const by = new Map();
+  for (const o of objects) { const m = by.get(o.label) || { n: 0, r: Infinity }; m.n++; m.r = Math.min(m.r, o.r); by.set(o.label, m); }
+  const list = [...by].filter(([, m]) => m.n >= 3 || m.r > 9).sort((a, b) => a[1].r - b[1].r);
+  MILESTONES = [];
+  for (const [label, m] of list) {
+    const last = MILESTONES[MILESTONES.length - 1];
+    if (last && m.r < last[0] * 1.2) continue;
+    MILESTONES.push([m.r, plural(label.toLowerCase())]);
+  }
 }
 
 // ---------- holes ----------
@@ -785,24 +1234,49 @@ const PIT_FADE = 6.5;                 // metres for the light to drop to ~37% (f
 // The pit is stretched downward as the hole grows so its walls stay readable from the higher camera.
 const pitScale = r => 1 + Math.max(0, r - START_R) * 0.2;
 const PIT_TEX_DEPTH = 16;             // metres covered by one copy of the wall texture
-const pitTex = pixelTexture(16, () => {});
-(() => {
+// Pit wall themes (skins): paving, base course, a soil layer, then brick courses with mortar.
+const PIT_THEMES = {
+  street: { pave: '#8a8f9c', base: '#5d6170', soil: ['#6e4b30', '#8a6a48'], brick: ['#6b665f', '#5f5a54'], mortar: '#3e3b3a' },
+  candy: { pave: '#ffd1e8', base: '#ffffff', soil: ['#7a4630', '#ff8fc8'], brick: ['#ff9ccc', '#fff1a8'], mortar: '#ffffff' },
+  lava: { pave: '#4a4040', base: '#2e2828', soil: ['#3a2a26', '#ff6a1a'], brick: ['#3b3232', '#2e2727'], mortar: '#ff7a1a' },
+  ice: { pave: '#e9f7fd', base: '#bfe6f6', soil: ['#9fd3ea', '#ffffff'], brick: ['#a6d8ef', '#8ccbe6'], mortar: '#e9f7fd' },
+  galaxy: { pave: '#3a3a6a', base: '#262650', soil: ['#1d1b3d', '#fff6c8'], brick: ['#2a2558', '#3a2a6a'], mortar: '#9b6bff' },
+  gold: { pave: '#e8c463', base: '#b8923a', soil: ['#8a6a2e', '#ffe58a'], brick: ['#e6b93c', '#d4a52f'], mortar: '#7a5a1c' }
+};
+function makePitTex(theme) {
+  const P = PIT_THEMES[theme] || PIT_THEMES.street;
+  const tex = pixelTexture(16, () => {});
   const c = document.createElement('canvas'); c.width = 16; c.height = 128;
   const g = c.getContext('2d'), px = 128 / PIT_TEX_DEPTH;  // 8 px per metre
   const jitter = (hex, y, x) => { const k = 0.88 + Math.random() * 0.2; const cc = new THREE.Color(hex).multiplyScalar(k); g.fillStyle = '#' + cc.getHexString(); g.fillRect(x, y, 1, 1); };
   for (let y = 0; y < 128; y++) for (let x = 0; x < 16; x++) {
     const m = y / px;
-    if (m < 0.25) jitter('#8a8f9c', y, x);                       // paving
-    else if (m < 0.5) jitter('#5d6170', y, x);                   // base course
-    else if (m < 2.2) jitter(Math.random() < 0.12 ? '#8a6a48' : '#6e4b30', y, x);   // soil with pebbles
+    if (m < 0.25) jitter(P.pave, y, x);                          // paving
+    else if (m < 0.5) jitter(P.base, y, x);                      // base course
+    else if (m < 2.2) jitter(Math.random() < 0.12 ? P.soil[1] : P.soil[0], y, x);   // soil with pebbles
     else {                                                        // stone courses, offset every row
       const row = Math.floor((y - 2.2 * px) / 6), bx = (x + (row % 2) * 4) % 8;
       const mortar = (y - Math.floor(2.2 * px)) % 6 === 0 || bx === 0;
-      jitter(mortar ? '#3e3b3a' : (row % 3 ? '#6b665f' : '#5f5a54'), y, x);
+      jitter(mortar ? P.mortar : (row % 3 ? P.brick[0] : P.brick[1]), y, x);
     }
   }
-  pitTex.image = c; pitTex.needsUpdate = true;
-})();
+  tex.image = c; tex.needsUpdate = true;
+  return tex;
+}
+const pitTex = makePitTex('street');
+const pitTexCache = { street: pitTex };
+const pitTexFor = theme => pitTexCache[theme] || (pitTexCache[theme] = makePitTex(theme));
+
+const SKINS = [
+  { id: 'mint', name: 'Mint', price: 0, color: '#23c2b0', pit: 'street' },
+  { id: 'sunny', name: 'Sunny', price: 150, color: '#ffd23d', pit: 'street' },
+  { id: 'bubble', name: 'Bubblegum', price: 300, color: '#ff7ac8', pit: 'candy' },
+  { id: 'lava', name: 'Lava', price: 600, color: '#ff5a1f', pit: 'lava' },
+  { id: 'frost', name: 'Frost', price: 600, color: '#8fe0ff', pit: 'ice' },
+  { id: 'galaxy', name: 'Galaxy', price: 1000, color: '#a77bff', pit: 'galaxy' },
+  { id: 'gold', name: 'Solid gold', price: 2000, color: '#ffcc33', pit: 'gold' }
+];
+const skinOf = id => SKINS.find(k => k.id === id) || SKINS[0];
 const pitGeo = (() => {
   const geo = new THREE.CylinderGeometry(1, 1, PIT_DEPTH, 48, 40, true);
   geo.translate(0, -PIT_DEPTH / 2, 0);
@@ -866,15 +1340,22 @@ const innerGlowGeo = (() => {
   geo.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
   return geo;
 })();
+// Rival personalities: greedy holes only eat the city, hunters go after other holes, cowards run early.
+const PERSONALITIES = {
+  balanced: { chase: 0.8, chasePlayer: 1, preyRange: 18, fear: 1.15, fearRange: 14, sight: 1 },
+  greedy: { chase: 0.1, chasePlayer: 0.3, preyRange: 10, fear: 1.15, fearRange: 12, sight: 1.3 },
+  hunter: { chase: 0.95, chasePlayer: 2, preyRange: 30, fear: 1.3, fearRange: 10, sight: 0.8 },
+  coward: { chase: 0.4, chasePlayer: 0.6, preyRange: 12, fear: 0.95, fearRange: 24, sight: 1 }
+};
 const HOLE_DEFS = [
   { name: 'You', color: '#23c2b0', player: true },
-  { name: 'Pothole', color: '#ff5a6e' },
-  { name: 'Manhole', color: '#ffc73d' },
-  { name: 'Sinkhole', color: '#9b6bff' },
-  { name: 'Donut', color: '#ff8f3d' },
-  { name: 'Black Hole', color: '#4f7cff' },
-  { name: 'Crater', color: '#3cc45a' },
-  { name: 'Wormhole', color: '#ff5fd2' }
+  { name: 'Pothole', color: '#ff5a6e', type: 'greedy' },
+  { name: 'Manhole', color: '#ffc73d', type: 'coward' },
+  { name: 'Sinkhole', color: '#9b6bff', type: 'hunter' },
+  { name: 'Donut', color: '#ff8f3d', type: 'greedy' },
+  { name: 'Black Hole', color: '#4f7cff', type: 'hunter' },
+  { name: 'Crater', color: '#3cc45a', type: 'balanced' },
+  { name: 'Wormhole', color: '#ff5fd2', type: 'coward' }
 ];
 const SPAWNS = [[0, 0], [-120, -120], [120, -120], [-120, 120], [120, 120], [0, -120], [-120, 0], [120, 0]];
 const holes = HOLE_DEFS.map((d, i) => {
@@ -902,23 +1383,36 @@ const holes = HOLE_DEFS.map((d, i) => {
   const sparkState = Array.from({ length: SPARKS }, () => ({ a: rand(0, Math.PI * 2), d: rand(1.1, DISK_OUT), h: rand(0.1, 0.6) }));
   scene.add(group);
   const tag = document.createElement('div');
-  tag.className = 'tag'; tag.textContent = d.name;
+  tag.className = 'tag'; tag.textContent = d.player ? d.name : `${d.name} · ${d.type}`;
   tag.style.boxShadow = `inset 0 0 0 2px ${d.color}`;
   document.body.appendChild(tag);
   return {
-    i, name: d.name, color: d.color, player: !!d.player, group, tag, ring, pit, floor, halo, inner, disk, disk2, sparks, sparkState, bh: 0, bump: 0, vanish: 0,
+    i, name: d.name, color: d.color, player: !!d.player, type: d.type || 'balanced', group, tag, ring, pit, floor, halo, inner, disk, disk2, sparks, sparkState, bh: 0, bump: 0, vanish: 0,
     x: 0, z: 0, vx: 0, vz: 0, r: START_R, r2: START_R * START_R, points: 0,
     alive: true, respawn: 0, eaten: 0, biggest: null,
     ai: { t: 0, tx: 0, tz: 0, mode: 'wander' }
   };
 });
 const player = holes[0];
+function applySkin() {
+  const k = skinOf(save.skin);
+  player.color = k.color;
+  player.ring.material.color.set(k.color);
+  player.halo.material.color.set(k.color);
+  player.inner.material.color.set(k.color);
+  player.tag.style.boxShadow = `inset 0 0 0 2px ${k.color}`;
+  player.pit.material.map = pitTexFor(k.pit); player.pit.material.needsUpdate = true;
+  player.name = (save.name || '').trim() || 'You';
+  player.tag.textContent = player.name;
+}
 
 function placeHole(h, i) {
   const [x, z] = SPAWNS[i];
   h.x = x; h.z = z; h.vx = h.vz = 0;
   h.r = START_R; h.r2 = START_R * START_R; h.points = 0; h.alive = true; h.respawn = 0;
   h.eaten = 0; h.biggest = null; h.group.visible = true; h.shield = 0;
+  h.buffs = {}; h.out = false; h.inGame = h.player || MODE.rivals; h.vanish = 0;
+  if (!h.inGame) { h.alive = false; h.respawn = Infinity; h.group.visible = false; h.tag.hidden = true; }
 }
 
 function respawnSpot() {
@@ -988,25 +1482,30 @@ function playerIntent() {
 
 // ---------- bots ----------
 function botThink(h) {
-  const ai = h.ai;
+  const ai = h.ai, P = PERSONALITIES[h.type] || PERSONALITIES.balanced;
+  const battle = MODE === MODES.battle;
   let threat = null, prey = null;
   for (const o of holes) {
     if (o === h || !o.alive) continue;
     const d = Math.hypot(o.x - h.x, o.z - h.z);
-    if (o.r > h.r * 1.15 && d < o.r + 14 && (!threat || d < threat.d)) threat = { o, d };
-    if (h.r > o.r * (o.player ? EASY.eatPlayerRatio + 0.05 : 1.2) && !(o.shield > 0) && d < h.r + 18 && (!prey || d < prey.d)) prey = { o, d };
+    if (o.r > h.r * P.fear && d < o.r + P.fearRange && !(h.shield > 0) && (!threat || d < threat.d)) threat = { o, d };
+    if (h.r > o.r * (o.player ? EASY.eatPlayerRatio + 0.05 : 1.2) && !(o.shield > 0) && d < h.r + P.preyRange * (battle ? 1.6 : 1) && (!prey || d < prey.d)) prey = { o, d };
   }
   if (threat) {
     ai.mode = 'flee';
     ai.tx = h.x + (h.x - threat.o.x) * 3; ai.tz = h.z + (h.z - threat.o.z) * 3;
     return;
   }
-  if (prey && Math.random() < (prey.o.player ? EASY.botChasePlayer : 0.8)) { ai.mode = 'chase'; ai.target = prey.o; return; }
+  const chase = prey && (prey.o.player ? EASY.botChasePlayer * P.chasePlayer : P.chase) * (battle ? 1.5 : 1);
+  if (prey && Math.random() < chase) { ai.mode = 'chase'; ai.target = prey.o; return; }
+  // a power-up close by is worth a detour
+  for (const p of pups) if (Math.abs(p.x - h.x) < 14 && Math.abs(p.z - h.z) < 14) { ai.mode = 'eat'; ai.tx = p.x; ai.tz = p.z; return; }
   let best = null, bestScore = 0;
+  const sight = EASY.botSight * P.sight;
   for (const o of objects) {
     if (!o.alive || o.falling || o.r >= h.r * fitOf(h)) continue;
     const dx = o.x - h.x, dz = o.z - h.z;
-    if (Math.abs(dx) > EASY.botSight || Math.abs(dz) > EASY.botSight) continue;
+    if (Math.abs(dx) > sight || Math.abs(dz) > sight) continue;
     const s = Math.pow(o.vol, 0.6) / Math.pow(Math.hypot(dx, dz) + 4, 1.4);
     if (s > bestScore) { bestScore = s; best = o; }
   }
@@ -1037,13 +1536,13 @@ soundBtn.addEventListener('click', () => {
   soundOn = !soundOn; syncSound();
   try { localStorage.setItem('eatin-sound', soundOn ? 'on' : 'off'); } catch (e) {}
 });
-function gulp(size) {
+function gulp(size, combo) {
   if (!soundOn || !audio) return;
   const now = audio.currentTime;
   if (now - lastGulp < 0.06) return;
   lastGulp = now;
   const o = audio.createOscillator(), g = audio.createGain();
-  const f = clamp(700 / Math.sqrt(size + 0.5), 90, 700);
+  const f = clamp(700 / Math.sqrt(size + 0.5), 90, 700) * (1 + Math.min(combo || 0, 30) * 0.025);   // a chain climbs in pitch
   o.type = 'sine';
   o.frequency.setValueAtTime(f, now);
   o.frequency.exponentialRampToValueAtTime(f * 0.35, now + 0.14);
@@ -1053,13 +1552,85 @@ function gulp(size) {
   o.connect(g).connect(audio.destination);
   o.start(now); o.stop(now + 0.18);
 }
+// Big things crunch (filtered noise), people squeak, power-ups chime.
+let noiseBuf = null;
+function crunch(size) {
+  if (!soundOn || !audio) return;
+  if (!noiseBuf) {
+    noiseBuf = audio.createBuffer(1, audio.sampleRate * 0.5, audio.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2);
+  }
+  const now = audio.currentTime, src = audio.createBufferSource(), f = audio.createBiquadFilter(), g = audio.createGain();
+  src.buffer = noiseBuf;
+  f.type = 'lowpass'; f.frequency.setValueAtTime(clamp(2400 / Math.sqrt(size), 250, 1800), now);
+  g.gain.setValueAtTime(clamp(0.05 + size * 0.02, 0.05, 0.25), now);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + 0.45);
+  src.connect(f).connect(g).connect(audio.destination);
+  src.start(now); src.stop(now + 0.5);
+}
+function tone(f0, f1, len, type, vol) {
+  if (!soundOn || !audio) return;
+  const now = audio.currentTime, o = audio.createOscillator(), g = audio.createGain();
+  o.type = type || 'sine';
+  o.frequency.setValueAtTime(f0, now); o.frequency.exponentialRampToValueAtTime(f1, now + len);
+  g.gain.setValueAtTime(0.0001, now); g.gain.exponentialRampToValueAtTime(vol || 0.06, now + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, now + len);
+  o.connect(g).connect(audio.destination);
+  o.start(now); o.stop(now + len + 0.02);
+}
+const squeak = () => tone(900 + Math.random() * 500, 1700 + Math.random() * 400, 0.09, 'sine', 0.035);
+const chime = () => { tone(660, 990, 0.12, 'triangle', 0.08); setTimeout(() => tone(990, 1320, 0.16, 'triangle', 0.07), 90); };
+
+// ---------- music ----------
+// A small step sequencer per map: bass on the root and fifth, an arpeggio over the map's scale.
+let musicOn = save.music !== false, musicTimer = null, musicStep = 0, musicNext = 0, musicGain = null;
+const musicBtn = document.getElementById('music');
+function syncMusic() { musicBtn.textContent = musicOn ? 'Music on' : 'Music off'; musicBtn.setAttribute('aria-pressed', musicOn); }
+syncMusic();
+musicBtn.addEventListener('click', () => {
+  musicOn = !musicOn; save.music = musicOn; persist(); syncMusic();
+  if (musicOn && state === 'play') startMusic(); else stopMusic();
+});
+const midi = n => 440 * Math.pow(2, (n - 69) / 12);
+function note(freq, t, len, type, vol) {
+  const o = audio.createOscillator(), g = audio.createGain();
+  o.type = type; o.frequency.setValueAtTime(freq, t);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+  o.connect(g).connect(musicGain);
+  o.start(t); o.stop(t + len + 0.02);
+}
+function startMusic() {
+  stopMusic();
+  if (!audio || !musicOn) return;
+  musicGain = audio.createGain(); musicGain.gain.value = 0.5; musicGain.connect(audio.destination);
+  const m = MAP.music, beat = 60 / m.bpm / 2;   // eighth notes
+  const prog = [0, 0, 3, 3, 4, 4, 2, 2];          // scale degrees per bar
+  const arp = [0, 2, 4, 2, 1, 3, 4, 3];
+  musicStep = 0; musicNext = audio.currentTime + 0.1;
+  musicTimer = setInterval(() => {
+    while (musicNext < audio.currentTime + 0.25) {
+      const bar = Math.floor(musicStep / 8) % prog.length, st = musicStep % 8, sc = m.scale;
+      const deg = k => { const i = prog[bar] + k; return sc[i % sc.length] + 12 * Math.floor(i / sc.length); };
+      if (st % 4 === 0) note(midi(m.root - 24 + deg(0)), musicNext, beat * 1.8, 'triangle', 0.09);
+      if (st % 4 === 2) note(midi(m.root - 24 + deg(2)), musicNext, beat * 0.9, 'triangle', 0.06);
+      if (state === 'play' && timeLeft < 15 || st % 2 === 0) note(midi(m.root + deg(arp[st])), musicNext, beat * 0.8, m.wave, 0.018);
+      musicNext += beat; musicStep++;
+    }
+  }, 60);
+}
+function stopMusic() {
+  if (musicTimer) { clearInterval(musicTimer); musicTimer = null; }
+  if (musicGain) { const g = musicGain; g.gain.setTargetAtTime(0.0001, audio.currentTime, 0.1); setTimeout(() => g.disconnect(), 600); musicGain = null; }
+}
 
 // ---------- HUD ----------
 const $ = id => document.getElementById(id);
-const hud = { score: $('myScore'), size: $('mySize'), fill: $('sizeFill'), next: $('nextUp'), timer: $('timer'), list: $('boardList'), toast: $('toast') };
-const MILESTONES = [[0.21, 'flowers'], [0.35, 'people'], [1.35, 'trees'], [1.95, 'cars'], [3.3, 'houses'], [4.0, 'buses'], [5.5, 'shops'], [8, 'apartment blocks'], [10.5, 'office towers']];
+const hud = { score: $('myScore'), size: $('mySize'), fill: $('sizeFill'), next: $('nextUp'), timer: $('timer'), list: $('boardList'), toast: $('toast'), combo: $('combo'), buffs: $('buffs'), goal: $('goal') };
 let hudT = 0, toastT = 0;
-function showToast(text, secs) { hud.toast.textContent = text; hud.toast.hidden = false; toastT = secs || 2.5; }
+function showToast(text, secs, minor) {   // a minor notice never covers a message that is still showing
+  if (minor && toastT > 0) return;
+  hud.toast.textContent = text; hud.toast.hidden = false; toastT = secs || 2.5;
+}
 function popText(text) {
   const [x, y] = toScreen(player.x, 0, player.z);
   const el = document.createElement('div');
@@ -1068,7 +1639,11 @@ function popText(text) {
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 950);
 }
-function ranking() { return holes.slice().sort((a, b) => b.points - a.points || b.r - a.r); }
+function ranking() {
+  const list = holes.filter(h => h.inGame);
+  if (MODE === MODES.battle) return list.sort((a, b) => (b.out ? 0 : 1) - (a.out ? 0 : 1) || (a.out && b.out ? b.outAt - a.outAt : b.r - a.r));
+  return list.sort((a, b) => b.points - a.points || b.r - a.r);
+}
 function updateHud() {
   hud.score.textContent = player.points.toLocaleString();
   hud.size.textContent = `Hole ${(player.r * 2).toFixed(1)} m wide`;
@@ -1083,46 +1658,465 @@ function updateHud() {
   const t = Math.max(0, Math.ceil(timeLeft));
   hud.timer.textContent = `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
   hud.timer.classList.toggle('low', t <= 10 && state === 'play');
+  hud.combo.textContent = round.combo >= 3 && state === 'play' ? `Combo ${round.combo}  x${comboMult().toFixed(2)}` : '';
+  hud.buffs.textContent = Object.entries(player.buffs || {}).filter(([, v]) => v > 0).map(([k, v]) => `${POWERS[k].name} ${Math.ceil(v)}s`).join('  ');
+  if (MODE === MODES.cleanup) {
+    const f = round.eatenPts / round.totalPts, goal = MODE.target;
+    hud.goal.hidden = state !== 'play';
+    hud.goal.innerHTML = `City swallowed ${Math.floor(f * 100)}% of ${Math.round(goal * 100)}%<div class="bar"><i style="width:${clamp(f / goal, 0, 1) * 100}%"></i></div>`;
+  } else if (MODE === MODES.battle) {
+    hud.goal.hidden = state !== 'play';
+    hud.goal.textContent = `${holes.filter(h => h.inGame && !h.out).length} holes left`;
+  } else hud.goal.hidden = true;
+  if (MODE === MODES.cleanup) { $('board').hidden = true; return; }
+  $('board').hidden = false;
   hud.list.innerHTML = ranking().map((h, i) =>
-    `<li class="${h.player ? 'you' : ''} ${h.alive ? '' : 'out'}"><span class="rk">${i + 1}</span><span class="dot" style="background:${h.color}"></span><span>${h.name}</span><span>${h.points.toLocaleString()}</span></li>`
+    `<li class="${h.player ? 'you' : ''} ${h.alive ? '' : 'out'}"><span class="rk">${i + 1}</span><span class="dot" style="background:${h.color}"></span><span>${esc(h.name)}</span><span>${MODE === MODES.battle ? (h.out ? 'out' : (h.r * 2).toFixed(0) + ' m') : h.points.toLocaleString()}</span></li>`
   ).join('');
 }
+
+// ---------- daily challenges ----------
+const CHALLENGES = [
+  { id: 'cars', text: 'Swallow 40 cars', goal: 40, sum: r => r.count['Car'] || 0 },
+  { id: 'people', text: 'Swallow 300 people', goal: 300, sum: r => (r.count['Pedestrian'] || 0) + (r.count['Mascot'] || 0) },
+  { id: 'trees', text: 'Swallow 60 trees', goal: 60, sum: r => (r.count['Tree'] || 0) + (r.count['Palm tree'] || 0) + (r.count['Pine tree'] || 0) },
+  { id: 'houses', text: 'Swallow 20 houses', goal: 20, sum: r => r.count['House'] || 0 },
+  { id: 'width', text: 'Reach 40 m wide in one round', goal: 40, max: r => Math.floor(r.width) },
+  { id: 'points', text: 'Score 8,000 points in one round', goal: 8000, max: r => r.points },
+  { id: 'combo', text: 'Reach a 60 combo', goal: 60, max: r => r.combo },
+  { id: 'powers', text: 'Grab 6 power-ups', goal: 6, sum: r => r.powers },
+  { id: 'rivals', text: 'Swallow 3 rival holes', goal: 3, sum: r => r.rivals },
+  { id: 'top3', text: 'Finish in the top 3 twice', goal: 2, sum: r => r.top3 },
+  { id: 'beach', text: 'Play a round in Beach town', goal: 1, sum: r => r.map === 'beach' ? 1 : 0 },
+  { id: 'fair', text: 'Play a round in the Theme park', goal: 1, sum: r => r.map === 'fair' ? 1 : 0 },
+  { id: 'snow', text: 'Play a round in Snow village', goal: 1, sum: r => r.map === 'snow' ? 1 : 0 },
+  { id: 'battle', text: 'Win a Battle', goal: 1, sum: r => r.battleWin },
+  { id: 'cleanup', text: 'Finish a Clean-up', goal: 1, sum: r => r.cleanWin },
+  { id: 'golden', text: 'Swallow a golden object', goal: 1, sum: r => r.golden },
+  { id: 'daily', text: 'Play the Daily city', goal: 1, sum: r => r.mode === 'daily' ? 1 : 0 }
+];
+const CHALLENGE_COINS = 75;
+function ensureDaily() {
+  const d = today();
+  if (save.daily && save.daily.date === d) return save.daily;
+  const r = seeded(hashStr('challenges ' + d)), pool = CHALLENGES.slice(), ids = [];
+  while (ids.length < 3) ids.push(pool.splice((r() * pool.length) | 0, 1)[0].id);
+  save.daily = { date: d, ids, prog: {}, done: {} };
+  persist();
+  return save.daily;
+}
+function applyChallenges(rs) {
+  const dy = ensureDaily(), finished = [];
+  for (const id of dy.ids) {
+    const c = CHALLENGES.find(k => k.id === id);
+    if (!c || dy.done[id]) continue;
+    dy.prog[id] = c.sum ? (dy.prog[id] || 0) + c.sum(rs) : Math.max(dy.prog[id] || 0, c.max(rs));
+    if (dy.prog[id] >= c.goal) { dy.done[id] = true; save.coins += CHALLENGE_COINS; finished.push(c.text); }
+  }
+  return finished;
+}
+
+// ---------- collection book ----------
+const BOOK = [
+  ['City', ['Pedestrian', 'Flower', 'Traffic cone', 'Fire hydrant', 'Trash can', 'Bush', 'Bench', 'Fence', 'Street lamp', 'Tree', 'Food kiosk', 'Car', 'Fountain', 'House', 'City bus', 'Shop building', 'Apartment block', 'Office tower', 'Stadium']],
+  ['Beach town', ['Beach towel', 'Beach ball', 'Surfboard', 'Sandcastle', 'Ice cream cart', 'Beach umbrella', 'Palm tree', 'Lifeguard tower', 'Lighthouse']],
+  ['Theme park', ['Balloon', 'Mascot', 'Bumper car', 'Teacup', 'Picnic table', 'Drop tower', 'Carousel', 'Roller coaster', 'Ferris wheel']],
+  ['Snow village', ['Sled', 'Snowman', 'Pine tree', 'Ice castle']],
+  ['Round events', ['Parade float']]
+];
+
+// ---------- daily leaderboard (shared, only inside Claude) ----------
+const lb = { db: null, uid: null };
+(async () => {
+  try {
+    if (!window.claude || typeof window.claude.use !== 'function') return;
+    const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    if (!db || !user) return;
+    const uid = await user.id();
+    if (!uid) return;
+    lb.db = db; lb.uid = uid;
+    $('leadersBtn').hidden = false;
+  } catch (e) {}
+})();
+async function postDaily(points, width) {
+  if (!lb.db) return 'none';
+  try {
+    const ref = lb.db.doc('lb/' + lb.uid), snap = await ref.get(), d = snap.exists ? snap.data() : null;
+    if (d && d.date === today() && d.points >= points) return 'kept';
+    await ref.set({ date: today(), name: player.name.slice(0, 12), points, width: Math.round(width * 10) / 10, skin: save.skin });
+    return 'posted';
+  } catch (e) { return 'failed'; }
+}
+
+// ---------- menus ----------
+const MAP_IDS = Object.keys(MAPS);
+const dailyMap = () => MAP_IDS[hashStr('map ' + today()) % MAP_IDS.length];
+function chips(el, items, current, onPick, disabled) {
+  el.innerHTML = items.map(([id, label]) => `<button class="chip" type="button" data-id="${id}" aria-pressed="${id === current}"${disabled ? ' disabled' : ''}>${esc(label)}</button>`).join('');
+  el.onclick = e => { const b = e.target.closest('.chip'); if (b && !b.disabled) onPick(b.dataset.id); };
+}
+function renderMenu() {
+  applySkin();
+  $('coinTxt').textContent = save.coins.toLocaleString();
+  $('bestTxt').textContent = save.rec.points.toLocaleString();
+  $('widestTxt').textContent = save.rec.width.toFixed(1) + ' m';
+  $('nameIn').value = save.name;
+  const daily = save.mode === 'daily';
+  chips($('modeChips'), Object.entries(MODES).map(([k, m]) => [k, m.name]), save.mode, id => { save.mode = id; persist(); renderMenu(); });
+  chips($('mapChips'), MAP_IDS.map(k => [k, MAPS[k].name]), daily ? dailyMap() : save.map, id => { save.map = id; persist(); renderMenu(); }, daily);
+  chips($('timeChips'), [['day', 'Afternoon'], ['night', 'Night']], daily ? 'day' : save.time, id => { save.time = id; persist(); renderMenu(); }, daily);
+  $('modeHint').textContent = MODES[save.mode].hint + (daily ? ` Today: ${MAPS[dailyMap()].name}.` : '');
+  const dy = ensureDaily();
+  const open = dy.ids.filter(id => !dy.done[id]).length;
+  $('chalBtn').innerHTML = 'Challenges' + (open ? '<span class="dot" aria-label="open challenges"></span>' : '');
+}
+$('nameIn').addEventListener('input', e => { save.name = e.target.value.slice(0, 12); persist(); applySkin(); });
+$('nameIn').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') e.target.blur(); });
+
+let panelFrom = 'startScreen';
+function openPanel(kind, from) {
+  panelFrom = from || 'startScreen';
+  $(panelFrom).hidden = true;
+  $('panelScreen').hidden = false;
+  renderPanel(kind);
+  setTimeout(() => $('panelBack').focus(), 30);
+}
+$('panelBack').addEventListener('click', () => { $('panelScreen').hidden = true; $(panelFrom).hidden = false; if (panelFrom === 'startScreen') renderMenu(); });
+document.querySelectorAll('[data-panel]').forEach(b => b.addEventListener('click', () => openPanel(b.dataset.panel)));
+
+function renderPanel(kind) {
+  const title = $('panelTitle'), body = $('panelBody');
+  if (kind === 'skins') {
+    title.textContent = 'Skins';
+    body.innerHTML = `<p class="sub"><span class="coin" aria-hidden="true"></span>${save.coins.toLocaleString()} coins. Every round pays coins, and challenges pay ${CHALLENGE_COINS} each.</p><ul class="list">` + SKINS.map(k => {
+      const own = save.owned.includes(k.id), on = save.skin === k.id, P = PIT_THEMES[k.pit];
+      const btn = on ? '<b>Wearing</b>' : own ? `<button class="chip" type="button" data-skin="${k.id}">Wear</button>`
+        : `<button class="chip" type="button" data-buy="${k.id}"${save.coins < k.price ? ' disabled' : ''}>Buy ${k.price}</button>`;
+      return `<li><span class="swatch" style="background:${k.color};--pit:linear-gradient(${P.pave} 0 18%, ${P.soil[0]} 18% 45%, ${P.brick[0]} 45%)"></span><span><b>${k.name}</b><br>${k.pit === 'street' ? 'Street pit' : k.pit[0].toUpperCase() + k.pit.slice(1) + ' pit'}</span>${btn}</li>`;
+    }).join('') + '</ul>';
+    body.onclick = e => {
+      const b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.buy) { const k = skinOf(b.dataset.buy); if (save.coins >= k.price) { save.coins -= k.price; save.owned.push(k.id); save.skin = k.id; chime(); } }
+      if (b.dataset.skin) save.skin = b.dataset.skin;
+      persist(); applySkin(); renderPanel('skins');
+    };
+  } else if (kind === 'challenges') {
+    const dy = ensureDaily();
+    title.textContent = 'Challenges';
+    body.innerHTML = `<p class="sub">Three new goals every day. Each one pays ${CHALLENGE_COINS} coins.</p><ul class="list">` + dy.ids.map(id => {
+      const c = CHALLENGES.find(k => k.id === id), v = Math.min(c.goal, dy.prog[id] || 0), done = dy.done[id];
+      return `<li class="${done ? 'done' : ''}"><span>${done ? '✓' : '○'}</span><span><b>${esc(c.text)}</b><div class="bar"><i style="width:${v / c.goal * 100}%"></i></div></span><span>${v.toLocaleString()}/${c.goal.toLocaleString()}</span></li>`;
+    }).join('') + `</ul><p class="sub">Records: best ${save.rec.points.toLocaleString()} points, widest ${save.rec.width.toFixed(1)} m, longest combo ${save.rec.combo}, ${save.rec.wins} wins in ${save.rec.rounds} rounds.${save.rec.bigLabel ? ` Biggest thing swallowed: ${esc(save.rec.bigLabel.toLowerCase())}.` : ''}</p>`;
+    body.onclick = null;
+  } else if (kind === 'book') {
+    const all = BOOK.reduce((n, [, l]) => n + l.length, 0), got = BOOK.reduce((n, [, l]) => n + l.filter(x => save.book[x]).length, 0);
+    title.textContent = 'Book';
+    body.innerHTML = `<p class="sub">${got} of ${all} things found. Swallow something new to fill its page.</p>` + BOOK.map(([where, list]) =>
+      `<div class="label" style="color:#7a8196">${where}</div><ul class="book">` + list.map(x => save.book[x]
+        ? `<li>${esc(x)}<span>${save.book[x].toLocaleString()} swallowed</span></li>`
+        : `<li class="lock">???<span>not found yet</span></li>`).join('') + '</ul>').join('');
+    body.onclick = null;
+  } else if (kind === 'leaders') {
+    title.textContent = 'Daily board';
+    body.innerHTML = `<p class="sub">Best Daily city scores for ${today()} (${MAPS[dailyMap()].name}).</p><p class="sub" id="lbStatus">Loading…</p><ol class="results" id="lbList"></ol>`;
+    body.onclick = null;
+    (async () => {
+      try {
+        const snap = await lb.db.collection('lb').where('date', '==', today()).get();
+        const rows = snap.docs.map(d => Object.assign({ id: d.id }, d.data())).sort((a, b) => b.points - a.points).slice(0, 25);
+        $('lbStatus').textContent = rows.length ? '' : 'No scores yet today. Play the Daily city to be first.';
+        $('lbList').innerHTML = rows.map((r, i) => `<li class="${r.id === lb.uid ? 'you' : ''}"><span>${i + 1}</span><span class="dot" style="background:${skinOf(r.skin).color}"></span><span>${esc(r.name || 'Player')}</span><span>${Number(r.points).toLocaleString()}</span></li>`).join('');
+      } catch (e) { $('lbStatus').textContent = 'The board could not be loaded right now.'; }
+    })();
+  } else if (kind === 'share') {
+    title.textContent = 'Share card';
+    const url = makeShareCard();
+    body.innerHTML = `<img id="shareImg" alt="Result card" src="${url}"><div class="row2"><button class="btn2" type="button" id="shareGo">Share</button><button class="btn2" type="button" id="saveGo">Save image</button></div><p class="sub" id="shareMsg"></p>`;
+    body.onclick = async e => {
+      const b = e.target.closest('button'); if (!b) return;
+      const blob = await (await fetch(url)).blob(), name = 'eat-in-result.png', msg = $('shareMsg');
+      if (b.id === 'shareGo') {
+        const file = new File([blob], name, { type: 'image/png' });
+        try {
+          if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: 'Eat In' });
+          else msg.textContent = 'Sharing is not available here. Use Save image, or long-press the card.';
+        } catch (err) { if (err && err.name !== 'AbortError') msg.textContent = 'Sharing did not work here. Use Save image instead.'; }
+      } else {
+        try {
+          const dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null;
+          if (dl) { await dl.save({ filename: name, data: blob }); msg.textContent = 'Saved.'; return; }
+        } catch (err) { if (err && err.code === 'declined') return; }
+        const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      }
+    };
+  }
+}
+
+// ---------- share card ----------
+let shot = null, wantShot = false;
+function makeShareCard() {
+  const W = 1080, H = 1350, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  g.fillStyle = '#1f2638'; g.fillRect(0, 0, W, H);
+  if (shot) {   // the last frame of the round, cropped to fill the top
+    const iw = shot.width, ih = shot.height, k = Math.max(W / iw, 820 / ih);
+    g.drawImage(shot, (W - iw * k) / 2, (820 - ih * k) / 2, iw * k, ih * k);
+  }
+  g.fillStyle = '#fffaf1'; g.fillRect(40, 760, W - 80, 550);
+  g.strokeStyle = '#1f2638'; g.lineWidth = 8; g.strokeRect(40, 760, W - 80, 550);
+  const r = round.result || {};
+  g.fillStyle = '#1f2638'; g.font = '700 92px "Pixelify Sans", monospace'; g.fillText('Eat In', 80, 870);
+  g.fillStyle = player.color; g.fillRect(W - 230, 805, 150, 70);
+  g.font = '800 36px Nunito, sans-serif'; g.fillStyle = '#4a5268';
+  g.fillText(`${player.name} · ${MODE.name} · ${MAP.name}`, 80, 935);
+  const stats = [['Rank', r.rank || '-'], ['Points', (r.points || 0).toLocaleString()], ['Width', (r.width || 0).toFixed(1) + ' m']];
+  stats.forEach(([k, v], i) => {
+    const x = 80 + i * 310;
+    g.fillStyle = '#f1ece2'; g.fillRect(x, 970, 290, 160);
+    g.fillStyle = '#1f2638'; g.font = '700 72px "Pixelify Sans", monospace'; g.fillText(String(v), x + 24, 1065);
+    g.fillStyle = '#7a8196'; g.font = '800 28px Nunito, sans-serif'; g.fillText(k.toUpperCase(), x + 24, 1110);
+  });
+  g.fillStyle = '#4a5268'; g.font = '700 34px Nunito, sans-serif';
+  g.fillText(r.line || '', 80, 1190, W - 160);
+  g.fillStyle = '#8a93a8'; g.font = '700 28px Nunito, sans-serif'; g.fillText(today(), 80, 1260);
+  return c.toDataURL('image/png');
+}
+$('shareBtn').addEventListener('click', () => openPanel('share', 'endScreen'));
 
 // ---------- game state ----------
-let state = 'menu', timeLeft = ROUND, autoPlayer = false, timeScale = 1;
+let state = 'menu', timeLeft = MODES.classic.time, autoPlayer = false, timeScale = 1;
+// Everything that belongs to one round.
+const round = { combo: 0, lastEat: -9, eatenPts: 0, totalPts: 1, events: [], rs: null, result: null, bonusCoins: 0, playT: 0, tod: [0, 1] };
+const comboMult = () => 1 + Math.min(Math.max(0, round.combo - 1), 20) * 0.025;   // up to x1.5
 
 function startGame() {
+  MODE = MODES[save.mode] || MODES.classic;
+  const daily = MODE === MODES.daily;
+  MAP = MAPS[daily ? dailyMap() : save.map] || MAPS.city;
+  if (daily) random = seeded(hashStr('city ' + today()));
   buildWorld();
+  random = Math.random;
   holes.forEach(placeHole);
-  timeLeft = ROUND;
+  applySkin();
+  clearPowers();
+  for (let i = 0; i < POWER_COUNT; i++) spawnPower();
+  timeLeft = MODE.time;
+  round.combo = 0; round.lastEat = -9; round.bonusCoins = 0; round.playT = 0; round.result = null;
+  round.eatenPts = 0; round.totalPts = objects.reduce((n, o) => n + o.points, 0);
+  round.tod = !daily && save.time === 'night' ? [1.1, 1.35] : [0, 1];
+  round.rs = { count: {}, width: 0, points: 0, combo: 0, powers: 0, rivals: 0, top3: 0, map: daily ? dailyMap() : save.map, mode: save.mode, battleWin: 0, cleanWin: 0, golden: 0, landmark: 0 };
+  round.events = [];
+  if (MODE.events) {
+    const kinds = ['rush', 'parade', 'golden'].sort(() => Math.random() - 0.5);
+    round.events = [{ at: MODE.time * 0.3, kind: kinds[0] }, { at: MODE.time * 0.62, kind: kinds[1] }];
+  }
+  snow.visible = !!MAP.snowy;
   state = 'play';
-  $('startScreen').hidden = true; $('endScreen').hidden = true;
+  $('startScreen').hidden = true; $('endScreen').hidden = true; $('panelScreen').hidden = true;
   if (!audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audio = null; } }
   if (audio && audio.state === 'suspended') audio.resume();
-  showToast('Swallow the small stuff first', 2.5);
+  startMusic();
+  showToast(MODE === MODES.cleanup ? `Swallow ${Math.round(MODE.target * 100)}% of ${MAP.name}` : MODE === MODES.battle ? 'Last hole standing wins' : 'Swallow the small stuff first', 2.5);
   canvas.focus();
 }
-function endGame() {
+function endGame(outcome) {
+  if (state !== 'play') return;
   state = 'over';
+  stopMusic();
+  wantShot = true;
   const rk = ranking();
-  const pos = rk.indexOf(player) + 1;
-  $('endTitle').textContent = pos === 1 ? 'Biggest hole in town' : "Time's up";
-  $('stRank').textContent = '#' + pos;
+  const pos = rk.indexOf(player) + 1, rs = round.rs;
+  const won = outcome === 'won' || (MODE !== MODES.cleanup && !outcome && pos === 1);
+  let title = pos === 1 ? 'Biggest hole in town' : "Time's up";
+  if (MODE === MODES.cleanup) title = outcome === 'won' ? 'City cleaned up' : "Time's up";
+  if (MODE === MODES.battle) title = outcome === 'won' ? 'Last hole standing' : outcome === 'lost' ? 'Swallowed' : pos === 1 ? 'Still the biggest' : "Time's up";
+  $('endTitle').textContent = title;
+  $('stRank').textContent = MODE === MODES.cleanup ? Math.floor(round.eatenPts / round.totalPts * 100) + '%' : '#' + pos;
+  $('stRank').nextElementSibling.textContent = MODE === MODES.cleanup ? 'Swallowed' : 'Rank';
   $('stPts').textContent = player.points.toLocaleString();
   $('stSize').textContent = (player.r * 2).toFixed(1) + ' m';
-  $('stBiggest').textContent = player.biggest
-    ? `You swallowed ${player.eaten} things. The biggest was a ${player.biggest.label.toLowerCase()}.`
-    : 'You did not swallow anything this time.';
+  const line = player.biggest ? `You swallowed ${player.eaten.toLocaleString()} things. The biggest was a ${player.biggest.label.toLowerCase()}.` : 'You did not swallow anything this time.';
+  $('stBiggest').textContent = line;
+  $('endList').hidden = MODE === MODES.cleanup;
   $('endList').innerHTML = rk.map((h, i) =>
-    `<li class="${h.player ? 'you' : ''}"><span>${i + 1}</span><span class="dot" style="background:${h.color}"></span><span>${h.name}</span><span>${h.points.toLocaleString()}</span></li>`
+    `<li class="${h.player ? 'you' : ''}"><span>${i + 1}</span><span class="dot" style="background:${h.color}"></span><span>${esc(h.name)}</span><span>${MODE === MODES.battle ? (h.out ? 'out' : (h.r * 2).toFixed(1) + ' m') : h.points.toLocaleString()}</span></li>`
   ).join('');
+
+  // stats, coins, records, challenges
+  rs.points = player.points; rs.width = player.r * 2;
+  if (pos <= 3 && MODE !== MODES.cleanup) rs.top3 = 1;
+  if (MODE === MODES.battle && won) rs.battleWin = 1;
+  if (MODE === MODES.cleanup && outcome === 'won') rs.cleanWin = 1;
+  let coins = Math.round(player.points / 40) + round.bonusCoins;
+  if (MODE !== MODES.cleanup) coins += [60, 40, 30, 20, 10, 10, 10, 10][pos - 1] || 0;
+  if (rs.battleWin) coins += 100;
+  if (rs.cleanWin) coins += 80;
+  save.coins += coins;
+  const news = [];
+  const R = save.rec;
+  R.rounds++; if (won) R.wins++;
+  if (player.points > R.points) { if (R.points) news.push('best score'); R.points = player.points; }
+  if (rs.width > R.width) { if (R.width) news.push('widest hole'); R.width = rs.width; }
+  if (rs.combo > R.combo) R.combo = rs.combo;
+  if (player.biggest && player.biggest.vol > R.bigVol) { R.bigVol = player.biggest.vol; R.bigLabel = player.biggest.label; }
+  const finished = applyChallenges(rs);
+  persist();
+  let reward = `+${coins.toLocaleString()} coins`;
+  if (news.length) reward += `. New record: ${news.join(' and ')}!`;
+  if (finished.length) reward += ` Challenge done: ${finished.join(', ')} (+${finished.length * CHALLENGE_COINS}).`;
+  $('stReward').textContent = reward;
+  round.result = { rank: MODE === MODES.cleanup ? Math.floor(round.eatenPts / round.totalPts * 100) + '%' : '#' + pos, points: player.points, width: rs.width, line };
+  if (MODE === MODES.daily) {
+    postDaily(player.points, rs.width).then(r => {
+      if (r === 'posted') $('stReward').textContent += ' Posted to the daily board.';
+      else if (r === 'failed') $('stReward').textContent += " Your score couldn't be posted to the daily board.";
+    });
+  }
   $('endScreen').hidden = false;
   setTimeout(() => $('againBtn').focus(), 50);
 }
 $('playBtn').addEventListener('click', startGame);
 $('againBtn').addEventListener('click', startGame);
+$('menuBtn').addEventListener('click', () => { $('endScreen').hidden = true; state = 'menu'; renderMenu(); $('startScreen').hidden = false; });
 
 // ---------- simulation ----------
+// ---------- power-ups ----------
+// Crates lying on the roads. Any hole that rolls over one gets it.
+const POWERS = {
+  speed: { name: 'Speed', color: '#ffc73d', time: 6, text: 'Speed boost!' },
+  magnet: { name: 'Magnet', color: '#ff5fd2', time: 5, text: 'Magnet: small things fly to you' },
+  grow: { name: 'Grow', color: '#3cc45a', time: 0, text: 'Growth spurt!' },
+  shield: { name: 'Shield', color: '#4f7cff', time: 6, text: 'Shield: nobody can swallow you' }
+};
+const POWER_COUNT = 10;
+let pups = [];
+const pupGlow = {};
+function spawnPower(kind) {
+  kind = kind || pick(Object.keys(POWERS));
+  const P = POWERS[kind];
+  const mesh = mk(variant('pup-' + kind, 1, () => {
+    const v = new Voxels();
+    v.box(P.color, 1.1, 1.1, 1.1, 0, 0, 0).box(C.white, 1.14, 0.22, 1.14, 0, 0.44, 0).box(C.white, 0.22, 1.14, 1.14, 0, 0, 0);
+    return v;
+  }));
+  if (!pupGlow[kind]) pupGlow[kind] = new THREE.SpriteMaterial(Object.assign({ map: glowTex, color: P.color, opacity: 0.7 }, additive));
+  const g = new THREE.Group();
+  g.add(mesh, sprite(pupGlow[kind], 0, 0.55, 0, 3.2));
+  const road = pick(ROADS.slice(1, -1)), along = freeAlong(), side = rand(-2.5, 2.5);
+  const [x, z] = random() < 0.5 ? [road + side, along] : [along, road + side];
+  g.position.set(x, 0.6, z);
+  scene.add(g);
+  pups.push({ kind, x, z, g, mesh, t: rand(0, 6) });
+}
+function clearPowers() { for (const p of pups) scene.remove(p.g); pups = []; }
+function grantPower(h, kind) {
+  const P = POWERS[kind];
+  if (kind === 'grow') h.r2 *= 1.15;
+  else h.buffs[kind] = P.time;
+  if (kind === 'shield') h.shield = Math.max(h.shield || 0, P.time);
+  if (h.player) { showToast(P.text, 2); chime(); round.rs.powers++; }
+}
+function updatePowers(dt) {
+  for (let i = pups.length - 1; i >= 0; i--) {
+    const p = pups[i];
+    p.t += dt;
+    p.g.position.y = 0.7 + Math.sin(p.t * 3) * 0.25;
+    p.mesh.rotation.y += dt * 1.6;
+    for (const h of holes) {
+      if (!h.alive || Math.abs(h.x - p.x) > h.r + 1 || Math.abs(h.z - p.z) > h.r + 1) continue;
+      if (Math.hypot(h.x - p.x, h.z - p.z) < h.r + 0.7) {
+        grantPower(h, p.kind);
+        scene.remove(p.g); pups.splice(i, 1);
+        setTimeout(() => { if (state === 'play') spawnPower(); }, 4000);
+        break;
+      }
+    }
+  }
+}
+// A magnet pulls things that fit toward the hole, lifting them off their paths.
+function magnetPull(h, dt) {
+  const reach = h.r * 1.6 + 4, fit = h.r * fitOf(h);
+  for (const o of objects) {
+    if (!o.alive || o.falling || o.r >= fit || o.landmark) continue;
+    const dx = h.x - o.x, dz = h.z - o.z;
+    if (Math.abs(dx) > reach || Math.abs(dz) > reach) continue;
+    const d = Math.hypot(dx, dz);
+    if (d > reach || d < 0.01) continue;
+    if (o.move) { o.move = null; o.mvx = o.mvz = 0; }
+    const sp = Math.min(d, (8 + h.r) * dt);
+    o.x += dx / d * sp; o.z += dz / d * sp;
+    o.mesh.position.x = o.x; o.mesh.position.z = o.z;
+  }
+}
+
+// ---------- round events ----------
+const goldMat = new THREE.MeshLambertMaterial({ color: 0xffcc33, emissive: 0x6a4a00, map: grainTex });
+const beaconMat = new THREE.SpriteMaterial(Object.assign({ map: glowTex, color: 0xffd54a, opacity: 0.9 }, additive));
+function runEvent(kind) {
+  if (kind === 'rush') {
+    for (let i = 0; i < 16; i++) spawnVehicle(pick(ROADS.slice(1, -1)), pick(['x', 'z']), pick([-1, 1]), random() < 0.5, freeAlong());
+    showToast('Rush hour! The streets fill with buses', 3);
+  } else if (kind === 'parade') {
+    // a parade marches down one road; cars on it pull over and vanish
+    const road = pick(ROADS.slice(2, -2)), axis = pick(['x', 'z']), dir = pick([-1, 1]);
+    for (const o of objects) if (o.alive && !o.falling && o.move && o.move.type === 'drive' && o.move.axis === axis && Math.abs(latOf(o) - road) < ROAD_HALF) { o.alive = false; scene.remove(o.mesh); }
+    const start = -dir * (HALF - 30);
+    const place = (made, back, lat) => {
+      const along = start - dir * back, x = axis === 'x' ? along : road + lat, z = axis === 'x' ? road + lat : along;
+      const m = { type: 'march', axis, dir, lat: road + lat, speed: 2.4, vehicle: made.label === 'Parade float' };
+      addObj(made, x, z, marchYaw(m), m);
+    };
+    for (let i = 0; i < 4; i++) {
+      place(MAKERS.float(), i * 14, 0);
+      for (let k = 0; k < 6; k++) place(MAP === MAPS.fair && k === 0 ? MAKERS.mascot() : MAKERS.person(), i * 14 + 5 + (k >> 1) * 2.2, k % 2 ? 1.6 : -1.6);
+    }
+    showToast('A parade is marching through town', 3);
+  } else if (kind === 'golden') {
+    let best = null, bd = Infinity;
+    const want = clamp(player.r * 1.15, 1, 9);
+    for (const o of objects) {
+      if (!o.alive || o.falling || o.landmark || o.r < player.r * 0.5 || o.r > want) continue;
+      const d = Math.hypot(o.x - player.x, o.z - player.z);
+      if (d > 25 && d < 90 && d < bd) { bd = d; best = o; }
+    }
+    if (!best) return;
+    best.golden = true; best.points *= 5;
+    best.mesh.traverse(c => { if (c.isMesh) c.material = goldMat; });
+    const s = sprite(beaconMat, 0, best.h + 3, 0, 6);
+    s.scale.set(3, 14, 1);
+    best.mesh.add(s);
+    showToast(`A golden ${best.label.toLowerCase()} appeared. It's worth 5x!`, 3.5);
+  }
+}
+
+// vehicles face +x, people face +z
+const marchYaw = m => m.vehicle ? (m.axis === 'x' ? (m.dir > 0 ? 0 : Math.PI) : (m.dir > 0 ? -Math.PI / 2 : Math.PI / 2))
+  : (m.axis === 'x' ? Math.atan2(m.dir, 0) : Math.atan2(0, m.dir));
+
+// ---------- snow ----------
+const snow = (() => {
+  const N = 900, geo = new THREE.BufferGeometry(), p = new Float32Array(N * 3);
+  for (let i = 0; i < N; i++) { p[i * 3] = rand(-60, 60); p[i * 3 + 1] = rand(0, 50); p[i * 3 + 2] = rand(-60, 60); }
+  geo.setAttribute('position', new THREE.BufferAttribute(p, 3));
+  const pts = new THREE.Points(geo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.35, transparent: true, opacity: 0.85, depthWrite: false }));
+  pts.frustumCulled = false; pts.visible = false;
+  scene.add(pts);
+  return pts;
+})();
+function updateSnow(dt) {
+  if (!snow.visible) return;
+  const p = snow.geometry.attributes.position, cx = camLook.x, cz = camLook.z;
+  for (let i = 0; i < p.count; i++) {
+    let x = p.getX(i), y = p.getY(i) - dt * 3, z = p.getZ(i);
+    x += Math.sin(elapsed + i) * dt * 0.6;
+    if (y < 0) y += 50;
+    if (x - cx > 60) x -= 120; else if (x - cx < -60) x += 120;
+    if (z - cz > 60) z -= 120; else if (z - cz < -60) z += 120;
+    p.setXYZ(i, x, y, z);
+  }
+  p.needsUpdate = true;
+}
+
 // ---------- time dilation: clocks near a big black hole run slow ----------
 let dilHoles = [];
 function dilation(x, z) {
@@ -1203,6 +2197,9 @@ function moveObjects(dt) {
         if (t >= Math.PI) { m.dir = -m.dir; m.turn = null; }
       } else if (m.axis === 'x') o.x += m.dir * m.v * dt;
       else o.z += m.dir * m.v * dt;
+    } else if (m.type === 'march') {
+      if (m.axis === 'x') o.x += m.dir * m.speed * dt; else o.z += m.dir * m.speed * dt;
+      if (alongOf(o) * m.dir > HALF - 6) { m.dir = -m.dir; o.yaw = marchYaw(m); o.mesh.rotation.y = o.yaw; }
     } else if (m.type === 'ring') {
       m.s = (m.s + m.speed * dt + m.per) % m.per;
       const seg = Math.floor(m.s / m.side), t = m.s - seg * m.side - m.off;
@@ -1272,20 +2269,33 @@ function finishSwallow(o) {
   o.alive = false; scene.remove(o.mesh);
   for (const [m] of o.mats) m.dispose();
   h.r2 += o.grow * (h.player ? EASY.playerGrow : EASY.botGrow);
-  h.points += o.points;
+  round.eatenPts += o.points;
   h.eaten++;
   if (!h.biggest || o.vol > h.biggest.vol) h.biggest = o;
-  if (h.player && state === 'play') {
-    gulp(o.r);
-    if (o.points >= 3) popText('+' + o.points);
-  }
+  if (!h.player || state !== 'play') { h.points += o.points; return; }
+  // eating in quick succession builds a combo that multiplies points
+  round.combo = round.playT - round.lastEat < 1.5 ? round.combo + 1 : 1;
+  round.lastEat = round.playT;
+  const rs = round.rs, pts = Math.round(o.points * comboMult());
+  h.points += pts;
+  rs.combo = Math.max(rs.combo, round.combo);
+  rs.count[o.label] = (rs.count[o.label] || 0) + 1;
+  if (!save.book[o.label]) { showToast(`New in your book: ${o.label.toLowerCase()}`, 1.6, true); }
+  save.book[o.label] = (save.book[o.label] || 0) + 1;
+  gulp(o.r, round.combo);
+  if (o.r > 2.5) crunch(o.r); else if (o.label === 'Pedestrian' || o.label === 'Mascot') squeak();
+  if (o.golden) { rs.golden++; round.bonusCoins += 25; showToast('Golden snack! +25 coins', 2.5); chime(); }
+  if (o.landmark) { rs.landmark++; h.points += 500; round.bonusCoins += 100; showToast(`You swallowed the ${o.label.toLowerCase()}! +500`, 3.5); }
+  if (pts >= 3) popText('+' + pts);
 }
 
 function step(dt) {
   const playing = state === 'play';
   if (playing) {
-    timeLeft -= dt;
+    timeLeft -= dt; round.playT += dt;
+    while (round.events.length && MODE.time - timeLeft >= round.events[0].at) runEvent(round.events.shift().kind);
     if (timeLeft <= 0) { timeLeft = 0; endGame(); }
+    if (MODE === MODES.cleanup && round.eatenPts >= round.totalPts * MODE.target) endGame('won');
   }
   moveObjects(dt);
 
@@ -1303,8 +2313,10 @@ function step(dt) {
         continue;
       }
       const [ix, iz] = h.player && !autoPlayer ? playerIntent() : botIntent(h, dt);
-      const speed = (h.player ? EASY.playerSpeed : EASY.botSpeed) + h.r * 0.9;
+      const speed = ((h.player ? EASY.playerSpeed : EASY.botSpeed) + h.r * 0.9) * (h.buffs.speed > 0 ? 1.6 : 1);
       if (h.shield > 0) h.shield -= dt;
+      for (const k in h.buffs) if (h.buffs[k] > 0) h.buffs[k] -= dt;
+      if (h.buffs.magnet > 0) magnetPull(h, dt);
       const k = Math.min(1, dt * 8);
       h.vx += (ix * speed - h.vx) * k; h.vz += (iz * speed - h.vz) * k;
       h.x = clamp(h.x + h.vx * dt, -EDGE + 1, EDGE - 1);
@@ -1348,6 +2360,9 @@ function step(dt) {
       if (a.r < b.r * ratio) continue;
       if (Math.hypot(a.x - b.x, a.z - b.z) < a.r - b.r * (b.player ? 0.8 : 0.4)) {
         b.alive = false; b.vanish = 1; b.vanishR = b.r; b.tag.hidden = true; b.respawn = b.player ? EASY.respawnTime : 3;
+        b.buffs = {};
+        if (a.player) round.rs.rivals++;
+        if (!MODE.respawn) { b.respawn = Infinity; b.out = true; b.outAt = round.playT; }
         a.r2 += b.r2 * 0.5; a.points += 20 + Math.round(b.points * 0.25);
         b.r2 = Math.max(START_R * START_R, b.r2 * (b.player ? EASY.respawnKeep : 0.36)); b.r = Math.sqrt(b.r2);
         b.vx = b.vz = 0;
@@ -1355,6 +2370,11 @@ function step(dt) {
         else if (a.player) { showToast(`You swallowed ${b.name}`, 2); popText('+' + (20 + Math.round(b.points * 0.25))); gulp(4); }
       }
     }
+    if (MODE === MODES.battle) {
+      if (player.out) endGame('lost');
+      else if (holes.every(h => h.player || !h.inGame || h.out)) endGame('won');
+    }
+    updatePowers(dt);
   }
 
   // falling objects
@@ -1554,19 +2574,26 @@ function frame(now) {
   hudT -= dt;
   if (hudT <= 0) { hudT = 0.2; updateHud(); }
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) hud.toast.hidden = true; }
-  applyTimeOfDay(state === 'play' ? 1 - timeLeft / ROUND : state === 'over' ? 1 : 0.2);
+  const [t0, t1] = round.tod;
+  applyTimeOfDay(state === 'play' ? t0 + (t1 - t0) * (1 - timeLeft / MODE.time) : state === 'over' ? t1 : t0 + 0.2);
   placeSun(camLook.x, camLook.z, state === 'menu' ? 6 : player.r);
   updateCityLights();
+  updateSnow(dt);
   renderWithLensing();
+  if (wantShot) {   // grab the last frame of the round for the share card, right after it was drawn
+    wantShot = false;
+    try { const img = new Image(); img.src = canvas.toDataURL('image/jpeg', 0.85); shot = img; } catch (e) { shot = null; }
+  }
   requestAnimationFrame(frame);
 }
 
 buildWorld();
 holes.forEach(placeHole);
+renderMenu();
 updateHud();
 requestAnimationFrame(frame);
 
 // test hook
-window.__eatIn = { holes, get objects() { return objects; }, botIntent, startGame, get state() { return state; }, set auto(v) { autoPlayer = v; }, set timeScale(v) { timeScale = v; }, set keepShadows(v) { perf.checked = v; }, get shadows() { return renderer.shadowMap.enabled; }, set time(v) { timeLeft = v; } };
+window.__eatIn = { holes, save, round, runEvent, get pups() { return pups; }, get mode() { return MODE; }, get map() { return MAP; }, endGame, get objects() { return objects; }, botIntent, startGame, get state() { return state; }, set auto(v) { autoPlayer = v; }, set timeScale(v) { timeScale = v; }, set keepShadows(v) { perf.checked = v; }, get shadows() { return renderer.shadowMap.enabled; }, set time(v) { timeLeft = v; } };
 })();
 </script>
