@@ -25,4 +25,5 @@ java -jar tools/apktool.jar --frame-path build/framework b app -o build/EatIn-un
 java -jar tools/uber-apk-signer.jar -a build/EatIn-unsigned.apk -o build/signed \
   --ks debug.keystore --ksAlias androiddebugkey --ksPass android --ksKeyPass android
 cp build/signed/*-aligned-signed.apk EatIn-debug.apk
+rm -rf build app/build
 echo "Built $(pwd)/EatIn-debug.apk (versionCode $code, versionName $name)"
