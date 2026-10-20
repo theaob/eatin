@@ -30,6 +30,10 @@ container, which can't reach it.
 - **GitHub Actions** (`.github/workflows/android.yml`) builds on every push that
   touches the game or `android/`. The run's artifact holds `app-debug.apk`
   (signed with the runner's own debug key) and `app-release.aab` (unsigned).
+  Pushes (not pull requests) also replace the `android-latest` pre-release on
+  GitHub with the same two files, which is the easiest way to get the APK onto
+  a phone. That APK has a different key from earlier builds, so uninstall the
+  old app first, or re-sign it with `debug.keystore` as below.
 - **Locally** with JDK 17 and the Android SDK (or Android Studio):
   `./gradlew assembleDebug bundleRelease`.
 
