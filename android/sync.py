@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Copy the game (../index.html) into app/assets and make it run offline.
+"""Copy the game (../index.html) into app/src/main/assets and make it run offline.
 
 Swaps the three.js CDN script for the bundled vendor/three.min.js and the
 Google Fonts stylesheet for vendor/fonts.css with the fonts inlined.
@@ -8,7 +8,7 @@ import base64, pathlib, re, shutil, sys
 
 here = pathlib.Path(__file__).resolve().parent
 src = here.parent / 'index.html'
-assets = here / 'app' / 'assets'
+assets = here / 'app' / 'src' / 'main' / 'assets'
 vendor = here / 'vendor'
 
 html = src.read_text(encoding='utf-8')

@@ -1,58 +1,70 @@
 # Eat In for Android
 
-`EatIn-debug.apk` (built by `build.sh`, not committed) is the game wrapped in a full-screen WebView app that turns with the phone (portrait or landscape)
-(package `com.onurbaykal.eatin`, Android 7.0+). It runs fully offline: three.js r128
-and the two fonts are bundled.
+The game wrapped in a full-screen WebView app that turns with the phone
+(package `com.onurbaykal.eatin`, Android 7.0+). The game runs offline: three.js
+r128 and the two fonts are bundled. The network is only used for ads.
 
-## Install
+## Ads
 
-Copy `EatIn-debug.apk` to the phone, open it, and allow installs from that app
-when Android asks. Or with a cable: `adb install -r EatIn-debug.apk`.
+AdMob, through the Google Mobile Ads SDK:
 
-## Rebuild after the game changes
+- a banner at the bottom of the screen whenever you're not playing (menu,
+  results, panels); the menus get extra bottom padding so nothing hides under it
+- an interstitial when leaving the results screen, after every 2nd round and at
+  most once per 150 s (`AD_EVERY` and `AD_GAP` in `../index.html`)
+- Google's consent form (UMP) where the law needs one, and an "Ad privacy"
+  button on the menu when users must be able to change their choice
 
-The game itself is not edited here. `sync.py` copies `../index.html` into
-`app/assets/` and swaps the three.js CDN script and Google Fonts link for the
-bundled copies in `vendor/`.
+The IDs in `app/src/main/res/values/ads.xml` are Google's public **test IDs**:
+they show test ads and earn nothing. Replace all three with the app ID and ad
+unit IDs from the AdMob console before releasing. The page talks to the app
+through `window.EatInAds` (in `MainActivity.java`); in a browser that object is
+missing and the game has no ads.
+
+## Build
+
+This is a normal Gradle project. Google's Maven repository is needed for the
+Android plugin and the ads SDK, so it builds anywhere except Claude's cloud
+container, which can't reach it.
+
+- **GitHub Actions** (`.github/workflows/android.yml`) builds on every push that
+  touches the game or `android/`. The run's artifact holds `app-debug.apk`
+  (signed with the runner's own debug key) and `app-release.aab` (unsigned).
+  Pushes (not pull requests) also replace the `android-latest` pre-release on
+  GitHub with the same two files, which is the easiest way to get the APK onto
+  a phone. That APK has a different key from earlier builds, so uninstall the
+  old app first, or re-sign it with `debug.keystore` as below.
+- **Locally** with JDK 17 and the Android SDK (or Android Studio):
+  `./gradlew assembleDebug bundleRelease`.
+
+`sync.py` runs as part of the build: it copies `../index.html` into
+`app/src/main/assets/` and swaps the three.js CDN script and Google Fonts link
+for the bundled copies in `vendor/`. Pass `-PversionCode=N -PversionName=X` to
+set the version; CI uses 100 plus the run number as `versionCode`, above
+every old apktool build.
+
+## Signing
+
+Keys stay out of the repo. A local build picks them up when present:
+
+- `debug.keystore` in this folder (password `android`) signs the debug APK, so
+  it installs over earlier builds and keeps saved progress
+- `../signing/keystore.properties` (or `KEYSTORE_PROPS`) signs the release bundle
+
+To sign CI output yourself:
 
 ```
-bash build.sh            # versionName defaults to 1.<versionCode>
-bash build.sh 1.2        # or pick one
+java -jar uber-apk-signer.jar -a app-debug.apk --ks debug.keystore \
+  --ksAlias androiddebugkey --ksPass android --ksKeyPass android
+jarsigner -keystore <upload keystore> app-release.aab <alias>
 ```
-
-Needs Java 11+ and Python 3, plus two jars in `tools/`: apktool (packs the
-APK, with its own aapt2) and uber-apk-signer (zipalign plus v1/v2/v3 signing).
-They are not in the repo; fetch them once:
-
-```
-mkdir -p tools
-curl -L -o tools/apktool.jar https://github.com/iBotPeaches/Apktool/releases/download/v2.10.0/apktool_2.10.0.jar
-curl -L -o tools/uber-apk-signer.jar https://github.com/patrickfav/uber-apk-signer/releases/download/v1.3.0/uber-apk-signer-1.3.0.jar
-```
-
-Each build bumps `versionCode`, and every build is signed with the same
-`debug.keystore` (password `android`), so a new APK installs over the old one
-and keeps saved settings. Keep that keystore; losing it means uninstalling
-before the next install. It is not committed to the repo: copy your existing
-`debug.keystore` into this folder before building, or `build.sh` makes a new
-one (and the first APK it signs will not install over one signed with the old
-key).
-
-The built APK, `build/` and `app/assets/` are build output and are ignored by
-git.
-
-If the game ever loads another file from a CDN, `sync.py` prints a warning;
-download that file into `vendor/` and add a swap for it in `sync.py`.
 
 ## Layout
 
-- `app/AndroidManifest.xml`: follows the phone rotation (`fullUser`), full screen, notch-aware
-- `app/smali/com/onurbaykal/eatin/MainActivity.smali`: the WebView activity (JS and
-  localStorage on, sound without a tap, immersive mode, pauses in background)
-- `app/res/`: app name, theme, launcher icon
+- `app/src/main/AndroidManifest.xml`: follows the phone rotation, full screen, notch-aware
+- `app/src/main/java/com/onurbaykal/eatin/MainActivity.java`: the WebView
+  activity (JS and localStorage on, sound without a tap, immersive mode, pauses
+  in background) and the ads
+- `app/src/main/res/`: app name, theme, launcher icon, ad IDs
 - `vendor/`: three.min.js and the font files
-- `app/assets/`: generated by `sync.py`, do not edit
-
-The activity is written in smali because this was built without the Android
-SDK (Google's download host was unreachable). Play Store release needs a real
-release keystore and an `.aab`, which is not set up.
+- `app/src/main/assets/`: generated by `sync.py`, do not edit

@@ -56,7 +56,7 @@ body { font-family: var(--font-body); font-weight: 600; color: var(--paper); use
 #sound { position: fixed; z-index: 7; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); font: 800 12px var(--font-body); color: var(--paper); padding: 8px 12px; cursor: pointer; }
 #sound:focus-visible, .btn:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
 
-.overlay { position: fixed; inset: 0; z-index: 10; display: grid; align-items: safe center; justify-items: center; overflow-y: auto; padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px)); box-sizing: border-box; background: radial-gradient(ellipse at center, rgba(31,38,56,.35), rgba(31,38,56,.7)); touch-action: pan-y; }
+.overlay { position: fixed; inset: 0; z-index: 10; display: grid; align-items: safe center; justify-items: center; overflow-y: auto; padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px) + var(--ad-h, 0px)); box-sizing: border-box; background: radial-gradient(ellipse at center, rgba(31,38,56,.35), rgba(31,38,56,.7)); touch-action: pan-y; }
 .card { background: var(--paper); color: var(--ink); border-radius: 4px; border: 3px solid var(--ink); padding: 26px 26px 22px; width: min(420px, 100%); box-sizing: border-box; box-shadow: 10px 10px 0 rgba(20,24,40,.45); display: grid; gap: 14px; }
 .logo { font-family: var(--font-display); font-weight: 700; font-size: clamp(54px, 15vw, 76px); line-height: .9; margin: 0; letter-spacing: .01em; display: flex; align-items: center; gap: 12px; }
 .logo .o { position: relative; display: inline-block; width: .9em; height: .58em; background: var(--mint); clip-path: var(--pix); transform: translateY(.06em); }
@@ -170,6 +170,7 @@ h2.big { font-family: var(--font-display); font-weight: 700; font-size: 40px; ma
       <button class="btn2" type="button" data-panel="challenges" id="chalBtn">Challenges</button>
       <button class="btn2" type="button" data-panel="book">Book</button>
       <button class="btn2" type="button" data-panel="leaders" id="leadersBtn" hidden>Leaders</button>
+      <button class="btn2" type="button" id="adPrivacyBtn" hidden>Ad privacy</button>
     </div>
   </div>
 </div>
@@ -1769,6 +1770,7 @@ function renderMenu() {
   const dy = ensureDaily();
   const open = dy.ids.filter(id => !dy.done[id]).length;
   $('chalBtn').innerHTML = 'Challenges' + (open ? '<span class="dot" aria-label="open challenges"></span>' : '');
+  if (nativeAds) ads.privacy(nativeAds.privacyOptionsRequired());
 }
 $('nameIn').addEventListener('input', e => { save.name = e.target.value.slice(0, 12); persist(); applySkin(); });
 $('nameIn').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') e.target.blur(); });
@@ -1883,6 +1885,33 @@ function makeShareCard() {
 }
 $('shareBtn').addEventListener('click', () => openPanel('share', 'endScreen'));
 
+// ---------- ads ----------
+// Only the Android app has ads: it injects window.EatInAds and calls back into
+// window.eatInAds. Elsewhere (browser, artifact) all of this does nothing.
+const AD_EVERY = 2;        // interstitial after every 2nd round...
+const AD_GAP = 150;        // ...and no more than one per 150 s
+const nativeAds = window.EatInAds || null;
+const ads = {
+  rounds: 0, last: -1e9, next: null,
+  menu(on) { if (nativeAds) on ? nativeAds.showBanner() : nativeAds.hideBanner(); if (!on) ads.banner(0); },
+  // Leaving the results screen: maybe show an interstitial, then go on.
+  between(then) {
+    if (!nativeAds || ads.rounds < AD_EVERY || performance.now() - ads.last < AD_GAP * 1000 || !nativeAds.interstitialReady()) return then();
+    ads.next = then;
+    nativeAds.showInterstitial();
+  },
+  done() {
+    const f = ads.next; ads.next = null;
+    if (!f) return;
+    ads.rounds = 0; ads.last = performance.now();
+    f();
+  },
+  banner(h) { document.documentElement.style.setProperty('--ad-h', h + 'px'); },
+  privacy(required) { $('adPrivacyBtn').hidden = !required; }
+};
+window.eatInAds = ads;
+$('adPrivacyBtn').addEventListener('click', () => nativeAds && nativeAds.showPrivacyOptions());
+
 // ---------- game state ----------
 let state = 'menu', timeLeft = MODES.classic.time, autoPlayer = false, timeScale = 1;
 // Everything that belongs to one round.
@@ -1912,6 +1941,7 @@ function startGame() {
   }
   snow.visible = !!MAP.snowy;
   state = 'play';
+  ads.menu(false);
   $('startScreen').hidden = true; $('endScreen').hidden = true; $('panelScreen').hidden = true;
   if (!audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audio = null; } }
   if (audio && audio.state === 'suspended') audio.resume();
@@ -1923,6 +1953,8 @@ function endGame(outcome) {
   if (state !== 'play') return;
   state = 'over';
   stopMusic();
+  ads.rounds++;
+  ads.menu(true);
   wantShot = true;
   const rk = ranking();
   const pos = rk.indexOf(player) + 1, rs = round.rs;
@@ -1976,8 +2008,8 @@ function endGame(outcome) {
   setTimeout(() => $('againBtn').focus(), 50);
 }
 $('playBtn').addEventListener('click', startGame);
-$('againBtn').addEventListener('click', startGame);
-$('menuBtn').addEventListener('click', () => { $('endScreen').hidden = true; state = 'menu'; renderMenu(); $('startScreen').hidden = false; });
+$('againBtn').addEventListener('click', () => ads.between(startGame));
+$('menuBtn').addEventListener('click', () => ads.between(() => { $('endScreen').hidden = true; state = 'menu'; renderMenu(); $('startScreen').hidden = false; }));
 
 // ---------- simulation ----------
 // ---------- power-ups ----------
@@ -2595,6 +2627,7 @@ function frame(now) {
 buildWorld();
 holes.forEach(placeHole);
 renderMenu();
+ads.menu(true);
 updateHud();
 requestAnimationFrame(frame);
 
