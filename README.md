@@ -26,5 +26,5 @@ python3 -m http.server
 
 ## Privacy
 
-See [privacy.html](privacy.html). With GitHub Pages on (branch `main`, folder
+See [privacy.html](privacy.html). With GitHub Pages on (the default branch, folder
 `/`), it is served at https://theaob.github.io/eatin/privacy.html.
