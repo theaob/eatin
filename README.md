@@ -23,3 +23,8 @@ python3 -m http.server
 
 `android/` wraps the game in an offline, full-screen WebView APK. See
 [android/README.md](android/README.md) for how to build and install it.
+
+## Privacy
+
+See [privacy.html](privacy.html). With GitHub Pages on (the default branch, folder
+`/`), it is served at https://theaob.github.io/eatin/privacy.html.
