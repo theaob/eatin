@@ -1,4 +1,4 @@
-.class public Lcom/eatin/game/MainActivity;
+.class public Lcom/onurbaykal/eatin/MainActivity;
 .super Landroid/app/Activity;
 .source "MainActivity.smali"
 
@@ -33,7 +33,7 @@
 
     new-instance v0, Landroid/webkit/WebView;
     invoke-direct {v0, p0}, Landroid/webkit/WebView;-><init>(Landroid/content/Context;)V
-    iput-object v0, p0, Lcom/eatin/game/MainActivity;->web:Landroid/webkit/WebView;
+    iput-object v0, p0, Lcom/onurbaykal/eatin/MainActivity;->web:Landroid/webkit/WebView;
 
     invoke-virtual {v0}, Landroid/webkit/WebView;->getSettings()Landroid/webkit/WebSettings;
     move-result-object v1
@@ -51,7 +51,7 @@
     const-string v1, "file:///android_asset/index.html"
     invoke-virtual {v0, v1}, Landroid/webkit/WebView;->loadUrl(Ljava/lang/String;)V
 
-    invoke-direct {p0}, Lcom/eatin/game/MainActivity;->hideBars()V
+    invoke-direct {p0}, Lcom/onurbaykal/eatin/MainActivity;->hideBars()V
     return-void
 .end method
 
@@ -60,7 +60,7 @@
     .locals 0
     invoke-super {p0, p1}, Landroid/app/Activity;->onWindowFocusChanged(Z)V
     if-eqz p1, :done
-    invoke-direct {p0}, Lcom/eatin/game/MainActivity;->hideBars()V
+    invoke-direct {p0}, Lcom/onurbaykal/eatin/MainActivity;->hideBars()V
     :done
     return-void
 .end method
@@ -69,7 +69,7 @@
 .method protected onPause()V
     .locals 1
     invoke-super {p0}, Landroid/app/Activity;->onPause()V
-    iget-object v0, p0, Lcom/eatin/game/MainActivity;->web:Landroid/webkit/WebView;
+    iget-object v0, p0, Lcom/onurbaykal/eatin/MainActivity;->web:Landroid/webkit/WebView;
     if-eqz v0, :done
     invoke-virtual {v0}, Landroid/webkit/WebView;->onPause()V
     invoke-virtual {v0}, Landroid/webkit/WebView;->pauseTimers()V
@@ -81,7 +81,7 @@
 .method protected onResume()V
     .locals 1
     invoke-super {p0}, Landroid/app/Activity;->onResume()V
-    iget-object v0, p0, Lcom/eatin/game/MainActivity;->web:Landroid/webkit/WebView;
+    iget-object v0, p0, Lcom/onurbaykal/eatin/MainActivity;->web:Landroid/webkit/WebView;
     if-eqz v0, :done
     invoke-virtual {v0}, Landroid/webkit/WebView;->onResume()V
     invoke-virtual {v0}, Landroid/webkit/WebView;->resumeTimers()V
@@ -92,7 +92,7 @@
 
 .method protected onDestroy()V
     .locals 1
-    iget-object v0, p0, Lcom/eatin/game/MainActivity;->web:Landroid/webkit/WebView;
+    iget-object v0, p0, Lcom/onurbaykal/eatin/MainActivity;->web:Landroid/webkit/WebView;
     if-eqz v0, :done
     invoke-virtual {v0}, Landroid/webkit/WebView;->destroy()V
     :done

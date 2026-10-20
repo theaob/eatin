@@ -1,7 +1,7 @@
 # Eat In for Android
 
 `EatIn-debug.apk` (built by `build.sh`, not committed) is the game wrapped in a full-screen WebView app that turns with the phone (portrait or landscape)
-(package `com.eatin.game`, Android 7.0+). It runs fully offline: three.js r128
+(package `com.onurbaykal.eatin`, Android 7.0+). It runs fully offline: three.js r128
 and the two fonts are bundled.
 
 ## Install
@@ -47,7 +47,7 @@ download that file into `vendor/` and add a swap for it in `sync.py`.
 ## Layout
 
 - `app/AndroidManifest.xml`: follows the phone rotation (`fullUser`), full screen, notch-aware
-- `app/smali/com/eatin/game/MainActivity.smali`: the WebView activity (JS and
+- `app/smali/com/onurbaykal/eatin/MainActivity.smali`: the WebView activity (JS and
   localStorage on, sound without a tap, immersive mode, pauses in background)
 - `app/res/`: app name, theme, launcher icon
 - `vendor/`: three.min.js and the font files
