@@ -4,8 +4,9 @@ plugins {
     id("com.android.application")
 }
 
-// Version: pass -PversionCode=N -PversionName=X (CI uses the run number).
-val code = (findProperty("versionCode") as String?)?.toInt() ?: 5
+// Version: pass -PversionCode=N -PversionName=X. CI uses 100 + the run number,
+// which stays above the codes of the old apktool builds.
+val code = (findProperty("versionCode") as String?)?.toInt() ?: 100
 val name = (findProperty("versionName") as String?) ?: "1.$code"
 
 // Release signing: ../../signing/keystore.properties (outside the repo) or

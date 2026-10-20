@@ -40,7 +40,8 @@ container, which can't reach it.
 `sync.py` runs as part of the build: it copies `../index.html` into
 `app/src/main/assets/` and swaps the three.js CDN script and Google Fonts link
 for the bundled copies in `vendor/`. Pass `-PversionCode=N -PversionName=X` to
-set the version; CI uses the run number as `versionCode`.
+set the version; CI uses 100 plus the run number as `versionCode`, above
+every old apktool build.
 
 ## Signing
 

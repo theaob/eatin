@@ -25,7 +25,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       # Debug APK (signed with the runner's debug key) and an unsigned
       # release bundle; sign both locally with the project keys, see README.
-      - run: ./gradlew --no-daemon assembleDebug bundleRelease -PversionCode=${{ github.run_number }}
+      - run: ./gradlew --no-daemon assembleDebug bundleRelease -PversionCode=$((100 + ${{ github.run_number }}))
       - uses: actions/upload-artifact@v4
         with:
           name: eatin-${{ github.run_number }}
