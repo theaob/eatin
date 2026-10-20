@@ -7,6 +7,9 @@ on:
     paths: ['android/**', 'index.html', '.github/workflows/android.yml']
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,3 +32,16 @@ jobs:
           path: |
             android/app/build/outputs/apk/debug/app-debug.apk
             android/app/build/outputs/bundle/release/app-release.aab
+      # Rolling pre-release with the newest build, easy to open on a phone.
+      - name: Update the android-latest pre-release
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk EatIn-debug-ci.apk
+          cp app/build/outputs/bundle/release/app-release.aab EatIn-release-unsigned.aab
+          gh release delete android-latest --yes --cleanup-tag || true
+          gh release create android-latest --prerelease --target "$GITHUB_SHA" \
+            --title "Latest Android build ($GITHUB_REF_NAME, run $GITHUB_RUN_NUMBER)" \
+            --notes "Built from $GITHUB_SHA. The APK is signed with the CI runner's debug key; the AAB is unsigned. See android/README.md to sign them." \
+            EatIn-debug-ci.apk EatIn-release-unsigned.aab
