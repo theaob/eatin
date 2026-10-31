@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eat In: Hole City</title>
+<meta name="description" content="Be a hole in the street. Swallow cars, houses and towers till you rule the city. Free on Android, or play it in your browser.">
+<link rel="canonical" href="https://theaob.github.io/eatin/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Eat In">
+<meta property="og:title" content="Eat In: Hole City">
+<meta property="og:description" content="Be a hole in the street. Swallow cars, houses and towers till you rule the city.">
+<meta property="og:url" content="https://theaob.github.io/eatin/">
+<meta property="og:image" content="https://theaob.github.io/eatin/img/feature.jpg">
+<meta property="og:image:width" content="1024">
+<meta property="og:image:height" content="500">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#1f2638">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@500;700&family=Nunito:wght@600;800&display=swap">
+<style>
+  /* Same palette and fonts as the game (index.html), laid out like a store listing. */
+  :root {
+    --ink: #1f2638;
+    --paper: #fffaf1;
+    --card: #f1ece2;
+    --line: #e2dbcc;
+    --hot: #ff5a6e;
+    --hot-dark: #c63a4d;
+    --mint: #23c2b0;
+    --sun: #ffc73d;
+    --text: #1f2638;
+    --muted: #4a5268;
+    --soft: #7a8196;
+    --bg: #fffaf1;
+    --display: 'Pixelify Sans', 'Courier New', monospace;
+    --body: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #161b28; --text: #f3efe6; --muted: #b9bfcd; --soft: #8a93a8;
+      --card: #222a3d; --line: #2f3850; --paper: #1f2638;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #161b28; --text: #f3efe6; --muted: #b9bfcd; --soft: #8a93a8;
+    --card: #222a3d; --line: #2f3850; --paper: #1f2638;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 600 17px/1.55 var(--body); }
+  img { display: block; max-width: 100%; }
+  a { color: inherit; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+
+  /* Hero: the feature graphic, then the app header like a store page */
+  .hero { background: var(--ink); }
+  .hero img { width: 100%; height: auto; max-width: 1024px; margin: 0 auto; }
+  .app { display: grid; grid-template-columns: auto 1fr; gap: 20px; align-items: center; padding: 28px 0 8px; }
+  .app .icon { width: 112px; height: 112px; border-radius: 22%; border: 3px solid var(--ink); box-shadow: 6px 6px 0 rgba(20,24,40,.35); image-rendering: pixelated; }
+  h1 { font: 700 clamp(34px, 7vw, 52px)/1 var(--display); margin: 0 0 6px; letter-spacing: .01em; }
+  .dev { margin: 0; color: var(--mint); font-weight: 800; }
+  .facts { display: flex; flex-wrap: wrap; gap: 8px 10px; margin: 8px 0 0; padding: 0; list-style: none; color: var(--muted); font-size: 14px; font-weight: 800; }
+  .facts li { background: var(--card); border: 2px solid var(--line); padding: 3px 10px; border-radius: 2px; }
+
+  .get { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; padding: 18px 0 8px; }
+  .badge { display: inline-flex; align-items: center; gap: 10px; height: 58px; padding: 0 18px 0 14px; background: #000; color: #fff; border: 1px solid #a6a6a6; border-radius: 9px; text-decoration: none; }
+  .badge svg { width: 30px; height: 33px; flex: none; }
+  .badge span { display: grid; line-height: 1.05; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; }
+  .badge small { font-size: 11px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; }
+  .badge b { font-size: 22px; font-weight: 500; letter-spacing: -.01em; }
+  .badge:focus-visible, .play:focus-visible { outline: 3px solid var(--sun); outline-offset: 3px; }
+  .play { font: 700 22px var(--display); letter-spacing: .03em; color: #fffaf1; background: var(--hot); border: 3px solid var(--ink); border-radius: 2px; padding: 11px 20px; text-decoration: none; box-shadow: 0 5px 0 var(--hot-dark); }
+  .play:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--hot-dark); }
+  .note { color: var(--soft); font-size: 14px; margin: 4px 0 0; }
+
+  /* Screenshot strip, scrolls sideways like the stores */
+  .shots { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 22px 16px 14px; margin: 0 -16px; overscroll-behavior-x: contain; }
+  .shots img { height: clamp(300px, 62vh, 480px); width: auto; flex: none; scroll-snap-align: start; border-radius: 12px; border: 2px solid var(--line); background: var(--card); }
+  .shots img.land { aspect-ratio: 16 / 9; }
+  .shots img.port { aspect-ratio: 9 / 16; }
+
+  h2 { font: 700 26px/1.2 var(--display); margin: 34px 0 10px; }
+  .lede { font-size: 19px; color: var(--muted); max-width: 46em; margin: 0; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin: 14px 0 0; padding: 0; list-style: none; }
+  .grid li { background: var(--card); border: 2px solid var(--line); border-radius: 2px; padding: 14px 16px; color: var(--muted); font-size: 15px; }
+  .grid b { display: block; color: var(--text); font: 700 19px var(--display); margin-bottom: 2px; }
+  ul.plain { color: var(--muted); padding-left: 1.2em; margin: 8px 0 0; }
+  ul.plain li { margin: 4px 0; }
+
+  footer { margin-top: 48px; padding: 24px 0 40px; border-top: 2px solid var(--line); color: var(--soft); font-size: 14px; }
+  footer a { color: var(--mint); }
+  footer p { margin: 4px 0; }
+
+  @media (max-width: 520px) {
+    .app { gap: 14px; }
+    .app .icon { width: 84px; height: 84px; }
+    .shots img { height: 360px; }
+  }
+</style>
+</head>
+<body>
+<header class="hero">
+  <img src="img/feature.jpg" alt="Eat In: a glowing hole swallows a pink office tower in a blocky city. Maps: City, Beach, Theme park, Snow." width="1024" height="500">
+</header>
+
+<main class="wrap">
+  <section class="app" aria-label="App">
+    <img class="icon" src="img/icon-512.png" alt="" width="112" height="112">
+    <div>
+      <h1>Eat In</h1>
+      <p class="dev">Hole City · Arcade</p>
+      <ul class="facts">
+        <li>Free</li>
+        <li>Plays offline</li>
+        <li>No account</li>
+        <li>Everyone</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="get">
+    <a class="badge" id="playStore" href="https://play.google.com/store/apps/details?id=com.onurbaykal.eatin" aria-label="Get it on Google Play">
+      <svg viewBox="0 0 30 33" aria-hidden="true">
+        <path d="M1.2.6 16.6 16.3 1.2 32a2 2 0 0 1-.7-1.6V2.2c0-.7.3-1.2.7-1.6Z" fill="#00d7fe"/>
+        <path d="m21.8 21.5-5.2-5.2 5.2-5.3 6.2 3.6c1.8 1 1.8 2.6 0 3.6l-6.2 3.3Z" fill="#ffce00"/>
+        <path d="M21.8 21.5 16.6 16.3 1.2 32c.6.6 1.5.7 2.6.1l18-10.6Z" fill="#ff3a44"/>
+        <path d="M21.8 11 3.8.5C2.7-.1 1.8 0 1.2.6l15.4 15.7L21.8 11Z" fill="#00f076"/>
+      </svg>
+      <span><small>Get it on</small><b>Google Play</b></span>
+    </a>
+    <a class="play" href="play/">Play in your browser</a>
+  </div>
+  <p class="note">Android 7 and up. The browser version runs on phones and computers, no install needed.</p>
+
+  <div class="shots" tabindex="0" aria-label="Screenshots">
+    <img class="port" src="img/portrait-1-black.webp" alt="A huge black hole bending the city around it" loading="lazy" width="540" height="960">
+    <img class="port" src="img/portrait-2-city.webp" alt="A small hole eating cars on a city street" loading="lazy" width="540" height="960">
+    <img class="land" src="img/landscape-1-city.webp" alt="Downtown towers falling into the hole, in landscape" loading="lazy" width="960" height="540">
+    <img class="port" src="img/portrait-3-fair.webp" alt="Swallowing rides at the theme park" loading="lazy" width="540" height="960">
+    <img class="port" src="img/portrait-4-beach.webp" alt="The beach town with palm trees and umbrellas" loading="lazy" width="540" height="960">
+    <img class="land" src="img/landscape-2-beach.webp" alt="The beach boardwalk, in landscape" loading="lazy" width="960" height="540">
+    <img class="port" src="img/portrait-5-snow.webp" alt="The snow village with pine trees and snowmen" loading="lazy" width="540" height="960">
+    <img class="land" src="img/landscape-3-fair.webp" alt="The theme park at night" loading="lazy" width="960" height="540">
+    <img class="port" src="img/portrait-6-menu.webp" alt="The start menu with modes, maps and hole skins" loading="lazy" width="540" height="960">
+  </div>
+
+  <h2>You are a hole in the street, and you are hungry</h2>
+  <p class="lede">Start small: cones, bins and people. Grow wide enough for cars, then trees, then houses, then whole office towers. Get big enough and your hole turns into a glowing black hole that bends the city around it.</p>
+
+  <h2>Four cities to swallow</h2>
+  <ul class="grid">
+    <li><b>City</b>Downtown towers, parks, buses and a stadium.</li>
+    <li><b>Beach town</b>Palm trees, boardwalks, umbrellas and a lighthouse.</li>
+    <li><b>Theme park</b>Rides, mascots, food kiosks and a Ferris wheel.</li>
+    <li><b>Snow village</b>Pine trees, snowmen and an ice castle.</li>
+  </ul>
+
+  <h2>Four ways to play</h2>
+  <ul class="grid">
+    <li><b>Classic</b>Two minutes against 7 rival holes. Most points wins.</li>
+    <li><b>Clean-up</b>No rivals. Swallow 35% of the city before the clock runs out.</li>
+    <li><b>Battle</b>No second chances. Be the last hole standing.</li>
+    <li><b>Daily city</b>A new seeded city every day, the same one for everybody.</li>
+  </ul>
+
+  <h2>Grow, chain, collect</h2>
+  <ul class="plain">
+    <li>Chain bites together for combo multipliers.</li>
+    <li>Grab power-ups: speed, magnet, growth spurt and shield.</li>
+    <li>Ride out round events like rush hour, a parade and golden objects.</li>
+    <li>Earn coins and unlock hole skins: Sunny, Bubblegum, Lava, Frost, Galaxy and Solid gold.</li>
+    <li>Fill your Book with everything you have swallowed, and share a card of your best round.</li>
+    <li>Portrait or landscape, with one-finger drag controls.</li>
+  </ul>
+
+  <div class="get">
+    <a class="badge" href="https://play.google.com/store/apps/details?id=com.onurbaykal.eatin" aria-label="Get it on Google Play">
+      <svg viewBox="0 0 30 33" aria-hidden="true">
+        <path d="M1.2.6 16.6 16.3 1.2 32a2 2 0 0 1-.7-1.6V2.2c0-.7.3-1.2.7-1.6Z" fill="#00d7fe"/>
+        <path d="m21.8 21.5-5.2-5.2 5.2-5.3 6.2 3.6c1.8 1 1.8 2.6 0 3.6l-6.2 3.3Z" fill="#ffce00"/>
+        <path d="M21.8 21.5 16.6 16.3 1.2 32c.6.6 1.5.7 2.6.1l18-10.6Z" fill="#ff3a44"/>
+        <path d="M21.8 11 3.8.5C2.7-.1 1.8 0 1.2.6l15.4 15.7L21.8 11Z" fill="#00f076"/>
+      </svg>
+      <span><small>Get it on</small><b>Google Play</b></span>
+    </a>
+    <a class="play" href="play/">Play in your browser</a>
+  </div>
+
+  <footer>
+    <p><a href="privacy.html">Privacy policy</a></p>
+    <p>Google Play and the Google Play logo are trademarks of Google LLC.</p>
+  </footer>
+</main>
+</body>
+</html>

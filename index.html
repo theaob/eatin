@@ -1840,8 +1840,12 @@ function renderPanel(kind) {
       if (b.id === 'shareGo') {
         const file = new File([blob], name, { type: 'image/png' });
         try {
-          if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: 'Eat In' });
-          else msg.textContent = 'Sharing is not available here. Use Save image, or long-press the card.';
+          const r = round.result || {}, text = `I scored ${(r.points || 0).toLocaleString()} points in Eat In. Play it: ${SITE_URL}`;
+          if (window.EatInShare) { if (!window.EatInShare.share(url.split(',')[1], text)) msg.textContent = 'Sharing did not work here. Use Save image instead.'; }
+          else if (navigator.canShare && navigator.canShare({ files: [file] })) await navigator.share({ files: [file], title: 'Eat In', text });
+          else if (navigator.share) await navigator.share({ title: 'Eat In', text });
+          else if (navigator.clipboard) { await navigator.clipboard.writeText(text); msg.textContent = 'Link copied. Use Save image to keep the card.'; }
+          else msg.textContent = `Sharing is not available here. Use Save image, or share ${SITE_URL}`;
         } catch (err) { if (err && err.name !== 'AbortError') msg.textContent = 'Sharing did not work here. Use Save image instead.'; }
       } else {
         try {
@@ -1855,6 +1859,7 @@ function renderPanel(kind) {
 }
 
 // ---------- share card ----------
+const SITE_URL = 'https://theaob.github.io/eatin/';   // the landing page (site/ in the repo), with store links
 let shot = null, wantShot = false;
 function makeShareCard() {
   const W = 1080, H = 1350, c = document.createElement('canvas'); c.width = W; c.height = H;
@@ -1881,6 +1886,8 @@ function makeShareCard() {
   g.fillStyle = '#4a5268'; g.font = '700 34px Nunito, sans-serif';
   g.fillText(r.line || '', 80, 1190, W - 160);
   g.fillStyle = '#8a93a8'; g.font = '700 28px Nunito, sans-serif'; g.fillText(today(), 80, 1260);
+  g.textAlign = 'right'; g.fillStyle = '#1f2638'; g.font = '800 30px Nunito, sans-serif';
+  g.fillText(SITE_URL.replace(/^https:\/\//, '').replace(/\/$/, ''), W - 80, 1260); g.textAlign = 'left';
   return c.toDataURL('image/png');
 }
 $('shareBtn').addEventListener('click', () => openPanel('share', 'endScreen'));
