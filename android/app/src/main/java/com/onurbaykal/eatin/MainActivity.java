@@ -238,6 +238,8 @@ public class MainActivity extends Activity {
     protected void onPause() {
         super.onPause();
         if (banner != null) banner.pause();
+        // Freeze the round (shows the pause card) before the WebView stops running.
+        if (web != null) web.evaluateJavascript("window.eatInPause && window.eatInPause()", null);
         if (web != null) { web.onPause(); web.pauseTimers(); }
     }
 
