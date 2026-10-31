@@ -33,8 +33,8 @@ body { font-family: var(--font-body); font-weight: 600; color: var(--paper); use
 #sizeFill { height: 100%; width: 0; background: repeating-linear-gradient(90deg, var(--mint) 0 6px, #1aa999 6px 8px); border-radius: 0; transition: width .25s; }
 #nextUp { font-size: 11px; color: var(--muted); margin-top: 5px; }
 
-#timer { top: calc(12px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); padding: 6px 18px; font-family: var(--font-display); font-size: 28px; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
-#timer.low { color: var(--hot); }
+#timer { top: calc(12px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); padding: 8px 14px; line-height: 0; background: rgba(31, 38, 56, 0.9); }
+#timer canvas { display: block; }
 
 #board { top: calc(12px + env(safe-area-inset-top, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); padding: 8px 12px; min-width: 150px; font-size: 13px; }
 #board ol { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 3px; }
@@ -123,7 +123,7 @@ h2.big { font-family: var(--font-display); font-weight: 700; font-size: 40px; ma
   #me { min-width: 0; padding: 8px 10px; }
   #myScore { font-size: 24px; }
   #nextUp { display: none; }
-  #timer { top: auto; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); font-size: 24px; }
+  #timer { top: auto; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
   #goal { top: auto; bottom: calc(62px + env(safe-area-inset-bottom, 0px)); }
   #toast { bottom: calc(112px + env(safe-area-inset-bottom, 0px)); }
   #sound, #music { bottom: auto; top: calc(12px + env(safe-area-inset-top, 0px) + 150px); right: calc(12px + env(safe-area-inset-right, 0px)); }
@@ -147,7 +147,7 @@ h2.big { font-family: var(--font-display); font-weight: 700; font-size: 40px; ma
   <div id="buffs"></div>
 </div>
 <div class="hud panel" id="goal" hidden></div>
-<div class="hud panel" id="timer">2:00</div>
+<div class="hud panel" id="timer" role="timer" aria-label="2:00"><canvas width="0" height="0"></canvas></div>
 <div class="hud panel" id="board"><div class="label">Biggest holes</div><ol id="boardList"></ol></div>
 <div class="hud panel" id="toast" hidden></div>
 <div id="stick" hidden></div><div id="knob" hidden></div>
@@ -187,7 +187,7 @@ h2.big { font-family: var(--font-display); font-weight: 700; font-size: 40px; ma
     <p class="reward" id="stReward"></p>
     <ol class="results" id="endList"></ol>
     <div class="row2"><button class="btn" id="againBtn" type="button">Play again</button><button class="btn alt" id="menuBtn" type="button">Menu</button></div>
-    <button class="btn2" id="shareBtn" type="button">Make a share card</button>
+    <button class="btn2" id="shareBtn" type="button">Share</button>
   </div>
 </div>
 
@@ -1627,6 +1627,44 @@ function stopMusic() {
 // ---------- HUD ----------
 const $ = id => document.getElementById(id);
 const hud = { score: $('myScore'), size: $('mySize'), fill: $('sizeFill'), next: $('nextUp'), timer: $('timer'), list: $('boardList'), toast: $('toast'), combo: $('combo'), buffs: $('buffs'), goal: $('goal') };
+// Round timer: blocky 5x7 pixel digits drawn on a canvas. Pixelify Sans was
+// hard to read at HUD size on phones; these stay crisp and match the voxel look.
+const TIMER_GLYPHS = {
+  0: ['01110', '10001', '10001', '10001', '10001', '10001', '01110'],
+  1: ['00100', '01100', '00100', '00100', '00100', '00100', '01110'],
+  2: ['01110', '10001', '00001', '00010', '00100', '01000', '11111'],
+  3: ['11111', '00010', '00100', '00010', '00001', '10001', '01110'],
+  4: ['00010', '00110', '01010', '10010', '11111', '00010', '00010'],
+  5: ['11111', '10000', '11110', '00001', '00001', '10001', '01110'],
+  6: ['00110', '01000', '10000', '11110', '10001', '10001', '01110'],
+  7: ['11111', '00001', '00010', '00100', '01000', '01000', '01000'],
+  8: ['01110', '10001', '10001', '01110', '10001', '10001', '01110'],
+  9: ['01110', '10001', '10001', '01111', '00001', '00010', '01100'],
+  ':': ['0', '0', '1', '0', '1', '0', '0'],
+};
+const TIMER_PX = 4; // CSS pixels per block, so digits are 28px tall
+let timerDrawn = '';
+function drawTimer(text, low) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 3), key = `${text}|${low}|${dpr}`;
+  if (key === timerDrawn) return;
+  timerDrawn = key;
+  hud.timer.setAttribute('aria-label', text);
+  const glyphs = [...text].map(ch => TIMER_GLYPHS[ch]).filter(Boolean);
+  const cols = glyphs.reduce((n, g) => n + g[0].length + 1, 0);
+  const w = cols * TIMER_PX, h = 8 * TIMER_PX; // one extra block for the shadow
+  const c = hud.timer.firstElementChild, g = c.getContext('2d');
+  c.width = Math.round(w * dpr); c.height = Math.round(h * dpr);
+  c.style.width = w + 'px'; c.style.height = h + 'px';
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  for (const [off, fill] of [[0.5, 'rgba(8, 10, 20, 0.85)'], [0, low ? '#ff8a98' : '#fffaf1']]) {
+    g.fillStyle = fill;
+    let x = 0;
+    for (const rows of glyphs) {
+      rows.forEach((row, y) => { for (let i = 0; i < row.length; i++) if (row[i] === '1') g.fillRect((x + i + off) * TIMER_PX, (y + off) * TIMER_PX, TIMER_PX, TIMER_PX); });
+      x += rows[0].length + 1;
+    }
+  }
+}
 let hudT = 0, toastT = 0;
 function showToast(text, secs, minor) {   // a minor notice never covers a message that is still showing
   if (minor && toastT > 0) return;
@@ -1657,8 +1695,7 @@ function updateHud() {
     hud.next.textContent = `Next: ${next[1]} at ${(need * 2).toFixed(1)} m`;
   } else { hud.fill.style.width = '100%'; hud.next.textContent = 'Nothing is too big now'; }
   const t = Math.max(0, Math.ceil(timeLeft));
-  hud.timer.textContent = `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
-  hud.timer.classList.toggle('low', t <= 10 && state === 'play');
+  drawTimer(`${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`, t <= 10 && state === 'play');
   hud.combo.textContent = round.combo >= 3 && state === 'play' ? `Combo ${round.combo}  x${comboMult().toFixed(2)}` : '';
   hud.buffs.textContent = Object.entries(player.buffs || {}).filter(([, v]) => v > 0).map(([k, v]) => `${POWERS[k].name} ${Math.ceil(v)}s`).join('  ');
   if (MODE === MODES.cleanup) {
