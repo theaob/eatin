@@ -1,9 +1,13 @@
 package com.onurbaykal.eatin;
 
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.net.Uri;
 import android.os.Bundle;
+import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.View;
@@ -13,6 +17,7 @@ import android.webkit.WebView;
 import android.widget.FrameLayout;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.FileProvider;
 
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
@@ -27,6 +32,8 @@ import com.google.android.ump.ConsentInformation;
 import com.google.android.ump.ConsentRequestParameters;
 import com.google.android.ump.UserMessagingPlatform;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -59,6 +66,7 @@ public class MainActivity extends Activity {
         s.setMediaPlaybackRequiresUserGesture(false);
         web.setBackgroundColor(Color.BLACK);
         web.addJavascriptInterface(new Bridge(), "EatInAds");
+        web.addJavascriptInterface(new ShareBridge(), "EatInShare");
         root.addView(web, new FrameLayout.LayoutParams(-1, -1));
 
         setContentView(root);
@@ -218,6 +226,35 @@ public class MainActivity extends Activity {
                 hideBars();
                 if (consent.canRequestAds()) startAds();
             }));
+        }
+    }
+
+    /**
+     * window.EatInShare.share(pngBase64, text): the WebView has no Web Share API,
+     * so the share card goes out through the Android share sheet instead.
+     */
+    private class ShareBridge {
+        @JavascriptInterface
+        public boolean share(String pngBase64, String text) {
+            try {
+                File dir = new File(getCacheDir(), "shared");
+                if (!dir.isDirectory() && !dir.mkdirs()) return false;
+                File png = new File(dir, "eat-in-result.png");
+                try (FileOutputStream out = new FileOutputStream(png)) {
+                    out.write(Base64.decode(pngBase64, Base64.DEFAULT));
+                }
+                Uri uri = FileProvider.getUriForFile(MainActivity.this, getPackageName() + ".share", png);
+                Intent send = new Intent(Intent.ACTION_SEND)
+                        .setType("image/png")
+                        .putExtra(Intent.EXTRA_STREAM, uri)
+                        .putExtra(Intent.EXTRA_TEXT, text)
+                        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                send.setClipData(ClipData.newRawUri(null, uri));
+                runOnUiThread(() -> startActivity(Intent.createChooser(send, "Share your round")));
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
         }
     }
 

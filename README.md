@@ -24,7 +24,14 @@ python3 -m http.server
 `android/` wraps the game in an offline, full-screen WebView APK. See
 [android/README.md](android/README.md) for how to build and install it.
 
-## Privacy
+## Website
 
-See [privacy.html](privacy.html). With GitHub Pages on (branch `main`, folder
-`/`), it is served at https://theaob.github.io/eatin/privacy.html.
+`.github/workflows/pages.yml` publishes https://theaob.github.io/eatin/ on
+every push to `main` (set Settings > Pages > Source to "GitHub Actions"):
+
+- `/` is the landing page with the store links and screenshots (`site/`)
+- `/play/` is the game itself (`index.html`)
+- `/privacy.html` is the privacy policy (`privacy.html`)
+
+The game's Share button puts that address on the result card and in the
+share text (`SITE_URL` in `index.html`).
