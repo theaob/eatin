@@ -53,8 +53,7 @@ body { font-family: var(--font-body); font-weight: 600; color: var(--paper); use
 #stick { width: 110px; height: 110px; clip-path: var(--pix); border: 2px solid rgba(255,255,255,.55); background: rgba(31,38,56,.18); }
 #knob { width: 46px; height: 46px; clip-path: var(--pix); background: rgba(255,255,255,.8); }
 
-#sound { position: fixed; z-index: 7; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); right: calc(12px + env(safe-area-inset-right, 0px)); font: 800 12px var(--font-body); color: var(--paper); padding: 8px 12px; cursor: pointer; }
-#sound:focus-visible, .btn:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
+.btn:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
 
 .overlay { position: fixed; inset: 0; z-index: 10; display: grid; align-items: safe center; justify-items: center; overflow-y: auto; padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px) + var(--ad-h, 0px)); box-sizing: border-box; background: radial-gradient(ellipse at center, rgba(31,38,56,.35), rgba(31,38,56,.7)); touch-action: pan-y; }
 .card { background: var(--paper); color: var(--ink); border-radius: 4px; border: 3px solid var(--ink); padding: 26px 26px 22px; width: min(420px, 100%); box-sizing: border-box; box-shadow: 10px 10px 0 rgba(20,24,40,.45); display: grid; gap: 14px; }
@@ -116,8 +115,9 @@ h2.big { font-family: var(--font-display); font-weight: 800; font-size: 40px; ma
 #buffs:empty, #combo:empty { display: none; }
 #goal { top: calc(62px + env(safe-area-inset-top, 0px)); left: 50%; transform: translateX(-50%); padding: 6px 12px; font-size: 13px; min-width: 160px; text-align: center; white-space: nowrap; }
 #goal .bar { background: rgba(255,255,255,.15); }
-#music { position: fixed; z-index: 7; bottom: calc(12px + env(safe-area-inset-bottom, 0px)); right: calc(104px + env(safe-area-inset-right, 0px)); font: 800 12px var(--font-body); color: var(--paper); padding: 8px 12px; cursor: pointer; }
-#music:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
+#pauseBtn { position: fixed; z-index: 7; top: calc(12px + env(safe-area-inset-top, 0px)); left: calc(50% + 66px); width: 44px; height: 44px; padding: 0; cursor: pointer; display: grid; place-items: center; }
+#pauseBtn::before { content: ""; width: 6px; height: 18px; background: var(--paper); box-shadow: 10px 0 0 var(--paper); transform: translateX(-5px); }
+#pauseBtn:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
 
 @media (max-width: 560px) {
   #me { min-width: 0; padding: 8px 10px; }
@@ -126,11 +126,13 @@ h2.big { font-family: var(--font-display); font-weight: 800; font-size: 40px; ma
   #timer { top: auto; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
   #goal { top: auto; bottom: calc(62px + env(safe-area-inset-bottom, 0px)); }
   #toast { bottom: calc(112px + env(safe-area-inset-bottom, 0px)); }
-  #sound, #music { bottom: auto; top: calc(12px + env(safe-area-inset-top, 0px) + 150px); right: calc(12px + env(safe-area-inset-right, 0px)); }
-  #music { top: calc(12px + env(safe-area-inset-top, 0px) + 188px); }
+  #pauseBtn { left: 50%; transform: translateX(-50%); }
   .card { padding: 20px 16px 18px; gap: 12px; }
   #board { font-size: 12px; min-width: 128px; }
   #board li:nth-child(n+5):not(.you) { display: none; }
+}
+@media (max-width: 359px) {
+  #pauseBtn { left: auto; right: calc(12px + env(safe-area-inset-right, 0px)); transform: none; top: calc(12px + env(safe-area-inset-top, 0px) + 150px); }
 }
 @media (prefers-reduced-motion: reduce) { .pop { animation-duration: .01s; } }
 </style>
@@ -151,8 +153,7 @@ h2.big { font-family: var(--font-display); font-weight: 800; font-size: 40px; ma
 <div class="hud panel" id="board"><div class="label">Biggest holes</div><ol id="boardList"></ol></div>
 <div class="hud panel" id="toast" hidden></div>
 <div id="stick" hidden></div><div id="knob" hidden></div>
-<button class="panel" id="sound" type="button" aria-pressed="true">Sound on</button>
-<button class="panel" id="music" type="button" aria-pressed="true">Music on</button>
+<button class="panel" id="pauseBtn" type="button" aria-label="Pause" title="Pause (Esc)" hidden></button>
 
 <div class="overlay" id="startScreen">
   <div class="card">
@@ -170,6 +171,7 @@ h2.big { font-family: var(--font-display); font-weight: 800; font-size: 40px; ma
       <button class="btn2" type="button" data-panel="challenges" id="chalBtn">Challenges</button>
       <button class="btn2" type="button" data-panel="book">Book</button>
       <button class="btn2" type="button" data-panel="leaders" id="leadersBtn" hidden>Leaders</button>
+      <button class="btn2" type="button" data-panel="settings">Settings</button>
       <button class="btn2" type="button" id="adPrivacyBtn" hidden>Ad privacy</button>
     </div>
   </div>
@@ -188,6 +190,16 @@ h2.big { font-family: var(--font-display); font-weight: 800; font-size: 40px; ma
     <ol class="results" id="endList"></ol>
     <div class="row2"><button class="btn" id="againBtn" type="button">Play again</button><button class="btn alt" id="menuBtn" type="button">Menu</button></div>
     <button class="btn2" id="shareBtn" type="button">Share</button>
+  </div>
+</div>
+
+<div class="overlay" id="pauseScreen" hidden>
+  <div class="card">
+    <h2 class="big">Paused</h2>
+    <p class="lede" id="pauseInfo"></p>
+    <button class="btn" id="resumeBtn" type="button">Resume</button>
+    <div class="row2"><button class="btn alt" id="restartBtn" type="button">Restart</button><button class="btn alt" id="quitBtn" type="button">Quit</button></div>
+    <button class="btn2" id="pauseSettingsBtn" type="button">Settings</button>
   </div>
 </div>
 
@@ -1529,14 +1541,11 @@ function botIntent(h, dt) {
 
 // ---------- audio ----------
 let audio = null, soundOn = true, lastGulp = 0;
-const soundBtn = document.getElementById('sound');
 try { soundOn = localStorage.getItem('eatin-sound') !== 'off'; } catch (e) {}
-function syncSound() { soundBtn.textContent = soundOn ? 'Sound on' : 'Sound off'; soundBtn.setAttribute('aria-pressed', soundOn); }
-syncSound();
-soundBtn.addEventListener('click', () => {
-  soundOn = !soundOn; syncSound();
+function toggleSound() {
+  soundOn = !soundOn;
   try { localStorage.setItem('eatin-sound', soundOn ? 'on' : 'off'); } catch (e) {}
-});
+}
 function gulp(size, combo) {
   if (!soundOn || !audio) return;
   const now = audio.currentTime;
@@ -1585,13 +1594,10 @@ const chime = () => { tone(660, 990, 0.12, 'triangle', 0.08); setTimeout(() => t
 // ---------- music ----------
 // A small step sequencer per map: bass on the root and fifth, an arpeggio over the map's scale.
 let musicOn = save.music !== false, musicTimer = null, musicStep = 0, musicNext = 0, musicGain = null;
-const musicBtn = document.getElementById('music');
-function syncMusic() { musicBtn.textContent = musicOn ? 'Music on' : 'Music off'; musicBtn.setAttribute('aria-pressed', musicOn); }
-syncMusic();
-musicBtn.addEventListener('click', () => {
-  musicOn = !musicOn; save.music = musicOn; persist(); syncMusic();
-  if (musicOn && state === 'play') startMusic(); else stopMusic();
-});
+function toggleMusic() {
+  musicOn = !musicOn; save.music = musicOn; persist();
+  if (musicOn && state === 'play' && !paused) startMusic(); else stopMusic();
+}
 const midi = n => 440 * Math.pow(2, (n - 69) / 12);
 function note(freq, t, len, type, vol) {
   const o = audio.createOscillator(), g = audio.createGain();
@@ -1788,7 +1794,13 @@ document.querySelectorAll('[data-panel]').forEach(b => b.addEventListener('click
 
 function renderPanel(kind) {
   const title = $('panelTitle'), body = $('panelBody');
-  if (kind === 'skins') {
+  if (kind === 'settings') {
+    title.textContent = 'Settings';
+    const row = (id, name, what, on) => `<li><b>${name}</b><span>${what}</span><button class="chip" type="button" id="${id}" aria-pressed="${on}" aria-label="${name}">${on ? 'On' : 'Off'}</button></li>`;
+    body.innerHTML = '<ul class="list">' + row('setSound', 'Sound', 'Gulps, crunches and chimes', soundOn) + row('setMusic', 'Music', 'The tune for each map', musicOn) + '</ul>';
+    $('setSound').addEventListener('click', () => { toggleSound(); renderPanel('settings'); $('setSound').focus(); });
+    $('setMusic').addEventListener('click', () => { toggleMusic(); renderPanel('settings'); $('setMusic').focus(); });
+  } else if (kind === 'skins') {
     title.textContent = 'Skins';
     body.innerHTML = `<p class="sub"><span class="coin" aria-hidden="true"></span>${save.coins.toLocaleString()} coins. Every round pays coins, and challenges pay ${CHALLENGE_COINS} each.</p><ul class="list">` + SKINS.map(k => {
       const own = save.owned.includes(k.id), on = save.skin === k.id, P = PIT_THEMES[k.pit];
@@ -1913,7 +1925,7 @@ window.eatInAds = ads;
 $('adPrivacyBtn').addEventListener('click', () => nativeAds && nativeAds.showPrivacyOptions());
 
 // ---------- game state ----------
-let state = 'menu', timeLeft = MODES.classic.time, autoPlayer = false, timeScale = 1;
+let state = 'menu', timeLeft = MODES.classic.time, autoPlayer = false, timeScale = 1, paused = false;
 // Everything that belongs to one round.
 const round = { combo: 0, lastEat: -9, eatenPts: 0, totalPts: 1, events: [], rs: null, result: null, bonusCoins: 0, playT: 0, tod: [0, 1] };
 const comboMult = () => 1 + Math.min(Math.max(0, round.combo - 1), 20) * 0.025;   // up to x1.5
@@ -1940,9 +1952,10 @@ function startGame() {
     round.events = [{ at: MODE.time * 0.3, kind: kinds[0] }, { at: MODE.time * 0.62, kind: kinds[1] }];
   }
   snow.visible = !!MAP.snowy;
-  state = 'play';
+  state = 'play'; paused = false;
   ads.menu(false);
-  $('startScreen').hidden = true; $('endScreen').hidden = true; $('panelScreen').hidden = true;
+  $('startScreen').hidden = true; $('endScreen').hidden = true; $('panelScreen').hidden = true; $('pauseScreen').hidden = true;
+  $('pauseBtn').hidden = false;
   if (!audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audio = null; } }
   if (audio && audio.state === 'suspended') audio.resume();
   startMusic();
@@ -1951,7 +1964,8 @@ function startGame() {
 }
 function endGame(outcome) {
   if (state !== 'play') return;
-  state = 'over';
+  state = 'over'; paused = false;
+  $('pauseBtn').hidden = true; $('pauseScreen').hidden = true;
   stopMusic();
   ads.rounds++;
   ads.menu(true);
@@ -2008,6 +2022,55 @@ function endGame(outcome) {
   setTimeout(() => $('againBtn').focus(), 50);
 }
 $('playBtn').addEventListener('click', startGame);
+
+// ---------- pause ----------
+// The world freezes (no step, no clock) but keeps drawing behind the card.
+// The banner ad stays hidden while paused so it can't be tapped by mistake mid-round.
+function pauseGame() {
+  if (state !== 'play' || paused) return;
+  paused = true;
+  stopMusic();
+  keys.clear(); ptr.touch = false; ptr.id = null; stick.hidden = knob.hidden = true;
+  updateHud();
+  $('pauseInfo').textContent = `${hud.timer.textContent} left, ${player.points.toLocaleString()} points so far.`;
+  $('pauseBtn').hidden = true;
+  $('pauseScreen').hidden = false;
+  setTimeout(() => $('resumeBtn').focus(), 50);
+}
+function resumeGame() {
+  if (!paused) return;
+  paused = false;
+  $('pauseScreen').hidden = true;
+  $('pauseBtn').hidden = false;
+  if (audio && audio.state === 'suspended') audio.resume();
+  startMusic();
+  canvas.focus();
+}
+function quitToMenu() {
+  paused = false;
+  $('pauseScreen').hidden = true; $('pauseBtn').hidden = true;
+  stopMusic();
+  state = 'menu';
+  renderMenu();
+  $('startScreen').hidden = false;
+  ads.menu(true);
+}
+$('pauseBtn').addEventListener('click', pauseGame);
+$('resumeBtn').addEventListener('click', resumeGame);
+$('restartBtn').addEventListener('click', startGame);
+$('quitBtn').addEventListener('click', quitToMenu);
+$('pauseSettingsBtn').addEventListener('click', () => openPanel('settings', 'pauseScreen'));
+window.addEventListener('keydown', e => {
+  if (e.key !== 'Escape' && e.key.toLowerCase() !== 'p' || e.repeat || state !== 'play') return;
+  e.preventDefault();
+  if (!$('panelScreen').hidden) $('panelBack').click();   // settings opened from the pause card: Esc goes back to it
+  else paused ? resumeGame() : pauseGame();
+});
+// Auto-pause when the tab or app goes to the background, or the window loses focus.
+document.addEventListener('visibilitychange', () => { if (document.hidden) pauseGame(); });
+window.addEventListener('pagehide', pauseGame);
+window.addEventListener('blur', pauseGame);
+window.eatInPause = pauseGame;   // the Android app calls this from onPause()
 $('againBtn').addEventListener('click', () => ads.between(startGame));
 $('menuBtn').addEventListener('click', () => ads.between(() => { $('endScreen').hidden = true; state = 'menu'; renderMenu(); $('startScreen').hidden = false; }));
 
@@ -2592,7 +2655,7 @@ let last = performance.now(), elapsed = 0;
 // If the first seconds of play run slowly, turn real-time shadows off (everything else stays).
 const perf = { frames: 0, time: 0, checked: false };
 function watchPerformance(rawDt) {
-  if (perf.checked || state !== 'play') return;
+  if (perf.checked || state !== 'play' || paused) return;
   perf.frames++; perf.time += rawDt;
   if (perf.time < 4) return;
   perf.checked = true;
@@ -2603,19 +2666,21 @@ function watchPerformance(rawDt) {
 }
 function frame(now) {
   watchPerformance((now - last) / 1000);
-  const dt = Math.min(0.05, (now - last) / 1000) * timeScale;
+  const dt = paused ? 0 : Math.min(0.05, (now - last) / 1000) * timeScale;
   last = now; elapsed += dt;
-  step(dt);
-  updateCamera(dt, elapsed);
+  if (!paused) {
+    step(dt);
+    updateCamera(dt, elapsed);
+    hudT -= dt;
+    if (hudT <= 0) { hudT = 0.2; updateHud(); }
+    if (toastT > 0) { toastT -= dt; if (toastT <= 0) hud.toast.hidden = true; }
+  }
   updateLabels();
-  hudT -= dt;
-  if (hudT <= 0) { hudT = 0.2; updateHud(); }
-  if (toastT > 0) { toastT -= dt; if (toastT <= 0) hud.toast.hidden = true; }
   const [t0, t1] = round.tod;
   applyTimeOfDay(state === 'play' ? t0 + (t1 - t0) * (1 - timeLeft / MODE.time) : state === 'over' ? t1 : t0 + 0.2);
   placeSun(camLook.x, camLook.z, state === 'menu' ? 6 : player.r);
   updateCityLights();
-  updateSnow(dt);
+  if (!paused) updateSnow(dt);
   renderWithLensing();
   if (wantShot) {   // grab the last frame of the round for the share card, right after it was drawn
     wantShot = false;
@@ -2632,6 +2697,6 @@ updateHud();
 requestAnimationFrame(frame);
 
 // test hook
-window.__eatIn = { holes, save, round, runEvent, get pups() { return pups; }, get mode() { return MODE; }, get map() { return MAP; }, endGame, get objects() { return objects; }, botIntent, startGame, get state() { return state; }, set auto(v) { autoPlayer = v; }, set timeScale(v) { timeScale = v; }, set keepShadows(v) { perf.checked = v; }, get shadows() { return renderer.shadowMap.enabled; }, set time(v) { timeLeft = v; } };
+window.__eatIn = { holes, save, round, runEvent, get pups() { return pups; }, get mode() { return MODE; }, get map() { return MAP; }, endGame, get objects() { return objects; }, botIntent, startGame, get state() { return state; }, set auto(v) { autoPlayer = v; }, set timeScale(v) { timeScale = v; }, set keepShadows(v) { perf.checked = v; }, get shadows() { return renderer.shadowMap.enabled; }, set time(v) { timeLeft = v; }, pause: pauseGame, resume: resumeGame, get paused() { return paused; } };
 })();
 </script>
