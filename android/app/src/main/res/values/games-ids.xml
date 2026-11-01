@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Google Play Games Services IDs.
+
+     Until app_id is a real project ID (digits only), Play Games stays off and
+     the app behaves exactly as before. To turn it on, open Play Console >
+     Play Games Services > Setup and management > Configuration, press
+     "Get resources", copy the Android XML and paste it over this whole file.
+
+     The game finds achievements and leaderboards by name (MainActivity.Games
+     looks up "achievement_<key>" and "leaderboard_<key>"), so create them in
+     Play Console with exactly the names in android/README.md. Play Console turns
+     a name like "Black hole" into achievement_black_hole. An empty or missing
+     entry is skipped. -->
+<resources>
+    <!--app_id-->
+    <string name="app_id" translatable="false">0</string>
+    <!--package_name-->
+    <string name="package_name" translatable="false">com.onurbaykal.eatin</string>
+
+    <!--achievement First round-->
+    <string name="achievement_first_round" translatable="false"></string>
+    <!--achievement Winner-->
+    <string name="achievement_winner" translatable="false"></string>
+    <!--achievement Last hole standing-->
+    <string name="achievement_last_hole_standing" translatable="false"></string>
+    <!--achievement Spotless-->
+    <string name="achievement_spotless" translatable="false"></string>
+    <!--achievement Black hole-->
+    <string name="achievement_black_hole" translatable="false"></string>
+    <!--achievement Supermassive-->
+    <string name="achievement_supermassive" translatable="false"></string>
+    <!--achievement High score-->
+    <string name="achievement_high_score" translatable="false"></string>
+    <!--achievement Combo master-->
+    <string name="achievement_combo_master" translatable="false"></string>
+    <!--achievement Sightseer-->
+    <string name="achievement_sightseer" translatable="false"></string>
+    <!--achievement Golden snack-->
+    <string name="achievement_golden_snack" translatable="false"></string>
+    <!--achievement Rival eater-->
+    <string name="achievement_rival_eater" translatable="false"></string>
+    <!--achievement World tour-->
+    <string name="achievement_world_tour" translatable="false"></string>
+    <!--achievement New look-->
+    <string name="achievement_new_look" translatable="false"></string>
+    <!--achievement Solid gold-->
+    <string name="achievement_solid_gold" translatable="false"></string>
+    <!--achievement Collector-->
+    <string name="achievement_collector" translatable="false"></string>
+    <!--achievement Regular-->
+    <string name="achievement_regular" translatable="false"></string>
+    <!--achievement Bottomless-->
+    <string name="achievement_bottomless" translatable="false"></string>
+    <!--achievement Challenger-->
+    <string name="achievement_challenger" translatable="false"></string>
+
+    <!--leaderboard Classic-->
+    <string name="leaderboard_classic" translatable="false"></string>
+    <!--leaderboard Clean up-->
+    <string name="leaderboard_clean_up" translatable="false"></string>
+    <!--leaderboard Battle-->
+    <string name="leaderboard_battle" translatable="false"></string>
+    <!--leaderboard Daily city-->
+    <string name="leaderboard_daily_city" translatable="false"></string>
+    <!--leaderboard Widest hole-->
+    <string name="leaderboard_widest_hole" translatable="false"></string>
+</resources>

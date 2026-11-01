@@ -28,12 +28,18 @@ import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
+import com.google.android.gms.games.AuthenticationResult;
+import com.google.android.gms.games.PlayGames;
+import com.google.android.gms.games.PlayGamesSdk;
+import com.google.android.gms.games.leaderboard.LeaderboardVariant;
+import com.google.android.gms.tasks.Task;
 import com.google.android.ump.ConsentInformation;
 import com.google.android.ump.ConsentRequestParameters;
 import com.google.android.ump.UserMessagingPlatform;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import org.json.JSONObject;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -42,6 +48,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * The page drives the ads through window.EatInAds (see Bridge) and hears back
  * through window.eatInAds.banner(heightPx), .done() and .privacy(required).
  * Ads only start after the UMP consent flow says they may be requested.
+ *
+ * Google Play Games Services goes through window.EatInGames (see Games) and
+ * reports sign-in back through window.eatInGames.status(signedIn, name). It
+ * stays off until res/values/games-ids.xml has a real app_id.
  */
 public class MainActivity extends Activity {
     private WebView web;
@@ -52,6 +62,7 @@ public class MainActivity extends Activity {
     private final AtomicBoolean adsStarted = new AtomicBoolean(false);
     private boolean wantBanner;
     private boolean interstitialShowing;
+    private Games games;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -67,12 +78,15 @@ public class MainActivity extends Activity {
         web.setBackgroundColor(Color.BLACK);
         web.addJavascriptInterface(new Bridge(), "EatInAds");
         web.addJavascriptInterface(new ShareBridge(), "EatInShare");
+        games = new Games();
+        web.addJavascriptInterface(games, "EatInGames");
         root.addView(web, new FrameLayout.LayoutParams(-1, -1));
 
         setContentView(root);
         web.loadUrl("file:///android_asset/index.html");
         hideBars();
         requestConsent();
+        games.start();
     }
 
     @SuppressWarnings("deprecation")
@@ -258,6 +272,116 @@ public class MainActivity extends Activity {
         }
     }
 
+    /**
+     * window.EatInGames: Google Play Games Services v2. The page names
+     * achievements and leaderboards by key; the IDs come from games-ids.xml
+     * ("achievement_<key>", "leaderboard_<key>"), and unknown or empty ones are
+     * skipped. Everything is a no-op until the player is signed in, and the page
+     * re-sends its progress when status(true) arrives, so nothing is lost.
+     */
+    private class Games {
+        private static final int RC_UI = 9001;
+        private final boolean configured = getString(R.string.app_id).matches("[1-9][0-9]{5,}");
+        private volatile boolean signedIn;
+        private String name = "";
+
+        void start() {
+            if (!configured) return;
+            PlayGamesSdk.initialize(MainActivity.this);
+            // Signs in automatically when the player has used Play Games before.
+            PlayGames.getGamesSignInClient(MainActivity.this).isAuthenticated()
+                .addOnCompleteListener(t -> signedIn(t, null));
+        }
+
+        private void signIn(Runnable then) {
+            PlayGames.getGamesSignInClient(MainActivity.this).signIn()
+                .addOnCompleteListener(t -> signedIn(t, then));
+        }
+
+        private void signedIn(Task<AuthenticationResult> t, Runnable then) {
+            signedIn = t.isSuccessful() && t.getResult().isAuthenticated();
+            hideBars();
+            if (!signedIn) { tell(); return; }
+            PlayGames.getPlayersClient(MainActivity.this).getCurrentPlayer()
+                .addOnCompleteListener(p -> {
+                    if (p.isSuccessful() && p.getResult() != null) name = p.getResult().getDisplayName();
+                    tell();
+                });
+            if (then != null) then.run();
+        }
+
+        private void tell() {
+            if (web != null) web.evaluateJavascript("window.eatInGames && window.eatInGames.status("
+                + signedIn + "," + JSONObject.quote(name == null ? "" : name) + ")", null);
+        }
+
+        /** The Play Games ID for a key, or null when it is not set up. */
+        private String id(String kind, String key) {
+            if (key == null || !key.matches("[a-z0-9_]+")) return null;
+            int res = getResources().getIdentifier(kind + "_" + key, "string", getPackageName());
+            if (res == 0) return null;
+            String v = getString(res).trim();
+            return v.isEmpty() ? null : v;
+        }
+
+        /** Runs the call on the UI thread, signing in first when asked to. */
+        private void run(boolean askSignIn, Runnable r) {
+            runOnUiThread(() -> {
+                if (!configured || isFinishing()) return;
+                if (signedIn) r.run();
+                else if (askSignIn) signIn(r);
+            });
+        }
+
+        private void show(Task<Intent> t) {
+            t.addOnSuccessListener(i -> startActivityForResult(i, RC_UI));
+        }
+
+        @JavascriptInterface
+        public boolean available() { return configured; }
+
+        @JavascriptInterface
+        public boolean signedIn() { return signedIn; }
+
+        @JavascriptInterface
+        public void signIn() { run(true, this::tell); }
+
+        @JavascriptInterface
+        public void submitScore(String key, double score) {
+            String id = id("leaderboard", key);
+            if (id != null && score > 0) run(false, () -> PlayGames.getLeaderboardsClient(MainActivity.this).submitScore(id, (long) score));
+        }
+
+        @JavascriptInterface
+        public void unlock(String key) {
+            String id = id("achievement", key);
+            if (id != null) run(false, () -> PlayGames.getAchievementsClient(MainActivity.this).unlock(id));
+        }
+
+        /** For incremental achievements: raises progress to at least steps (never lowers it). */
+        @JavascriptInterface
+        public void setSteps(String key, double steps) {
+            String id = id("achievement", key);
+            if (id != null && steps >= 1) run(false, () -> PlayGames.getAchievementsClient(MainActivity.this).setSteps(id, (int) Math.min(steps, Integer.MAX_VALUE)));
+        }
+
+        /** key "" shows every leaderboard; daily shows today's scores first. */
+        @JavascriptInterface
+        public void showLeaderboards(String key, boolean daily) {
+            String id = id("leaderboard", key);
+            run(true, () -> show(id == null
+                ? PlayGames.getLeaderboardsClient(MainActivity.this).getAllLeaderboardsIntent()
+                : PlayGames.getLeaderboardsClient(MainActivity.this).getLeaderboardIntent(id,
+                    daily ? LeaderboardVariant.TIME_SPAN_DAILY : LeaderboardVariant.TIME_SPAN_ALL_TIME,
+                    LeaderboardVariant.COLLECTION_PUBLIC)));
+        }
+
+        @JavascriptInterface
+        public void showAchievements() {
+            run(true, () -> show(PlayGames.getAchievementsClient(MainActivity.this).getAchievementsIntent()));
+        }
+    }
+
     // ---------- lifecycle ----------
 
     @Override
@@ -269,6 +393,12 @@ public class MainActivity extends Activity {
             tellPage("banner(0)");
             if (wantBanner) loadBanner();
         }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        hideBars();
     }
 
     @Override
