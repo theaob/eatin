@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <!-- Network is only used for ads; the game itself runs offline. -->
+    <!-- Network is only used for ads and Play Games; the game itself runs offline. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Pulled in by WorkManager inside the ads SDK; the app runs no foreground
@@ -16,6 +16,17 @@
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="@string/admob_app_id" />
+        <!-- Play Games Services project ID, from res/values/games-ids.xml. -->
+        <meta-data
+            android:name="com.google.android.gms.games.APP_ID"
+            android:value="@string/app_id" />
+        <!-- The SDK would initialize itself at launch through this provider, even with
+             the placeholder app_id. MainActivity.Games initializes it only once a
+             real ID is set. -->
+        <provider
+            android:name="com.google.android.gms.games.provider.PlayGamesInitProvider"
+            android:authorities="${applicationId}.playgamesinitprovider"
+            tools:node="remove" />
         <!-- Hands the share card PNG to other apps (see ShareBridge). -->
         <provider
             android:name="androidx.core.content.FileProvider"

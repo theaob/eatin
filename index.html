@@ -171,6 +171,7 @@ h2.big { font-family: var(--font-display); font-weight: 800; font-size: 40px; ma
       <button class="btn2" type="button" data-panel="challenges" id="chalBtn">Challenges</button>
       <button class="btn2" type="button" data-panel="book">Book</button>
       <button class="btn2" type="button" data-panel="leaders" id="leadersBtn" hidden>Leaders</button>
+      <button class="btn2" type="button" id="achBtn" aria-label="Achievements" title="Play Games achievements" hidden>Awards</button>
       <button class="btn2" type="button" data-panel="settings">Settings</button>
       <button class="btn2" type="button" id="adPrivacyBtn" hidden>Ad privacy</button>
     </div>
@@ -258,7 +259,8 @@ const SAVE_KEY = 'eatin-save';
 const save = Object.assign({
   coins: 0, name: '', skin: 'mint', owned: ['mint'], mode: 'classic', map: 'city', time: 'day', music: true,
   rec: { points: 0, width: 0, bigVol: 0, bigLabel: '', rounds: 0, wins: 0, combo: 0 },
-  book: {}, daily: null
+  book: {}, daily: null,
+  best: {}, maps: [], feats: {}   // best score per mode, maps played, one-off feats (for Play Games)
 }, (() => { try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; } catch (e) { return {}; } })());
 function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} }
 
@@ -1718,7 +1720,7 @@ function applyChallenges(rs) {
     const c = CHALLENGES.find(k => k.id === id);
     if (!c || dy.done[id]) continue;
     dy.prog[id] = c.sum ? (dy.prog[id] || 0) + c.sum(rs) : Math.max(dy.prog[id] || 0, c.max(rs));
-    if (dy.prog[id] >= c.goal) { dy.done[id] = true; save.coins += CHALLENGE_COINS; finished.push(c.text); }
+    if (dy.prog[id] >= c.goal) { dy.done[id] = true; save.coins += CHALLENGE_COINS; save.rec.chals = (save.rec.chals || 0) + 1; finished.push(c.text); }
   }
   return finished;
 }
@@ -1790,7 +1792,11 @@ function openPanel(kind, from) {
   setTimeout(() => $('panelBack').focus(), 30);
 }
 $('panelBack').addEventListener('click', () => { $('panelScreen').hidden = true; $(panelFrom).hidden = false; if (panelFrom === 'startScreen') renderMenu(); });
-document.querySelectorAll('[data-panel]').forEach(b => b.addEventListener('click', () => openPanel(b.dataset.panel)));
+document.querySelectorAll('[data-panel]').forEach(b => b.addEventListener('click', () => {
+  // In the Android app the leaderboards are Google Play Games' own screens.
+  if (b.dataset.panel === 'leaders' && !lb.db && games.native) return games.native.showLeaderboards('', false);
+  openPanel(b.dataset.panel);
+}));
 
 function renderPanel(kind) {
   const title = $('panelTitle'), body = $('panelBody');
@@ -1810,7 +1816,7 @@ function renderPanel(kind) {
     }).join('') + '</ul>';
     body.onclick = e => {
       const b = e.target.closest('button'); if (!b) return;
-      if (b.dataset.buy) { const k = skinOf(b.dataset.buy); if (save.coins >= k.price) { save.coins -= k.price; save.owned.push(k.id); save.skin = k.id; chime(); } }
+      if (b.dataset.buy) { const k = skinOf(b.dataset.buy); if (save.coins >= k.price) { save.coins -= k.price; save.owned.push(k.id); save.skin = k.id; chime(); games.sync(); } }
       if (b.dataset.skin) save.skin = b.dataset.skin;
       persist(); applySkin(); renderPanel('skins');
     };
@@ -1931,6 +1937,66 @@ const ads = {
 window.eatInAds = ads;
 $('adPrivacyBtn').addEventListener('click', () => nativeAds && nativeAds.showPrivacyOptions());
 
+// ---------- Google Play Games (Android app only) ----------
+// The app injects window.EatInGames when Play Games is set up and calls back
+// window.eatInGames.status(signedIn, name). Everything is worked out from the
+// saved progress, so a sync after sign-in also catches up on older rounds.
+// In a browser or a Claude artifact this does nothing.
+const ACHIEVEMENTS = {   // key (Play Console name, lower case with _) -> unlocked?
+  first_round: () => save.rec.rounds >= 1,
+  winner: () => save.rec.wins >= 1,
+  last_hole_standing: () => !!save.feats.battle,
+  spotless: () => !!save.feats.cleanup,
+  black_hole: () => save.rec.width >= 20,
+  supermassive: () => save.rec.width >= 40,
+  high_score: () => save.rec.points >= 10000,
+  combo_master: () => save.rec.combo >= 75,
+  sightseer: () => !!save.feats.landmark,
+  golden_snack: () => !!save.feats.golden,
+  rival_eater: () => !!save.feats.rival,
+  world_tour: () => MAP_IDS.every(m => save.maps.includes(m)),
+  new_look: () => save.owned.length > 1,
+  solid_gold: () => save.owned.includes('gold'),
+  collector: () => BOOK.every(([, list]) => list.every(x => save.book[x]))
+};
+const STEPPED = {        // incremental achievements: key -> steps so far
+  regular: () => save.rec.rounds,                                         // 50 rounds
+  bottomless: () => Object.values(save.book).reduce((n, c) => n + c, 0),  // 10,000 things
+  challenger: () => save.rec.chals || 0                                   // 30 daily challenges
+};
+const BOARDS = { classic: 'classic', cleanup: 'clean_up', battle: 'battle' };   // mode -> leaderboard
+const games = {
+  native: (window.EatInGames && window.EatInGames.available()) ? window.EatInGames : null,
+  on: false, name: '', sent: {},
+  status(on, name) {
+    games.on = !!on; games.name = name || '';
+    if (games.on) games.sync();
+  },
+  // Each call goes out once per value; Play Games keeps the best anyway.
+  send(fn, key, v) {
+    if (!games.native || !games.on || games.sent[fn + key] === v) return;
+    games.sent[fn + key] = v;
+    try { fn === 'unlock' ? games.native.unlock(key) : games.native[fn](key, v); } catch (e) {}
+  },
+  sync() {
+    for (const k in ACHIEVEMENTS) if (ACHIEVEMENTS[k]()) games.send('unlock', k, 1);
+    for (const k in STEPPED) { const n = STEPPED[k](); if (n > 0) games.send('setSteps', k, n); }
+    for (const m in BOARDS) if (save.best[m]) games.send('submitScore', BOARDS[m], save.best[m]);
+    if (save.rec.width) games.send('submitScore', 'widest_hole', Math.round(save.rec.width * 10));   // 1 decimal place
+  },
+  // The daily board keeps one score per day, so only today's rounds go there.
+  daily(points) {
+    if (!games.native || !points) return;
+    try { games.native.submitScore('daily_city', points); } catch (e) {}
+  }
+};
+window.eatInGames = games;
+if (games.native) {
+  $('leadersBtn').hidden = false;
+  $('achBtn').hidden = false;
+  $('achBtn').addEventListener('click', () => games.native.showAchievements());
+}
+
 // ---------- game state ----------
 let state = 'menu', timeLeft = MODES.classic.time, autoPlayer = false, timeScale = 1, paused = false;
 // Everything that belongs to one round.
@@ -2012,6 +2078,14 @@ function endGame(outcome) {
   if (rs.width > R.width) { if (R.width) news.push('widest hole'); R.width = rs.width; }
   if (rs.combo > R.combo) R.combo = rs.combo;
   if (player.biggest && player.biggest.vol > R.bigVol) { R.bigVol = player.biggest.vol; R.bigLabel = player.biggest.label; }
+  if (player.points > (save.best[save.mode] || 0)) save.best[save.mode] = player.points;
+  if (!save.maps.includes(rs.map)) save.maps.push(rs.map);
+  const F = save.feats;
+  if (rs.battleWin) F.battle = 1;
+  if (rs.cleanWin) F.cleanup = 1;
+  if (rs.golden) F.golden = 1;
+  if (rs.landmark) F.landmark = 1;
+  if (rs.rivals) F.rival = 1;
   const finished = applyChallenges(rs);
   persist();
   let reward = `+${coins.toLocaleString()} coins`;
@@ -2019,6 +2093,8 @@ function endGame(outcome) {
   if (finished.length) reward += ` Challenge done: ${finished.join(', ')} (+${finished.length * CHALLENGE_COINS}).`;
   $('stReward').textContent = reward;
   round.result = { rank: MODE === MODES.cleanup ? Math.floor(round.eatenPts / round.totalPts * 100) + '%' : '#' + pos, points: player.points, width: rs.width, line };
+  games.sync();
+  if (MODE === MODES.daily) games.daily(player.points);
   if (MODE === MODES.daily) {
     postDaily(player.points, rs.width).then(r => {
       if (r === 'posted') $('stReward').textContent += ' Posted to the daily board.';
