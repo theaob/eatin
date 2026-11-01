@@ -287,7 +287,7 @@ public class MainActivity extends Activity {
 
         void start() {
             if (!configured) return;
-            PlayGamesSdk.initialize(MainActivity.this);
+            PlayGamesSdk.initialize(getApplicationContext());   // the manifest removes its auto-init provider
             // Signs in automatically when the player has used Play Games before.
             PlayGames.getGamesSignInClient(MainActivity.this).isAuthenticated()
                 .addOnCompleteListener(t -> signedIn(t, null));

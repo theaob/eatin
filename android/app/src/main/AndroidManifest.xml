@@ -20,6 +20,13 @@
         <meta-data
             android:name="com.google.android.gms.games.APP_ID"
             android:value="@string/app_id" />
+        <!-- The SDK would initialize itself at launch through this provider, even with
+             the placeholder app_id. MainActivity.Games initializes it only once a
+             real ID is set. -->
+        <provider
+            android:name="com.google.android.gms.games.provider.PlayGamesInitProvider"
+            android:authorities="${applicationId}.playgamesinitprovider"
+            tools:node="remove" />
         <!-- Hands the share card PNG to other apps (see ShareBridge). -->
         <provider
             android:name="androidx.core.content.FileProvider"
