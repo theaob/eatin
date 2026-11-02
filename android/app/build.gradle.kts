@@ -79,4 +79,7 @@ dependencies {
     implementation("com.google.android.ump:user-messaging-platform:3.2.0")
     implementation("com.google.android.gms:play-services-games-v2:20.1.2")   // Play Games: sign-in, leaderboards, achievements
     implementation("androidx.core:core:1.13.1")   // FileProvider, for sharing the result card
+    // The ads and Play Games SDKs pull in androidx.fragment 1.1.0, which Play Console
+    // flags as outdated. Pin a current version (it also lifts androidx.activity).
+    implementation("androidx.fragment:fragment:1.8.6")
 }
