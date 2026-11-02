@@ -25,9 +25,9 @@
 <body>
 <main>
 <h1>Eat In Privacy Policy</h1>
-<p class="meta">Effective 20 October 2026. Applies to the Eat In Android app (<code>com.onurbaykal.eatin</code>) and the Eat In web game.</p>
+<p class="meta">Effective 1 November 2026. Applies to the Eat In Android app (<code>com.onurbaykal.eatin</code>) and the Eat In web game.</p>
 
-<p>Eat In is a single-player arcade game. It has no accounts and no analytics of its own. The Android app shows ads from Google AdMob; the web game has no ads. This page explains what data the game keeps, what the ads collect, and where it goes.</p>
+<p>Eat In is a single-player arcade game. It has no accounts and no analytics of its own. The Android app shows ads from Google AdMob and can use Google Play Games for leaderboards and achievements; the web game has neither. This page explains what data the game keeps, what the ads collect, and where it goes.</p>
 
 <h2>What the game stores</h2>
 <p>To remember your progress, the game saves the following on your own device, in the browser or app storage:</p>
@@ -38,10 +38,10 @@
   <li>Daily challenge progress</li>
   <li>Settings such as the last mode, map, time of day, music and sound</li>
 </ul>
-<p>This data never leaves your device through the game. We, the developer, cannot see it.</p>
+<p>This data never leaves your device through the game, except for the scores and achievements described under Google Play Games below. We, the developer, cannot see it.</p>
 
 <h2>Ads in the Android app</h2>
-<p>The game itself runs offline: the 3D engine and fonts are bundled inside the app. The app uses the internet only to show ads, which come from Google AdMob through the Google Mobile Ads SDK. A banner appears outside gameplay and a full-screen ad sometimes appears between rounds.</p>
+<p>The game itself runs offline: the 3D engine and fonts are bundled inside the app. The app uses the internet only for ads and Google Play Games. Ads come from Google AdMob through the Google Mobile Ads SDK. A banner appears outside gameplay and a full-screen ad sometimes appears between rounds.</p>
 <p>To serve and measure ads, and to prevent fraud, the Google Mobile Ads SDK collects and sends to Google:</p>
 <ul>
   <li>Your device's advertising ID (you can reset it or delete it in Android settings)</li>
@@ -52,12 +52,17 @@
 <p>Google may use this data to show personalised ads, depending on your choices. If you are in the European Economic Area, the UK or Switzerland, or another place whose laws require it, the app asks for your consent with Google's consent form before showing ads, and an "Ad privacy" button on the main menu lets you change your choice at any time. Your game progress is never sent with the ads. See <a href="https://policies.google.com/technologies/partner-sites">how Google uses data from apps that use its services</a> and <a href="https://policies.google.com/privacy">Google's privacy policy</a>.</p>
 <p>The developer does not receive any personal data from the ads, only totals such as how many ads were shown.</p>
 
+<h2>Google Play Games in the Android app</h2>
+<p>The Android app works with Google Play Games for leaderboards and achievements. If you use Play Games, the app signs you in to it automatically; otherwise it asks only when you open Leaders or Awards, and the game works fully without it.</p>
+<p>When you are signed in, the app sends to Google Play Games: your best score in each mode, your scores in the Daily city, your widest hole, and the achievements you have earned (worked out from the progress listed above, such as rounds played and things swallowed). Google stores these with your Play Games profile. Your Play Games name and avatar, not the name you type into the game, appear next to your scores on the public leaderboards, depending on your Play Games settings. Google's <a href="https://policies.google.com/privacy">privacy policy</a> applies, and you can manage or delete your Play Games profile and its data in the Play Games app or at <a href="https://myaccount.google.com/">your Google Account</a>.</p>
+<p>The developer can see leaderboard and achievement totals in Google Play Console, with the public Play Games names shown on leaderboards, but no other personal data.</p>
+
 <h2>Android backup</h2>
 <p>If you have turned on Android's own device backup, Android may include the app's saved progress in your backup to your Google account, so it can be restored on a new phone. That backup is handled by Google under your account settings, not by Eat In, and you can turn it off in your phone's settings.</p>
 
 <h2>The web version</h2>
 <p>When you play Eat In in a web browser, your browser downloads the 3D engine from cdnjs (Cloudflare) and the fonts from Google Fonts. As with any web request, those services receive your IP address and browser details. Their own privacy policies apply: <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare</a> and <a href="https://policies.google.com/privacy">Google</a>. If the page is hosted on GitHub Pages, <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub</a> also receives standard request logs.</p>
-<p>When the game runs inside Claude as a Claude artifact, a shared daily leaderboard appears. Posting a score there stores your player name, score, hole width and skin with your Claude user ID, so other players of that artifact can see the board. This feature is hidden everywhere else, including the Android app.</p>
+<p>When the game runs inside Claude as a Claude artifact, a shared daily leaderboard appears. Posting a score there stores your player name, score, hole width and skin with your Claude user ID, so other players of that artifact can see the board. This feature is hidden everywhere else; the Android app uses Google Play Games instead.</p>
 
 <h2>Sharing your result</h2>
 <p>The share card is drawn on your device. It is only sent somewhere if you choose to share it through your phone's share menu or save it as an image.</p>
