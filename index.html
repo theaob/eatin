@@ -78,6 +78,9 @@ body { font-family: var(--font-body); font-weight: 600; color: var(--paper); use
 h2.big { font-family: var(--font-display); font-weight: 800; font-size: 40px; margin: 0; line-height: 1; }
 .wallet { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: #4a5268; font-weight: 800; }
 .wallet b { font-family: var(--font-display); font-weight: 800; font-size: 18px; color: var(--ink); }
+.wallet .due { color: #d43a50; }
+.chal-r { display: grid; gap: 4px; justify-items: end; font-variant-numeric: tabular-nums; }
+.chal-r .chip { padding: 3px 8px; font-size: 12px; }
 .coin { display: inline-block; width: 12px; height: 12px; background: var(--sun); border: 2px solid #c99a1c; margin-right: 5px; vertical-align: -1px; }
 .field { display: grid; gap: 4px; }
 .field input { font: 700 16px var(--font-body); color: var(--ink); background: #fff; border: 2px solid #d6cfbf; border-radius: 2px; padding: 8px 10px; min-width: 0; }
@@ -185,7 +188,7 @@ h2.big { font-family: var(--font-display); font-weight: 800; font-size: 40px; ma
     <div class="menu-top">
     <h1 class="logo">Eat <span class="o" aria-hidden="true"></span>In</h1>
     <p class="lede">You are a hole in the street. Swallow anything that fits and grow. Steer with the mouse, drag on touch, or use WASD.</p>
-    <div class="wallet"><span><span class="coin" aria-hidden="true"></span><b id="coinTxt">0</b> coins</span><span>Best <b id="bestTxt">0</b></span><span>Widest <b id="widestTxt">0 m</b></span></div>
+    <div class="wallet"><span><span class="coin" aria-hidden="true"></span><b id="coinTxt">0</b> coins</span><span>Best <b id="bestTxt">0</b></span><span>Widest <b id="widestTxt">0 m</b></span><span id="streakTxt" hidden></span></div>
     </div>
     <div class="menu-picks">
     <label class="field"><span class="label">Your hole's name</span><input id="nameIn" maxlength="12" autocomplete="off" spellcheck="false" placeholder="You"></label>
@@ -197,7 +200,7 @@ h2.big { font-family: var(--font-display); font-weight: 800; font-size: 40px; ma
     <div class="menu-go">
     <button class="btn" id="playBtn" type="button">Play</button>
     <div class="menu-row">
-      <button class="btn2" type="button" data-panel="skins">Skins</button>
+      <button class="btn2" type="button" data-panel="skins" id="skinBtn">Skins</button>
       <button class="btn2" type="button" data-panel="challenges" id="chalBtn">Challenges</button>
       <button class="btn2" type="button" data-panel="book">Book</button>
       <button class="btn2" type="button" data-panel="leaders" id="leadersBtn" hidden>Leaders</button>
@@ -219,6 +222,7 @@ h2.big { font-family: var(--font-display); font-weight: 800; font-size: 40px; ma
     </div>
     <p class="lede" id="stBiggest"></p>
     <p class="reward" id="stReward"></p>
+    <p class="sub" id="stNext"></p>
     <ol class="results" id="endList"></ol>
     <div class="row2"><button class="btn" id="againBtn" type="button">Play again</button><button class="btn alt" id="menuBtn" type="button">Menu</button></div>
     <button class="btn2" id="shareBtn" type="button">Share</button>
@@ -298,9 +302,26 @@ const save = Object.assign({
   coins: 0, name: '', skin: 'mint', owned: ['mint'], mode: 'classic', map: 'city', time: 'day', music: true,
   rec: { points: 0, width: 0, bigVol: 0, bigLabel: '', rounds: 0, wins: 0, combo: 0 },
   book: {}, daily: null,
-  best: {}, maps: [], feats: {}   // best score per mode, maps played, one-off feats (for Play Games)
+  best: {}, maps: [], feats: {},  // best score per mode, maps played, one-off feats (for Play Games)
+  streak: { last: '', days: 0, best: 0 }   // days in a row with a finished round (UTC days, like the challenges)
 }, (() => { try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; } catch (e) { return {}; } })());
 function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} }
+
+// ---------- daily streak ----------
+// The first round finished each day pays a bonus that grows for 7 days in a row.
+// Missing a day starts it again at day 1.
+const STREAK_COINS = [10, 20, 30, 40, 50, 60, 75];   // day 1..7, then 75 a day
+const dayBefore = d => new Date(Date.parse(d + 'T00:00:00Z') - 864e5).toISOString().slice(0, 10);
+const streakCoins = days => STREAK_COINS[Math.min(days, STREAK_COINS.length) - 1];
+// Days in the streak that is still alive (it survives until a whole day passes with no round).
+function streakNow() { const s = save.streak, d = today(); return s.last === d || s.last === dayBefore(d) ? s.days : 0; }
+function bumpStreak() {   // returns the bonus, or 0 if today already counted
+  const s = save.streak, d = today();
+  if (s.last === d) return 0;
+  s.days = s.last === dayBefore(d) ? s.days + 1 : 1;
+  s.last = d; s.best = Math.max(s.best || 0, s.days);
+  return streakCoins(s.days);
+}
 
 // ---------- modes ----------
 const MODES = {
@@ -1748,6 +1769,7 @@ const CHALLENGES = [
   { id: 'daily', text: 'Play the Daily city', goal: 1, sum: r => r.mode === 'daily' ? 1 : 0 }
 ];
 const CHALLENGE_COINS = 75;
+const CHALLENGE_SET_BONUS = 100;   // extra for finishing all three in a day
 function ensureDaily() {
   const d = today();
   if (save.daily && save.daily.date === d) return save.daily;
@@ -1765,7 +1787,34 @@ function applyChallenges(rs) {
     dy.prog[id] = c.sum ? (dy.prog[id] || 0) + c.sum(rs) : Math.max(dy.prog[id] || 0, c.max(rs));
     if (dy.prog[id] >= c.goal) { dy.done[id] = true; save.coins += CHALLENGE_COINS; save.rec.chals = (save.rec.chals || 0) + 1; finished.push(c.text); }
   }
-  return finished;
+  let setBonus = 0;
+  if (!dy.bonus && dy.ids.every(id => dy.done[id])) { dy.bonus = true; setBonus = CHALLENGE_SET_BONUS; save.coins += setBonus; }
+  return { finished, setBonus };
+}
+// One free swap a day for a challenge that hasn't been finished yet.
+function swapChallenge(id) {
+  const dy = ensureDaily();
+  if (dy.swapped || dy.done[id] || !dy.ids.includes(id)) return;
+  const pool = CHALLENGES.filter(c => !dy.ids.includes(c.id));
+  const next = pool[(Math.random() * pool.length) | 0];
+  dy.ids[dy.ids.indexOf(id)] = next.id;
+  delete dy.prog[id];
+  dy.swapped = true;
+  persist();
+}
+// What to aim for next, shown on the results card: the next skin, then the closest challenge.
+function nextGoals() {
+  const out = [], next = SKINS.filter(k => !save.owned.includes(k.id)).sort((a, b) => a.price - b.price)[0];
+  if (next) out.push(save.coins >= next.price ? `You can buy the ${next.name} skin now.` : `${(next.price - save.coins).toLocaleString()} more coins for the ${next.name} skin.`);
+  const dy = ensureDaily(), open = dy.ids.filter(id => !dy.done[id]).map(id => CHALLENGES.find(c => c.id === id)).filter(Boolean);
+  if (open.length) {
+    const c = open.sort((a, b) => (dy.prog[b.id] || 0) / b.goal - (dy.prog[a.id] || 0) / a.goal)[0], v = Math.min(c.goal, dy.prog[c.id] || 0);
+    out.push(`Closest challenge: ${c.text.toLowerCase()} (${v.toLocaleString()} of ${c.goal.toLocaleString()}).`);
+  } else {
+    const d = streakNow() + 1;
+    out.push(`All of today's challenges are done. Come back tomorrow for new ones${streakNow() ? ` and day ${d} of your streak (+${streakCoins(d)} coins)` : ''}.`);
+  }
+  return out.join(' ');
 }
 
 // ---------- collection book ----------
@@ -1821,6 +1870,12 @@ function renderMenu() {
   const dy = ensureDaily();
   const open = dy.ids.filter(id => !dy.done[id]).length;
   $('chalBtn').innerHTML = 'Challenges' + (open ? '<span class="dot" aria-label="open challenges"></span>' : '');
+  const canBuy = SKINS.some(k => !save.owned.includes(k.id) && save.coins >= k.price);
+  $('skinBtn').innerHTML = 'Skins' + (canBuy ? '<span class="dot" aria-label="a skin you can buy"></span>' : '');
+  const st = streakNow(), due = st && save.streak.last !== today();
+  $('streakTxt').hidden = !st;
+  $('streakTxt').innerHTML = `Streak <b>${st}</b>${due ? ' <span class="due">· play today</span>' : ''}`;
+  $('streakTxt').title = `${st} ${st === 1 ? 'day' : 'days'} in a row` + (due ? '. Finish a round today to keep it going.' : '');
   if (nativeAds) ads.privacy(nativeAds.privacyOptionsRequired());
 }
 $('nameIn').addEventListener('input', e => { save.name = e.target.value.slice(0, 12); persist(); applySkin(); });
@@ -1867,16 +1922,20 @@ function renderPanel(kind) {
   } else if (kind === 'challenges') {
     const dy = ensureDaily();
     title.textContent = 'Challenges';
-    body.innerHTML = `<p class="sub">Three new goals every day. Each one pays ${CHALLENGE_COINS} coins.</p><ul class="list">` + dy.ids.map(id => {
+    body.innerHTML = `<p class="sub">Three new goals every day. Each one pays ${CHALLENGE_COINS} coins, and finishing all three pays ${CHALLENGE_SET_BONUS} more.${dy.swapped ? '' : ' You can swap one a day.'}</p><ul class="list">` + dy.ids.map(id => {
       const c = CHALLENGES.find(k => k.id === id), v = Math.min(c.goal, dy.prog[id] || 0), done = dy.done[id];
-      return `<li class="${done ? 'done' : ''}"><span>${done ? '✓' : '○'}</span><span><b>${esc(c.text)}</b><div class="bar"><i style="width:${v / c.goal * 100}%"></i></div></span><span>${v.toLocaleString()}/${c.goal.toLocaleString()}</span></li>`;
-    }).join('') + `</ul><p class="sub">Records: best ${save.rec.points.toLocaleString()} points, widest ${save.rec.width.toFixed(1)} m, longest combo ${save.rec.combo}, ${save.rec.wins} wins in ${save.rec.rounds} rounds.${save.rec.bigLabel ? ` Biggest thing swallowed: ${esc(save.rec.bigLabel.toLowerCase())}.` : ''}</p>`;
-    body.onclick = null;
+      const swap = !done && !dy.swapped ? `<button class="chip" type="button" data-swap="${id}" aria-label="Swap for another challenge">Swap</button>` : '';
+      return `<li class="${done ? 'done' : ''}"><span>${done ? '✓' : '○'}</span><span><b>${esc(c.text)}</b><div class="bar"><i style="width:${v / c.goal * 100}%"></i></div></span><span class="chal-r">${v.toLocaleString()}/${c.goal.toLocaleString()}${swap}</span></li>`;
+    }).join('') + `</ul><p class="sub">Records: best ${save.rec.points.toLocaleString()} points, widest ${save.rec.width.toFixed(1)} m, longest combo ${save.rec.combo}, ${save.rec.wins} wins in ${save.rec.rounds} rounds.${save.rec.bigLabel ? ` Biggest thing swallowed: ${esc(save.rec.bigLabel.toLowerCase())}.` : ''}${save.streak.best ? ` Longest streak: ${save.streak.best} ${save.streak.best === 1 ? 'day' : 'days'}.` : ''}</p>`;
+    body.onclick = e => {
+      const b = e.target.closest('[data-swap]'); if (!b) return;
+      swapChallenge(b.dataset.swap); renderPanel('challenges'); $('panelBack').focus();
+    };
   } else if (kind === 'book') {
     const all = BOOK.reduce((n, [, l]) => n + l.length, 0), got = BOOK.reduce((n, [, l]) => n + l.filter(x => save.book[x]).length, 0);
     title.textContent = 'Book';
-    body.innerHTML = `<p class="sub">${got} of ${all} things found. Swallow something new to fill its page.</p>` + BOOK.map(([where, list]) =>
-      `<div class="label" style="color:#7a8196">${where}</div><ul class="book">` + list.map(x => save.book[x]
+    body.innerHTML = `<p class="sub">${got} of ${all} things found. Swallow something new to fill its page, and finish a page for bonus coins.</p>` + BOOK.map(([where, list]) =>
+      `<div class="label" style="color:#7a8196">${where} · ${list.every(x => save.book[x]) ? 'done' : `${list.filter(x => save.book[x]).length}/${list.length}, +${pageCoins(list)} coins`}</div><ul class="book">` + list.map(x => save.book[x]
         ? `<li>${esc(x)}<span>${save.book[x].toLocaleString()} swallowed</span></li>`
         : `<li class="lock">???<span>not found yet</span></li>`).join('') + '</ul>').join('');
     body.onclick = null;
@@ -2044,7 +2103,15 @@ if (games.native) {
 // ---------- game state ----------
 let state = 'menu', timeLeft = MODES.classic.time, autoPlayer = false, timeScale = 1, paused = false;
 // Everything that belongs to one round.
-const round = { id: 0, combo: 0, lastEat: -9, eatenPts: 0, totalPts: 1, events: [], rs: null, result: null, bonusCoins: 0, playT: 0, tod: [0, 1] };
+const round = { id: 0, combo: 0, lastEat: -9, eatenPts: 0, totalPts: 1, events: [], rs: null, result: null, bonusCoins: 0, playT: 0, tod: [0, 1], tips: [], pages: [], best: 0, beatBest: false };
+// Tips for someone's very first round, shown one at a time when nothing else is on screen.
+const FIRST_TIPS = [
+  { at: 7, text: 'Keep eating without a pause to build a combo' },
+  { at: 18, text: 'Crates on the roads are power-ups. Roll over one' },
+  { at: 30, text: 'Holes bigger than you can swallow you. Smaller ones are lunch', rivals: true },
+  { at: 44, text: 'The bar under your points fills up until bigger things fit' }
+];
+const pageCoins = list => Math.max(50, 15 * list.length);   // finishing a page of the book
 const COMBO_WINDOW = 1.5;   // seconds between bites that keep a combo alive
 const COMBO_MIN = 0.1;      // food smaller than this share of the hole's radius doesn't count
 const comboMult = () => 1 + Math.min(Math.max(0, round.combo - 1), 25) * 0.02;   // up to x1.5 at a 26 combo
@@ -2063,6 +2130,8 @@ function startGame() {
   timeLeft = MODE.time;
   round.id++;
   round.combo = 0; round.lastEat = -9; round.bonusCoins = 0; round.playT = 0; round.result = null;
+  round.tips = save.rec.rounds ? [] : FIRST_TIPS.filter(t => MODE.rivals || !t.rivals);
+  round.pages = []; round.best = save.best[save.mode] || 0; round.beatBest = false;
   round.eatenPts = 0; round.totalPts = objects.reduce((n, o) => n + o.points, 0);
   round.tod = !daily && save.time === 'night' ? [1.1, 1.35] : [0, 1];
   round.rs = { count: {}, width: 0, points: 0, combo: 0, powers: 0, rivals: 0, top3: 0, map: daily ? dailyMap() : save.map, mode: save.mode, battleWin: 0, cleanWin: 0, golden: 0, landmark: 0 };
@@ -2119,6 +2188,8 @@ function endGame(outcome) {
   if (MODE !== MODES.cleanup) coins += [60, 40, 30, 20, 10, 10, 10, 10][pos - 1] || 0;
   if (rs.battleWin) coins += 100;
   if (rs.cleanWin) coins += 80;
+  const streak = bumpStreak();
+  coins += streak;
   save.coins += coins;
   const news = [];
   const R = save.rec;
@@ -2135,12 +2206,17 @@ function endGame(outcome) {
   if (rs.golden) F.golden = 1;
   if (rs.landmark) F.landmark = 1;
   if (rs.rivals) F.rival = 1;
-  const finished = applyChallenges(rs);
+  const { finished, setBonus } = applyChallenges(rs);
   persist();
   let reward = `+${coins.toLocaleString()} coins`;
-  if (news.length) reward += `. New record: ${news.join(' and ')}!`;
+  if (streak) reward += save.streak.days > 1 ? `, with +${streak} for a ${save.streak.days}-day streak` : `, with +${streak} for today's first round`;
+  reward += '.';
+  if (news.length) reward += ` New record: ${news.join(' and ')}!`;
   if (finished.length) reward += ` Challenge done: ${finished.join(', ')} (+${finished.length * CHALLENGE_COINS}).`;
+  if (setBonus) reward += ` All three of today's challenges done (+${setBonus}).`;
+  if (round.pages.length) reward += ` Book page done: ${round.pages.join(', ')}.`;
   $('stReward').textContent = reward;
+  $('stNext').textContent = nextGoals();
   round.result = { rank: MODE === MODES.cleanup ? Math.floor(round.eatenPts / round.totalPts * 100) + '%' : '#' + pos, points: player.points, width: rs.width, line };
   games.sync();
   if (MODE === MODES.daily) games.daily(player.points);
@@ -2519,8 +2595,20 @@ function finishSwallow(o) {
   h.points += pts;
   rs.combo = Math.max(rs.combo, round.combo);
   rs.count[o.label] = (rs.count[o.label] || 0) + 1;
-  if (!save.book[o.label]) { showToast(`New in your book: ${o.label.toLowerCase()}`, 1.6, true); }
+  const isNew = !save.book[o.label];
   save.book[o.label] = (save.book[o.label] || 0) + 1;
+  if (isNew) {
+    showToast(`New in your book: ${o.label.toLowerCase()}`, 1.6, true);
+    // A finished page pays at once and is saved straight away, so quitting the round can't lose it.
+    const page = BOOK.find(([, list]) => list.includes(o.label));
+    if (page && page[1].every(x => save.book[x])) {
+      const c = pageCoins(page[1]);
+      save.coins += c; persist();
+      round.pages.push(`${page[0]} (+${c})`);
+      showToast(`${page[0]} page of the book done! +${c} coins`, 3); chime();
+    }
+  }
+  if (!round.beatBest && round.best && h.points > round.best) { round.beatBest = true; showToast('New personal best!', 2.5); chime(); }
   gulp(o.r, round.combo);
   if (o.r > 2.5) crunch(o.r); else if (o.label === 'Pedestrian' || o.label === 'Mascot') squeak();
   if (o.golden) { rs.golden++; round.bonusCoins += 25; showToast('Golden snack! +25 coins', 2.5); chime(); }
@@ -2533,6 +2621,7 @@ function step(dt) {
   if (playing) {
     timeLeft -= dt; round.playT += dt;
     while (round.events.length && MODE.time - timeLeft >= round.events[0].at) runEvent(round.events.shift().kind);
+    if (round.tips.length && round.playT >= round.tips[0].at && toastT <= 0) showToast(round.tips.shift().text, 3.5);
     if (timeLeft <= 0) { timeLeft = 0; endGame(); }
     if (MODE === MODES.cleanup && round.eatenPts >= round.totalPts * MODE.target) endGame('won');
   }
