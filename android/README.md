@@ -131,6 +131,18 @@ for the bundled copies in `vendor/`. Pass `-PversionCode=N -PversionName=X` to
 set the version; CI uses 100 plus the run number as `versionCode`, above
 every old apktool build.
 
+## Streak reminder
+
+`Reminders.java` keeps at most one local notification waiting, for a day the player
+has not played yet ("Keep your 5-day streak going"). The page decides the time
+(the `reminder` object in `index.html`, near the hour the player usually starts)
+and moves it on after every round through `window.EatInReminder`. The game asks
+first, on the results of the third day in a row; on Android 13+ that is followed
+by the system's notification permission prompt. Settings has an on/off switch.
+Alarms are inexact (no exact-alarm permission) and are set again after a reboot
+or an app update. Nothing is sent anywhere, so the Play data safety form doesn't
+change; the privacy policy describes it.
+
 ## Signing
 
 Keys stay out of the repo. A local build picks them up when present:

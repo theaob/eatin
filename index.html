@@ -78,6 +78,19 @@ body { font-family: var(--font-body); font-weight: 600; color: var(--paper); use
 h2.big { font-family: var(--font-display); font-weight: 800; font-size: 40px; margin: 0; line-height: 1; }
 .wallet { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: #4a5268; font-weight: 800; }
 .wallet b { font-family: var(--font-display); font-weight: 800; font-size: 18px; color: var(--ink); }
+.wallet .due { color: #d43a50; }
+.event { display: block; width: 100%; text-align: left; font: 700 13px var(--font-body); color: var(--ink); background: #fff0c4; border: 2px solid #f1d27a; border-radius: 2px; padding: 6px 10px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.event b { font-weight: 800; }
+.event:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
+.reward.unlock { background: #e2f5e9; border-color: #b9e3c6; }
+.ask { display: grid; gap: 8px; padding: 10px; background: #f1ece2; border: 2px solid #e2dbcc; }
+.ask b { color: var(--ink); }
+.chip.locked::before { content: ""; display: inline-block; width: 9px; height: 10px; margin-right: 5px; vertical-align: -1px; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 9 10' shape-rendering='crispEdges'%3E%3Cpath fill='%231f2638' d='M2 0h5v1H2zM1 1h2v3H1zM6 1h2v3H6zM0 4h9v6H0z'/%3E%3Cpath fill='%23f1ece2' d='M4 6h1v2H4z'/%3E%3C/svg%3E") no-repeat; }
+/* First launch: only the logo, the line about the game and Play. */
+.menu-card.first .menu-picks, .menu-card.first .menu-row, .menu-card.first .wallet, .menu-card.first .event { display: none !important; }
+.menu-card.first .lede { display: block !important; }
+.chal-r { display: grid; gap: 4px; justify-items: end; font-variant-numeric: tabular-nums; }
+.chal-r .chip { padding: 3px 8px; font-size: 12px; }
 .coin { display: inline-block; width: 12px; height: 12px; background: var(--sun); border: 2px solid #c99a1c; margin-right: 5px; vertical-align: -1px; }
 .field { display: grid; gap: 4px; }
 .field input { font: 700 16px var(--font-body); color: var(--ink); background: #fff; border: 2px solid #d6cfbf; border-radius: 2px; padding: 8px 10px; min-width: 0; }
@@ -139,7 +152,7 @@ h2.big { font-family: var(--font-display); font-weight: 800; font-size: 40px; ma
 }
 /* Menu: the wrappers only matter on short screens, so Play stays in view without scrolling. */
 .menu-top, .menu-picks, .menu-go { display: contents; }
-@media (max-height: 760px) {
+@media (max-height: 860px) {
   .menu-card { gap: 9px; padding-top: 16px; padding-bottom: 16px; }
   .menu-card .logo { font-size: clamp(40px, 8vh, 56px); }
   .menu-card .lede { display: none; }
@@ -147,6 +160,9 @@ h2.big { font-family: var(--font-display); font-weight: 800; font-size: 40px; ma
   .menu-card .field input { padding: 6px 10px; }
   .menu-card .btn { padding: 9px 18px; }
   .menu-card .hint { min-height: 0; }
+  .menu-card .pickrow { grid-template-columns: 44px minmax(0, 1fr); align-items: start; column-gap: 6px; }
+  .menu-card .pickrow .label { padding-top: 7px; font-size: 10px; letter-spacing: .08em; }
+  .menu-card .event { padding: 4px 9px; }
 }
 /* Landscape phones: two columns, with Play under the logo on the left. */
 @media (max-height: 560px) and (min-aspect-ratio: 4/3) {
@@ -185,7 +201,8 @@ h2.big { font-family: var(--font-display); font-weight: 800; font-size: 40px; ma
     <div class="menu-top">
     <h1 class="logo">Eat <span class="o" aria-hidden="true"></span>In</h1>
     <p class="lede">You are a hole in the street. Swallow anything that fits and grow. Steer with the mouse, drag on touch, or use WASD.</p>
-    <div class="wallet"><span><span class="coin" aria-hidden="true"></span><b id="coinTxt">0</b> coins</span><span>Best <b id="bestTxt">0</b></span><span>Widest <b id="widestTxt">0 m</b></span></div>
+    <div class="wallet"><span><span class="coin" aria-hidden="true"></span><b id="coinTxt">0</b> coins</span><span>Best <b id="bestTxt">0</b></span><span>Widest <b id="widestTxt">0 m</b></span><span id="streakTxt" hidden></span></div>
+    <button class="event" id="eventBtn" type="button" data-panel="challenges"></button>
     </div>
     <div class="menu-picks">
     <label class="field"><span class="label">Your hole's name</span><input id="nameIn" maxlength="12" autocomplete="off" spellcheck="false" placeholder="You"></label>
@@ -196,8 +213,9 @@ h2.big { font-family: var(--font-display); font-weight: 800; font-size: 40px; ma
     </div>
     <div class="menu-go">
     <button class="btn" id="playBtn" type="button">Play</button>
+    <p class="hint" id="firstHint" hidden>Two minutes, seven rival holes. Swallow the small stuff first.</p>
     <div class="menu-row">
-      <button class="btn2" type="button" data-panel="skins">Skins</button>
+      <button class="btn2" type="button" data-panel="skins" id="skinBtn">Skins</button>
       <button class="btn2" type="button" data-panel="challenges" id="chalBtn">Challenges</button>
       <button class="btn2" type="button" data-panel="book">Book</button>
       <button class="btn2" type="button" data-panel="leaders" id="leadersBtn" hidden>Leaders</button>
@@ -219,6 +237,12 @@ h2.big { font-family: var(--font-display); font-weight: 800; font-size: 40px; ma
     </div>
     <p class="lede" id="stBiggest"></p>
     <p class="reward" id="stReward"></p>
+    <p class="reward unlock" id="stUnlock" hidden></p>
+    <p class="sub" id="stNext"></p>
+    <div class="ask" id="remindAsk" hidden>
+      <p class="sub"><b>Want a reminder so your streak doesn't end?</b> At most one a day, and only when you haven't played yet.</p>
+      <div class="row2"><button class="btn2" type="button" id="remindYes">Remind me</button><button class="btn2" type="button" id="remindNo">No thanks</button></div>
+    </div>
     <ol class="results" id="endList"></ol>
     <div class="row2"><button class="btn" id="againBtn" type="button">Play again</button><button class="btn alt" id="menuBtn" type="button">Menu</button></div>
     <button class="btn2" id="shareBtn" type="button">Share</button>
@@ -298,9 +322,66 @@ const save = Object.assign({
   coins: 0, name: '', skin: 'mint', owned: ['mint'], mode: 'classic', map: 'city', time: 'day', music: true,
   rec: { points: 0, width: 0, bigVol: 0, bigLabel: '', rounds: 0, wins: 0, combo: 0 },
   book: {}, daily: null,
-  best: {}, maps: [], feats: {}   // best score per mode, maps played, one-off feats (for Play Games)
+  best: {}, maps: [], feats: {},  // best score per mode, maps played, one-off feats (for Play Games)
+  streak: { last: '', days: 0, best: 0 },  // days in a row with a finished round (the player's own calendar days)
+  hours: [],     // local hour of the first round on each of the last few days (for the reminder)
+  week: null,    // weekly event goal progress
+  remind: null   // streak reminder on Android: null = never asked, true / false
 }, (() => { try { return JSON.parse(localStorage.getItem(SAVE_KEY)) || {}; } catch (e) { return {}; } })());
 function persist() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (e) {} }
+
+// ---------- daily streak ----------
+// The first round finished each day pays a bonus that grows for 7 days in a row.
+// Missing a day starts it again at day 1. Days are the player's local calendar days
+// (not UTC like the challenges), so playing every evening always counts.
+const STREAK_COINS = [10, 20, 30, 40, 50, 60, 75];   // day 1..7, then 75 a day
+const localDay = (t = new Date()) => `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+const dayBefore = d => new Date(Date.parse(d + 'T00:00:00Z') - 864e5).toISOString().slice(0, 10);   // calendar maths only
+const streakCoins = days => STREAK_COINS[Math.min(days, STREAK_COINS.length) - 1];
+// Days in the streak that is still alive (it survives until a whole day passes with no round).
+function streakNow() { const s = save.streak, d = localDay(); return s.last === d || s.last === dayBefore(d) ? s.days : 0; }
+function bumpStreak() {   // returns the bonus, or 0 if today already counted
+  const s = save.streak, d = localDay();
+  if (s.last === d) return 0;
+  s.days = s.last === dayBefore(d) ? s.days + 1 : 1;
+  s.last = d; s.best = Math.max(s.best || 0, s.days);
+  save.hours = (save.hours || []).concat(new Date().getHours()).slice(-7);
+  return streakCoins(s.days);
+}
+
+// ---------- weekly event ----------
+// One rule changes the game for a whole week (Monday to Sunday, UTC, the same for everyone),
+// with one goal that pays WEEK_COINS. The events take turns in a fixed order.
+const WEEK_EVENTS = [
+  { id: 'golden', name: 'Golden week', rule: 'Two golden snacks in every round, worth 50 coins each.', goal: 8, goalText: 'Swallow 8 golden snacks', sum: r => r.golden },
+  { id: 'power', name: 'Power-up week', rule: 'Twice the power-up crates, and yours last 50% longer.', goal: 40, goalText: 'Grab 40 power-ups', sum: r => r.powers },
+  { id: 'rush', name: 'Rush week', rule: 'Rush hour in every round, and each car or bus pays a coin.', goal: 250, goalText: 'Swallow 250 cars and buses', sum: r => (r.count['Car'] || 0) + (r.count['City bus'] || 0) },
+  { id: 'appetite', name: 'Big appetite week', rule: 'Your hole grows 15% faster.', goal: 3000, goalText: 'Swallow 3,000 things', sum: r => Object.values(r.count).reduce((n, c) => n + c, 0) },
+  { id: 'night', name: 'Night market week', rule: 'Rounds played at night pay 50% more coins.', goal: 8, goalText: 'Finish 8 rounds at night', sum: r => r.night }
+];
+const WEEK_COINS = 400;
+const weekNo = () => Math.floor((Date.now() / 864e5 + 3) / 7);   // 1 Jan 1970 was a Thursday
+const weekEvent = () => WEEK_EVENTS[weekNo() % WEEK_EVENTS.length];
+const weekDaysLeft = () => Math.max(1, Math.ceil((weekNo() + 1) * 7 - 3 - Date.now() / 864e5));
+function ensureWeek() {
+  const n = weekNo();
+  if (!save.week || save.week.no !== n) save.week = { no: n, prog: 0, done: false, seen: false };
+  return save.week;
+}
+function applyWeek(rs) {   // returns the prize if this round finished the goal
+  const w = ensureWeek(), ev = weekEvent();
+  if (w.done) return 0;
+  w.prog += ev.sum(rs) || 0;
+  if (w.prog < ev.goal) return 0;
+  w.done = true; save.coins += WEEK_COINS;
+  return WEEK_COINS;
+}
+
+// ---------- unlocks for new players ----------
+// The first launch shows just Play (Classic in the City). Other modes, maps and night
+// open over the first three rounds, each with a small "unlocked" moment on the results.
+const UNLOCKS = { cleanup: 1, beach: 1, battle: 2, fair: 2, night: 2, daily: 3, snow: 3 };
+const unlocked = id => (save.rec.rounds || 0) >= (UNLOCKS[id] || 0);
 
 // ---------- modes ----------
 const MODES = {
@@ -1748,6 +1829,7 @@ const CHALLENGES = [
   { id: 'daily', text: 'Play the Daily city', goal: 1, sum: r => r.mode === 'daily' ? 1 : 0 }
 ];
 const CHALLENGE_COINS = 75;
+const CHALLENGE_SET_BONUS = 100;   // extra for finishing all three in a day
 function ensureDaily() {
   const d = today();
   if (save.daily && save.daily.date === d) return save.daily;
@@ -1765,7 +1847,36 @@ function applyChallenges(rs) {
     dy.prog[id] = c.sum ? (dy.prog[id] || 0) + c.sum(rs) : Math.max(dy.prog[id] || 0, c.max(rs));
     if (dy.prog[id] >= c.goal) { dy.done[id] = true; save.coins += CHALLENGE_COINS; save.rec.chals = (save.rec.chals || 0) + 1; finished.push(c.text); }
   }
-  return finished;
+  let setBonus = 0;
+  if (!dy.bonus && dy.ids.every(id => dy.done[id])) { dy.bonus = true; setBonus = CHALLENGE_SET_BONUS; save.coins += setBonus; }
+  return { finished, setBonus };
+}
+// One free swap a day for a challenge that hasn't been finished yet.
+function swapChallenge(id) {
+  const dy = ensureDaily();
+  if (dy.swapped || dy.done[id] || !dy.ids.includes(id)) return;
+  const pool = CHALLENGES.filter(c => !dy.ids.includes(c.id));
+  const next = pool[(Math.random() * pool.length) | 0];
+  dy.ids[dy.ids.indexOf(id)] = next.id;
+  delete dy.prog[id];
+  dy.swapped = true;
+  persist();
+}
+// What to aim for next, shown on the results card: the next skin, then the closest challenge.
+function nextGoals() {
+  const out = [], next = SKINS.filter(k => !save.owned.includes(k.id)).sort((a, b) => a.price - b.price)[0];
+  if (next) out.push(save.coins >= next.price ? `You can buy the ${next.name} skin now.` : `${(next.price - save.coins).toLocaleString()} more coins for the ${next.name} skin.`);
+  const dy = ensureDaily(), open = dy.ids.filter(id => !dy.done[id]).map(id => CHALLENGES.find(c => c.id === id)).filter(Boolean);
+  if (open.length) {
+    const c = open.sort((a, b) => (dy.prog[b.id] || 0) / b.goal - (dy.prog[a.id] || 0) / a.goal)[0], v = Math.min(c.goal, dy.prog[c.id] || 0);
+    out.push(`Closest challenge: ${c.text.toLowerCase()} (${v.toLocaleString()} of ${c.goal.toLocaleString()}).`);
+  } else {
+    const d = streakNow() + 1;
+    out.push(`All of today's challenges are done. Come back tomorrow for new ones${streakNow() ? ` and day ${d} of your streak (+${streakCoins(d)} coins)` : ''}.`);
+  }
+  const ev = weekEvent(), wk = ensureWeek();
+  if (!wk.done && save.rec.rounds > 1) out.push(`${ev.name}: ${Math.min(wk.prog, ev.goal).toLocaleString()} of ${ev.goal.toLocaleString()} for ${WEEK_COINS} coins.`);
+  return out.join(' ');
 }
 
 // ---------- collection book ----------
@@ -1804,7 +1915,10 @@ async function postDaily(points, width) {
 const MAP_IDS = Object.keys(MAPS);
 const dailyMap = () => MAP_IDS[hashStr('map ' + today()) % MAP_IDS.length];
 function chips(el, items, current, onPick, disabled) {
-  el.innerHTML = items.map(([id, label]) => `<button class="chip" type="button" data-id="${id}" aria-pressed="${id === current}"${disabled ? ' disabled' : ''}>${esc(label)}</button>`).join('');
+  el.innerHTML = items.map(([id, label]) => {
+    const lock = !unlocked(id), more = (UNLOCKS[id] || 0) - (save.rec.rounds || 0);
+    return `<button class="chip${lock ? ' locked' : ''}" type="button" data-id="${id}" aria-pressed="${id === current}"${disabled || lock ? ' disabled' : ''}${lock ? ` title="Unlocks after ${more} more ${more === 1 ? 'round' : 'rounds'}" aria-label="${esc(label)}, locked"` : ''}>${esc(label)}</button>`;
+  }).join('');
   el.onclick = e => { const b = e.target.closest('.chip'); if (b && !b.disabled) onPick(b.dataset.id); };
 }
 function renderMenu() {
@@ -1813,14 +1927,29 @@ function renderMenu() {
   $('bestTxt').textContent = save.rec.points.toLocaleString();
   $('widestTxt').textContent = save.rec.width.toFixed(1) + ' m';
   $('nameIn').value = save.name;
+  for (const k of ['mode', 'map', 'time']) if (!unlocked(save[k])) save[k] = { mode: 'classic', map: 'city', time: 'day' }[k];
   const daily = save.mode === 'daily';
   chips($('modeChips'), Object.entries(MODES).map(([k, m]) => [k, m.name]), save.mode, id => { save.mode = id; persist(); renderMenu(); });
   chips($('mapChips'), MAP_IDS.map(k => [k, MAPS[k].name]), daily ? dailyMap() : save.map, id => { save.map = id; persist(); renderMenu(); }, daily);
   chips($('timeChips'), [['day', 'Afternoon'], ['night', 'Night']], daily ? 'day' : save.time, id => { save.time = id; persist(); renderMenu(); }, daily);
-  $('modeHint').textContent = MODES[save.mode].hint + (daily ? ` Today: ${MAPS[dailyMap()].name}.` : '');
+  const locked = Object.keys(UNLOCKS).filter(id => !unlocked(id)), soon = Math.min(...locked.map(id => UNLOCKS[id])) - save.rec.rounds;
+  $('modeHint').textContent = MODES[save.mode].hint + (daily ? ` Today: ${MAPS[dailyMap()].name}.` : '')
+    + (locked.length ? ` More unlocks after ${soon} more ${soon === 1 ? 'round' : 'rounds'}.` : '');
+  const first = !save.rec.rounds;
+  document.querySelector('.menu-card').classList.toggle('first', first);
+  $('firstHint').hidden = !first;
+  const ev = weekEvent(), wk = ensureWeek(), left = weekDaysLeft();
+  $('eventBtn').innerHTML = `<b>${ev.name}</b> · ${wk.done ? 'goal done' : `${Math.min(wk.prog, ev.goal).toLocaleString()}/${ev.goal.toLocaleString()}`} · ${left} ${left === 1 ? 'day' : 'days'} left`;
+  $('eventBtn').title = `${ev.rule} Weekly goal: ${ev.goalText.toLowerCase()} for ${WEEK_COINS} coins.`;
   const dy = ensureDaily();
   const open = dy.ids.filter(id => !dy.done[id]).length;
   $('chalBtn').innerHTML = 'Challenges' + (open ? '<span class="dot" aria-label="open challenges"></span>' : '');
+  const canBuy = SKINS.some(k => !save.owned.includes(k.id) && save.coins >= k.price);
+  $('skinBtn').innerHTML = 'Skins' + (canBuy ? '<span class="dot" aria-label="a skin you can buy"></span>' : '');
+  const st = streakNow(), due = st && save.streak.last !== today();
+  $('streakTxt').hidden = !st;
+  $('streakTxt').innerHTML = `Streak <b>${st}</b>${due ? ' <span class="due">· play today</span>' : ''}`;
+  $('streakTxt').title = `${st} ${st === 1 ? 'day' : 'days'} in a row` + (due ? '. Finish a round today to keep it going.' : '');
   if (nativeAds) ads.privacy(nativeAds.privacyOptionsRequired());
 }
 $('nameIn').addEventListener('input', e => { save.name = e.target.value.slice(0, 12); persist(); applySkin(); });
@@ -1847,7 +1976,14 @@ function renderPanel(kind) {
   if (kind === 'settings') {
     title.textContent = 'Settings';
     const row = (id, name, what, on) => `<li><b>${name}</b><span>${what}</span><button class="chip" type="button" id="${id}" aria-pressed="${on}" aria-label="${name}">${on ? 'On' : 'Off'}</button></li>`;
-    body.innerHTML = '<ul class="list">' + row('setSound', 'Sound', 'Gulps, crunches and chimes', soundOn) + row('setMusic', 'Music', 'The tune for each map', musicOn) + '</ul>';
+    const remindOn = !!save.remind && !!reminder.native && reminder.native.allowed();
+    body.innerHTML = '<ul class="list">' + row('setSound', 'Sound', 'Gulps, crunches and chimes', soundOn) + row('setMusic', 'Music', 'The tune for each map', musicOn)
+      + (reminder.native ? row('setRemind', 'Streak reminder', 'One notification on a day you haven\'t played yet', remindOn) : '') + '</ul>';
+    if (reminder.native) $('setRemind').addEventListener('click', () => {
+      if (remindOn) { save.remind = false; persist(); reminder.plan(); renderPanel('settings'); }
+      else reminder.ask();   // re-renders through reminder.allowed()
+      $('setRemind') && $('setRemind').focus();
+    });
     $('setSound').addEventListener('click', () => { toggleSound(); renderPanel('settings'); $('setSound').focus(); });
     $('setMusic').addEventListener('click', () => { toggleMusic(); renderPanel('settings'); $('setMusic').focus(); });
   } else if (kind === 'skins') {
@@ -1867,16 +2003,23 @@ function renderPanel(kind) {
   } else if (kind === 'challenges') {
     const dy = ensureDaily();
     title.textContent = 'Challenges';
-    body.innerHTML = `<p class="sub">Three new goals every day. Each one pays ${CHALLENGE_COINS} coins.</p><ul class="list">` + dy.ids.map(id => {
+    const ev = weekEvent(), wk = ensureWeek(), wv = Math.min(ev.goal, wk.prog), left = weekDaysLeft();
+    body.innerHTML = `<div class="label" style="color:#7a8196">This week: ${ev.name}</div><p class="sub">${ev.rule} ${left} ${left === 1 ? 'day' : 'days'} left.</p>`
+      + `<ul class="list"><li class="${wk.done ? 'done' : ''}"><span>${wk.done ? '✓' : '○'}</span><span><b>${esc(ev.goalText)}</b><div class="bar"><i style="width:${wv / ev.goal * 100}%"></i></div></span><span class="chal-r">${wv.toLocaleString()}/${ev.goal.toLocaleString()}<span>${WEEK_COINS} coins</span></span></li></ul>`
+      + `<div class="label" style="color:#7a8196">Today</div><p class="sub">Three new goals every day. Each one pays ${CHALLENGE_COINS} coins, and finishing all three pays ${CHALLENGE_SET_BONUS} more.${dy.swapped ? '' : ' You can swap one a day.'}</p><ul class="list">` + dy.ids.map(id => {
       const c = CHALLENGES.find(k => k.id === id), v = Math.min(c.goal, dy.prog[id] || 0), done = dy.done[id];
-      return `<li class="${done ? 'done' : ''}"><span>${done ? '✓' : '○'}</span><span><b>${esc(c.text)}</b><div class="bar"><i style="width:${v / c.goal * 100}%"></i></div></span><span>${v.toLocaleString()}/${c.goal.toLocaleString()}</span></li>`;
-    }).join('') + `</ul><p class="sub">Records: best ${save.rec.points.toLocaleString()} points, widest ${save.rec.width.toFixed(1)} m, longest combo ${save.rec.combo}, ${save.rec.wins} wins in ${save.rec.rounds} rounds.${save.rec.bigLabel ? ` Biggest thing swallowed: ${esc(save.rec.bigLabel.toLowerCase())}.` : ''}</p>`;
-    body.onclick = null;
+      const swap = !done && !dy.swapped ? `<button class="chip" type="button" data-swap="${id}" aria-label="Swap for another challenge">Swap</button>` : '';
+      return `<li class="${done ? 'done' : ''}"><span>${done ? '✓' : '○'}</span><span><b>${esc(c.text)}</b><div class="bar"><i style="width:${v / c.goal * 100}%"></i></div></span><span class="chal-r">${v.toLocaleString()}/${c.goal.toLocaleString()}${swap}</span></li>`;
+    }).join('') + `</ul><p class="sub">Records: best ${save.rec.points.toLocaleString()} points, widest ${save.rec.width.toFixed(1)} m, longest combo ${save.rec.combo}, ${save.rec.wins} wins in ${save.rec.rounds} rounds.${save.rec.bigLabel ? ` Biggest thing swallowed: ${esc(save.rec.bigLabel.toLowerCase())}.` : ''}${save.streak.best ? ` Longest streak: ${save.streak.best} ${save.streak.best === 1 ? 'day' : 'days'}.` : ''}</p>`;
+    body.onclick = e => {
+      const b = e.target.closest('[data-swap]'); if (!b) return;
+      swapChallenge(b.dataset.swap); renderPanel('challenges'); $('panelBack').focus();
+    };
   } else if (kind === 'book') {
     const all = BOOK.reduce((n, [, l]) => n + l.length, 0), got = BOOK.reduce((n, [, l]) => n + l.filter(x => save.book[x]).length, 0);
     title.textContent = 'Book';
-    body.innerHTML = `<p class="sub">${got} of ${all} things found. Swallow something new to fill its page.</p>` + BOOK.map(([where, list]) =>
-      `<div class="label" style="color:#7a8196">${where}</div><ul class="book">` + list.map(x => save.book[x]
+    body.innerHTML = `<p class="sub">${got} of ${all} things found. Swallow something new to fill its page, and finish a page for bonus coins.</p>` + BOOK.map(([where, list]) =>
+      `<div class="label" style="color:#7a8196">${where} · ${list.every(x => save.book[x]) ? 'done' : `${list.filter(x => save.book[x]).length}/${list.length}, +${pageCoins(list)} coins`}</div><ul class="book">` + list.map(x => save.book[x]
         ? `<li>${esc(x)}<span>${save.book[x].toLocaleString()} swallowed</span></li>`
         : `<li class="lock">???<span>not found yet</span></li>`).join('') + '</ul>').join('');
     body.onclick = null;
@@ -2041,15 +2184,70 @@ if (games.native) {
   $('achBtn').addEventListener('click', () => games.native.showAchievements());
 }
 
+// ---------- streak reminder (Android app only) ----------
+// The app injects window.EatInReminder: allowed(), ask(), schedule(atMs, title, text),
+// cancel(); ask() answers through window.eatInReminder.allowed(granted). There is only
+// ever one reminder waiting: for tomorrow, near the hour this player usually plays.
+// Each finished round moves it a day on, so it only shows on a day with no round yet,
+// and once the streak has ended no new one is set.
+const reminder = {
+  native: window.EatInReminder || null,
+  usualHour() {
+    const h = (save.hours || []).slice().sort((a, b) => a - b);
+    return h.length ? h[h.length >> 1] : 19;
+  },
+  plan() {
+    const n = reminder.native;
+    if (!n) return;
+    try {
+      const st = save.streak;
+      const d = localDay(), alive = st.last === d || st.last === dayBefore(d);
+      if (!save.remind || st.days < 2 || !alive || !n.allowed()) { n.cancel(); return; }
+      // played today: remind tomorrow; not yet today: remind later today
+      const at = new Date(); if (st.last === d) at.setDate(at.getDate() + 1);
+      at.setHours(clamp(reminder.usualHour(), 10, 21), 0, 0, 0);
+      if (at.getTime() <= Date.now()) return;   // too late today; the one already set stands
+      n.schedule(at.getTime(), `Keep your ${st.days}-day streak going`, `Finish one round of Eat In today for +${streakCoins(st.days + 1)} coins.`);
+    } catch (e) {}
+  },
+  ask() { if (reminder.native) try { reminder.native.ask(); } catch (e) {} },
+  allowed(ok) {   // the answer to ask()
+    save.remind = !!ok; persist();
+    reminder.plan();
+    if (!$('remindAsk').hidden) $('remindAsk').innerHTML = `<p class="sub">${ok ? "Reminders are on. You can turn them off in Settings." : 'Notifications are off for Eat In. You can allow them in Android settings, then switch the reminder on in Settings.'}</p>`;
+    if (!$('panelScreen').hidden && $('panelTitle').textContent === 'Settings') renderPanel('settings');
+  }
+};
+window.eatInReminder = reminder;
+// Offered once, on the results of the third day in a row.
+function showReminderAsk() {
+  $('remindAsk').hidden = !(reminder.native && save.remind === null && save.streak.days >= 3);
+}
+$('remindYes').addEventListener('click', reminder.ask);
+$('remindNo').addEventListener('click', () => { save.remind = false; persist(); $('remindAsk').hidden = true; });
+reminder.plan();   // after an app update or a reboot the alarm is gone; set it again
+
 // ---------- game state ----------
 let state = 'menu', timeLeft = MODES.classic.time, autoPlayer = false, timeScale = 1, paused = false;
 // Everything that belongs to one round.
-const round = { id: 0, combo: 0, lastEat: -9, eatenPts: 0, totalPts: 1, events: [], rs: null, result: null, bonusCoins: 0, playT: 0, tod: [0, 1] };
+const round = { id: 0, combo: 0, lastEat: -9, eatenPts: 0, totalPts: 1, events: [], rs: null, result: null, bonusCoins: 0, playT: 0, tod: [0, 1], tips: [], pages: [], best: 0, beatBest: false };
+// Tips for someone's very first round, shown one at a time when nothing else is on screen.
+const FIRST_TIPS = [
+  { at: 7, text: 'Keep eating without a pause to build a combo' },
+  { at: 18, text: 'Crates on the roads are power-ups. Roll over one' },
+  { at: 30, text: 'Holes bigger than you can swallow you. Smaller ones are lunch', rivals: true },
+  { at: 44, text: 'The bar under your points fills up until bigger things fit' }
+];
+const pageCoins = list => Math.max(50, 15 * list.length);   // finishing a page of the book
 const COMBO_WINDOW = 1.5;   // seconds between bites that keep a combo alive
 const COMBO_MIN = 0.1;      // food smaller than this share of the hole's radius doesn't count
 const comboMult = () => 1 + Math.min(Math.max(0, round.combo - 1), 25) * 0.02;   // up to x1.5 at a 26 combo
 
 function startGame() {
+  // Anything not unlocked yet (an old save, or a test) falls back to Classic, City, afternoon.
+  if (!unlocked(save.mode)) save.mode = 'classic';
+  if (!unlocked(save.map)) save.map = 'city';
+  if (!unlocked(save.time)) save.time = 'day';
   MODE = MODES[save.mode] || MODES.classic;
   const daily = MODE === MODES.daily;
   MAP = MAPS[daily ? dailyMap() : save.map] || MAPS.city;
@@ -2059,18 +2257,26 @@ function startGame() {
   holes.forEach(placeHole);
   applySkin();
   clearPowers();
-  for (let i = 0; i < POWER_COUNT; i++) spawnPower();
+  const ev = weekEvent(), wk = ensureWeek();
+  round.ev = ev.id;
+  for (let i = 0; i < POWER_COUNT * (ev.id === 'power' ? 2 : 1); i++) spawnPower();
   timeLeft = MODE.time;
   round.id++;
   round.combo = 0; round.lastEat = -9; round.bonusCoins = 0; round.playT = 0; round.result = null;
+  round.tips = save.rec.rounds ? [] : FIRST_TIPS.filter(t => MODE.rivals || !t.rivals);
+  round.pages = []; round.best = save.best[save.mode] || 0; round.beatBest = false;
   round.eatenPts = 0; round.totalPts = objects.reduce((n, o) => n + o.points, 0);
   round.tod = !daily && save.time === 'night' ? [1.1, 1.35] : [0, 1];
-  round.rs = { count: {}, width: 0, points: 0, combo: 0, powers: 0, rivals: 0, top3: 0, map: daily ? dailyMap() : save.map, mode: save.mode, battleWin: 0, cleanWin: 0, golden: 0, landmark: 0 };
+  round.rs = { count: {}, width: 0, points: 0, combo: 0, powers: 0, rivals: 0, top3: 0, map: daily ? dailyMap() : save.map, mode: save.mode, battleWin: 0, cleanWin: 0, golden: 0, landmark: 0, night: !daily && save.time === 'night' ? 1 : 0 };
   round.events = [];
   if (MODE.events) {
-    const kinds = ['rush', 'parade', 'golden'].sort(() => Math.random() - 0.5);
+    const kinds = ['rush', 'parade', 'golden'].filter(k => !(ev.id === 'golden' && k === 'golden') && !(ev.id === 'rush' && k === 'rush')).sort(() => Math.random() - 0.5);
     round.events = [{ at: MODE.time * 0.3, kind: kinds[0] }, { at: MODE.time * 0.62, kind: kinds[1] }];
   }
+  // the week's event adds its own round events, in every mode
+  if (ev.id === 'golden') round.events.push({ at: MODE.time * 0.15, kind: 'golden' }, { at: MODE.time * 0.8, kind: 'golden' });
+  if (ev.id === 'rush') round.events.push({ at: MODE.time * 0.08, kind: 'rush' });
+  round.events.sort((a, b) => a.at - b.at);
   snow.visible = !!MAP.snowy;
   state = 'play'; paused = false;
   ads.menu(false);
@@ -2079,7 +2285,8 @@ function startGame() {
   if (!audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { audio = null; } }
   if (audio && audio.state === 'suspended') audio.resume();
   startMusic();
-  showToast(MODE === MODES.cleanup ? `Swallow ${Math.round(MODE.target * 100)}% of ${MAP.name}` : MODE === MODES.battle ? 'Last hole standing wins' : 'Swallow the small stuff first', 2.5);
+  if (!wk.seen && save.rec.rounds) { wk.seen = true; persist(); showToast(`${ev.name}! ${ev.rule}`, 4); }
+  else showToast(MODE === MODES.cleanup ? `Swallow ${Math.round(MODE.target * 100)}% of ${MAP.name}` : MODE === MODES.battle ? 'Last hole standing wins' : 'Swallow the small stuff first', 2.5);
   canvas.focus();
 }
 function endGame(outcome) {
@@ -2119,10 +2326,14 @@ function endGame(outcome) {
   if (MODE !== MODES.cleanup) coins += [60, 40, 30, 20, 10, 10, 10, 10][pos - 1] || 0;
   if (rs.battleWin) coins += 100;
   if (rs.cleanWin) coins += 80;
+  if (round.ev === 'night' && rs.night) coins = Math.round(coins * 1.5);
+  const streak = bumpStreak();
+  coins += streak;
   save.coins += coins;
   const news = [];
   const R = save.rec;
   R.rounds++; if (won) R.wins++;
+  const opened = Object.keys(UNLOCKS).filter(id => UNLOCKS[id] === R.rounds);
   if (player.points > R.points) { if (R.points) news.push('best score'); R.points = player.points; }
   if (rs.width > R.width) { if (R.width) news.push('widest hole'); R.width = rs.width; }
   if (rs.combo > R.combo) R.combo = rs.combo;
@@ -2135,12 +2346,24 @@ function endGame(outcome) {
   if (rs.golden) F.golden = 1;
   if (rs.landmark) F.landmark = 1;
   if (rs.rivals) F.rival = 1;
-  const finished = applyChallenges(rs);
+  const { finished, setBonus } = applyChallenges(rs);
+  const weekPrize = applyWeek(rs);
   persist();
   let reward = `+${coins.toLocaleString()} coins`;
-  if (news.length) reward += `. New record: ${news.join(' and ')}!`;
+  if (streak) reward += save.streak.days > 1 ? `, with +${streak} for a ${save.streak.days}-day streak` : `, with +${streak} for today's first round`;
+  reward += '.';
+  if (news.length) reward += ` New record: ${news.join(' and ')}!`;
   if (finished.length) reward += ` Challenge done: ${finished.join(', ')} (+${finished.length * CHALLENGE_COINS}).`;
+  if (setBonus) reward += ` All three of today's challenges done (+${setBonus}).`;
+  if (round.pages.length) reward += ` Book page done: ${round.pages.join(', ')}.`;
+  if (weekPrize) reward += ` ${weekEvent().name} goal done (+${weekPrize})!`;
   $('stReward').textContent = reward;
+  const names = { cleanup: 'Clean-up mode', battle: 'Battle mode', daily: 'the Daily city', night: 'night rounds' };
+  $('stUnlock').hidden = !opened.length;
+  $('stUnlock').textContent = `Unlocked: ${opened.map(id => names[id] || MAPS[id].name).join(', ')}!`;
+  $('stNext').textContent = nextGoals();
+  showReminderAsk();
+  reminder.plan();
   round.result = { rank: MODE === MODES.cleanup ? Math.floor(round.eatenPts / round.totalPts * 100) + '%' : '#' + pos, points: player.points, width: rs.width, line };
   games.sync();
   if (MODE === MODES.daily) games.daily(player.points);
@@ -2247,8 +2470,9 @@ function clearPowers() { for (const p of pups) scene.remove(p.g); pups = []; }
 function grantPower(h, kind) {
   const P = POWERS[kind];
   if (kind === 'grow') h.r2 *= 1.15;
-  else h.buffs[kind] = P.time;
-  if (kind === 'shield') h.shield = Math.max(h.shield || 0, P.time);
+  const t = P.time * (h.player && round.ev === 'power' ? 1.5 : 1);
+  if (kind !== 'grow') h.buffs[kind] = t;
+  if (kind === 'shield') h.shield = Math.max(h.shield || 0, t);
   if (h.player) { showToast(P.text, 2); chime(); round.rs.powers++; }
 }
 function updatePowers(dt) {
@@ -2504,7 +2728,7 @@ function finishSwallow(o) {
   const h = o.hole;
   o.alive = false; scene.remove(o.mesh);
   for (const [m] of o.mats) m.dispose();
-  h.r2 += o.grow * (h.player ? EASY.playerGrow : EASY.botGrow) * growTaper(h.r, h.player ? EASY.playerTaper : EASY.botTaper);
+  h.r2 += o.grow * (h.player ? EASY.playerGrow * (round.ev === 'appetite' ? 1.15 : 1) : EASY.botGrow) * growTaper(h.r, h.player ? EASY.playerTaper : EASY.botTaper);
   round.eatenPts += o.points;
   h.eaten++;
   if (!h.biggest || o.vol > h.biggest.vol) h.biggest = o;
@@ -2519,11 +2743,24 @@ function finishSwallow(o) {
   h.points += pts;
   rs.combo = Math.max(rs.combo, round.combo);
   rs.count[o.label] = (rs.count[o.label] || 0) + 1;
-  if (!save.book[o.label]) { showToast(`New in your book: ${o.label.toLowerCase()}`, 1.6, true); }
+  const isNew = !save.book[o.label];
   save.book[o.label] = (save.book[o.label] || 0) + 1;
+  if (isNew) {
+    showToast(`New in your book: ${o.label.toLowerCase()}`, 1.6, true);
+    // A finished page pays at once and is saved straight away, so quitting the round can't lose it.
+    const page = BOOK.find(([, list]) => list.includes(o.label));
+    if (page && page[1].every(x => save.book[x])) {
+      const c = pageCoins(page[1]);
+      save.coins += c; persist();
+      round.pages.push(`${page[0]} (+${c})`);
+      showToast(`${page[0]} page of the book done! +${c} coins`, 3); chime();
+    }
+  }
+  if (!round.beatBest && round.best && h.points > round.best) { round.beatBest = true; showToast('New personal best!', 2.5); chime(); }
   gulp(o.r, round.combo);
   if (o.r > 2.5) crunch(o.r); else if (o.label === 'Pedestrian' || o.label === 'Mascot') squeak();
-  if (o.golden) { rs.golden++; round.bonusCoins += 25; showToast('Golden snack! +25 coins', 2.5); chime(); }
+  if (o.golden) { const c = round.ev === 'golden' ? 50 : 25; rs.golden++; round.bonusCoins += c; showToast(`Golden snack! +${c} coins`, 2.5); chime(); }
+  if (round.ev === 'rush' && (o.label === 'Car' || o.label === 'City bus')) round.bonusCoins++;
   if (o.landmark) { rs.landmark++; h.points += 500; round.bonusCoins += 100; showToast(`You swallowed the ${o.label.toLowerCase()}! +500`, 3.5); }
   if (pts >= 3) popText('+' + pts);
 }
@@ -2533,6 +2770,7 @@ function step(dt) {
   if (playing) {
     timeLeft -= dt; round.playT += dt;
     while (round.events.length && MODE.time - timeLeft >= round.events[0].at) runEvent(round.events.shift().kind);
+    if (round.tips.length && round.playT >= round.tips[0].at && toastT <= 0) showToast(round.tips.shift().text, 3.5);
     if (timeLeft <= 0) { timeLeft = 0; endGame(); }
     if (MODE === MODES.cleanup && round.eatenPts >= round.totalPts * MODE.target) endGame('won');
   }
