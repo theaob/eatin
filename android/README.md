@@ -88,7 +88,7 @@ every sign-in and every round, so progress from before sign-in is not lost.
    | Black hole | Grow 20 m wide. | Standard |
    | Supermassive | Grow 40 m wide. | Standard |
    | High score | Score 10,000 points in one round. | Standard |
-   | Combo master | Reach a 75 combo. | Standard |
+   | Combo master | Reach a 40 combo. | Standard |
    | Sightseer | Swallow a landmark. | Standard |
    | Golden snack | Swallow a golden object. | Standard |
    | Rival eater | Swallow a rival hole. | Standard |
