@@ -1,3 +1,6 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Eat In</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;800&display=swap">
@@ -87,9 +90,9 @@ h2.big { font-family: var(--font-display); font-weight: 800; font-size: 40px; ma
 .chip:focus-visible, .btn2:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
 .hint { margin: 0; font-size: 13px; color: #6a7286; line-height: 1.4; min-height: 1.4em; }
 .menu-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 6px; }
-.btn2 { font: 800 15px var(--font-display); color: var(--ink); background: #fff; border: 2px solid var(--ink); border-radius: 2px; padding: 8px 6px; cursor: pointer; box-shadow: 0 3px 0 var(--ink); }
+.btn2 { position: relative; font: 800 15px var(--font-display); color: var(--ink); background: #fff; border: 2px solid var(--ink); border-radius: 2px; padding: 8px 6px; cursor: pointer; box-shadow: 0 3px 0 var(--ink); }
 .btn2:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
-.btn2 .dot { display: inline-block; width: 8px; height: 8px; background: var(--hot); margin-left: 4px; vertical-align: 2px; }
+.btn2 .dot { position: absolute; top: -5px; right: -5px; width: 10px; height: 10px; background: var(--hot); border: 2px solid var(--ink); }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .row2 .btn { font-size: 20px; padding: 10px 8px; }
 .btn.alt { background: var(--paper); color: var(--ink); box-shadow: 0 5px 0 var(--ink); }
@@ -120,7 +123,7 @@ h2.big { font-family: var(--font-display); font-weight: 800; font-size: 40px; ma
 #pauseBtn:focus-visible { outline: 3px solid var(--sun); outline-offset: 2px; }
 
 @media (max-width: 560px) {
-  #me { min-width: 0; padding: 8px 10px; }
+  #me { min-width: 0; max-width: 42vw; box-sizing: border-box; padding: 8px 10px; }
   #myScore { font-size: 24px; }
   #nextUp { display: none; }
   #timer { top: auto; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); }
@@ -131,7 +134,7 @@ h2.big { font-family: var(--font-display); font-weight: 800; font-size: 40px; ma
   #board { font-size: 12px; min-width: 128px; }
   #board li:nth-child(n+5):not(.you) { display: none; }
 }
-@media (max-width: 359px) {
+@media (max-width: 389px) {
   #pauseBtn { left: auto; right: calc(12px + env(safe-area-inset-right, 0px)); transform: none; top: calc(12px + env(safe-area-inset-top, 0px) + 150px); }
 }
 @media (prefers-reduced-motion: reduce) { .pop { animation-duration: .01s; } }
@@ -252,6 +255,7 @@ function seeded(seed) {   // mulberry32
 const hashStr = str => { let h = 2166136261; for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 16777619); return h >>> 0; };
 const today = () => new Date().toISOString().slice(0, 10);   // UTC, so everyone shares one daily city and board
 const plural = w => /(s|sh|ch|x)$/.test(w) ? w + 'es' : /[^aeiou]y$/.test(w) ? w.slice(0, -1) + 'ies' : w + 's';
+const an = w => (/^[aeiou]/i.test(w) ? 'an ' : 'a ') + w;
 const esc = str => String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 // ---------- saved progress (this device) ----------
@@ -553,6 +557,7 @@ const headPoolMat = new THREE.MeshBasicMaterial(Object.assign({ map: poolTex, co
 const headGlowMat = new THREE.SpriteMaterial(Object.assign({ map: glowTex, color: 0xfff6dc, opacity: 0 }, additive));
 const tailGlowMat = new THREE.SpriteMaterial(Object.assign({ map: glowTex, color: 0xff3b3b, opacity: 0 }, additive));
 const flatQuad = new THREE.PlaneGeometry(1, 1).rotateX(-Math.PI / 2);
+flatQuad.userData.shared = true;
 function groundGlow(mat, x, z, sx, sz) {
   const m = new THREE.Mesh(flatQuad, mat);
   m.position.set(x, 0.05, z); m.scale.set(sx, 1, sz); m.renderOrder = 2; m.userData.glow = true;
@@ -616,7 +621,7 @@ const variantCache = new Map();
 function variant(key, n, build) {
   if (!variantCache.has(key)) {   // built from Math.random so a seeded city draws the same numbers however many variants exist yet
     const keep = random; random = Math.random;
-    variantCache.set(key, Array.from({ length: n }, () => build().geometry()));
+    variantCache.set(key, Array.from({ length: n }, () => { const g = build().geometry(); g.userData.shared = true; return g; }));
     random = keep;
   }
   return pick(variantCache.get(key));
@@ -1184,7 +1189,11 @@ function genTraffic() {
 }
 
 function buildWorld() {
-  for (const o of objects) scene.remove(o.mesh);
+  for (const o of objects) {
+    scene.remove(o.mesh);
+    o.mesh.traverse(c => { if (c.isMesh && !c.geometry.userData.shared) c.geometry.dispose(); });
+    if (o.falling && o.alive) for (const [m] of o.mats) m.dispose();
+  }
   objects = [];
   blocks = [];
   const centers = [];
@@ -1667,7 +1676,7 @@ function updateHud() {
   const t = Math.max(0, Math.ceil(timeLeft));
   hud.timer.textContent = `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
   hud.timer.classList.toggle('low', t <= 10 && state === 'play');
-  hud.combo.textContent = round.combo >= 3 && state === 'play' ? `Combo ${round.combo}  x${comboMult().toFixed(2)}` : '';
+  hud.combo.textContent = round.combo >= 3 && state === 'play' && round.playT - round.lastEat < 1.5 ? `Combo ${round.combo}  x${comboMult().toFixed(2)}` : '';
   hud.buffs.textContent = Object.entries(player.buffs || {}).filter(([, v]) => v > 0).map(([k, v]) => `${POWERS[k].name} ${Math.ceil(v)}s`).join('  ');
   if (MODE === MODES.cleanup) {
     const f = round.eatenPts / round.totalPts, goal = MODE.target;
@@ -1800,6 +1809,7 @@ document.querySelectorAll('[data-panel]').forEach(b => b.addEventListener('click
 
 function renderPanel(kind) {
   const title = $('panelTitle'), body = $('panelBody');
+  body.onclick = null;   // each panel sets its own; a leftover one would also fire on the next panel's buttons
   if (kind === 'settings') {
     title.textContent = 'Settings';
     const row = (id, name, what, on) => `<li><b>${name}</b><span>${what}</span><button class="chip" type="button" id="${id}" aria-pressed="${on}" aria-label="${name}">${on ? 'On' : 'Off'}</button></li>`;
@@ -2000,7 +2010,7 @@ if (games.native) {
 // ---------- game state ----------
 let state = 'menu', timeLeft = MODES.classic.time, autoPlayer = false, timeScale = 1, paused = false;
 // Everything that belongs to one round.
-const round = { combo: 0, lastEat: -9, eatenPts: 0, totalPts: 1, events: [], rs: null, result: null, bonusCoins: 0, playT: 0, tod: [0, 1] };
+const round = { id: 0, combo: 0, lastEat: -9, eatenPts: 0, totalPts: 1, events: [], rs: null, result: null, bonusCoins: 0, playT: 0, tod: [0, 1] };
 const comboMult = () => 1 + Math.min(Math.max(0, round.combo - 1), 20) * 0.025;   // up to x1.5
 
 function startGame() {
@@ -2015,6 +2025,7 @@ function startGame() {
   clearPowers();
   for (let i = 0; i < POWER_COUNT; i++) spawnPower();
   timeLeft = MODE.time;
+  round.id++;
   round.combo = 0; round.lastEat = -9; round.bonusCoins = 0; round.playT = 0; round.result = null;
   round.eatenPts = 0; round.totalPts = objects.reduce((n, o) => n + o.points, 0);
   round.tod = !daily && save.time === 'night' ? [1.1, 1.35] : [0, 1];
@@ -2054,7 +2065,7 @@ function endGame(outcome) {
   $('stRank').nextElementSibling.textContent = MODE === MODES.cleanup ? 'Swallowed' : 'Rank';
   $('stPts').textContent = player.points.toLocaleString();
   $('stSize').textContent = (player.r * 2).toFixed(1) + ' m';
-  const line = player.biggest ? `You swallowed ${player.eaten.toLocaleString()} things. The biggest was a ${player.biggest.label.toLowerCase()}.` : 'You did not swallow anything this time.';
+  const line = player.biggest ? `You swallowed ${player.eaten.toLocaleString()} things. The biggest was ${an(player.biggest.label.toLowerCase())}.` : 'You did not swallow anything this time.';
   $('stBiggest').textContent = line;
   $('endList').hidden = MODE === MODES.cleanup;
   $('endList').innerHTML = rk.map((h, i) =>
@@ -2205,7 +2216,8 @@ function updatePowers(dt) {
       if (Math.hypot(h.x - p.x, h.z - p.z) < h.r + 0.7) {
         grantPower(h, p.kind);
         scene.remove(p.g); pups.splice(i, 1);
-        setTimeout(() => { if (state === 'play') spawnPower(); }, 4000);
+        const id = round.id;   // a restart must not inherit this round's respawns
+        setTimeout(() => { if (state === 'play' && round.id === id) spawnPower(); }, 4000);
         break;
       }
     }
@@ -2259,7 +2271,7 @@ function runEvent(kind) {
     }
     if (!best) return;
     best.golden = true; best.points *= 5;
-    best.mesh.traverse(c => { if (c.isMesh) c.material = goldMat; });
+    best.mesh.traverse(c => { if (c.isMesh && !c.userData.glow) c.material = goldMat; });
     const s = sprite(beaconMat, 0, best.h + 3, 0, 6);
     s.scale.set(3, 14, 1);
     best.mesh.add(s);
