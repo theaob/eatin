@@ -6,12 +6,14 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.View;
 import android.webkit.JavascriptInterface;
+import android.window.OnBackInvokedDispatcher;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.widget.FrameLayout;
@@ -87,6 +89,31 @@ public class MainActivity extends Activity {
         hideBars();
         requestConsent();
         games.start();
+        if (Build.VERSION.SDK_INT >= 33) {
+            getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                OnBackInvokedDispatcher.PRIORITY_DEFAULT, this::handleBack);
+        }
+    }
+
+    // ---------- back button ----------
+
+    /**
+     * Back goes to the page first (window.eatInBack): it closes an open panel, pauses or
+     * resumes a round, or leaves the results. Only on the main menu does the app go to
+     * the background, as a launcher activity would.
+     */
+    private void handleBack() {
+        if (web == null) { moveTaskToBack(true); return; }
+        web.evaluateJavascript("window.eatInBack ? window.eatInBack() : false",
+            handled -> { if (!"true".equals(handled)) moveTaskToBack(true); });
+    }
+
+    /** Android 12 and older; 13+ uses the callback registered in onCreate. */
+    @Override
+    @SuppressWarnings("deprecation")
+    public void onBackPressed() {
+        if (Build.VERSION.SDK_INT >= 33) super.onBackPressed();
+        else handleBack();
     }
 
     @SuppressWarnings("deprecation")
