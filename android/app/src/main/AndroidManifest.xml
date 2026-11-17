@@ -4,6 +4,10 @@
     <!-- Network is only used for ads and Play Games; the game itself runs offline. -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- The streak reminder (Reminders.java): one local notification, asked for in the game
+         on the third day in a row, and set again after a reboot. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Pulled in by WorkManager inside the ads SDK; the app runs no foreground
          service, and keeping it means a foreground-service declaration on Play. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove" />
@@ -38,6 +42,14 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/share_paths" />
         </provider>
+        <receiver
+            android:name=".Reminders"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
         <activity
             android:name=".MainActivity"
             android:exported="true"

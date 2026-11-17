@@ -82,6 +82,7 @@ public class MainActivity extends Activity {
         web.addJavascriptInterface(new ShareBridge(), "EatInShare");
         games = new Games();
         web.addJavascriptInterface(games, "EatInGames");
+        web.addJavascriptInterface(new ReminderBridge(), "EatInReminder");
         root.addView(web, new FrameLayout.LayoutParams(-1, -1));
 
         setContentView(root);
@@ -297,6 +298,48 @@ public class MainActivity extends Activity {
                 return false;
             }
         }
+    }
+
+    /**
+     * window.EatInReminder: the streak reminder (see Reminders). ask() requests the
+     * notification permission on Android 13+ and answers through
+     * window.eatInReminder.allowed(granted).
+     */
+    private static final int RC_NOTIFY = 9002;
+
+    private class ReminderBridge {
+        @JavascriptInterface
+        public boolean allowed() { return Reminders.allowed(MainActivity.this); }
+
+        @JavascriptInterface
+        public void ask() {
+            runOnUiThread(() -> {
+                if (Build.VERSION.SDK_INT >= 33 && !Reminders.allowed(MainActivity.this)
+                    && checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(new String[] { android.Manifest.permission.POST_NOTIFICATIONS }, RC_NOTIFY);
+                } else {
+                    tellReminder(Reminders.allowed(MainActivity.this));
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void schedule(double at, String title, String text) {
+            Reminders.schedule(MainActivity.this, (long) at, title, text);
+        }
+
+        @JavascriptInterface
+        public void cancel() { Reminders.cancel(MainActivity.this); }
+    }
+
+    private void tellReminder(boolean ok) {
+        if (web != null) web.evaluateJavascript("window.eatInReminder && window.eatInReminder.allowed(" + ok + ")", null);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] results) {
+        super.onRequestPermissionsResult(requestCode, permissions, results);
+        if (requestCode == RC_NOTIFY) { hideBars(); tellReminder(Reminders.allowed(this)); }
     }
 
     /**
