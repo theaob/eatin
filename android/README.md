@@ -16,9 +16,13 @@ AdMob, through the Google Mobile Ads SDK:
 - Google's consent form (UMP) where the law needs one, and an "Ad privacy"
   button on the menu when users must be able to change their choice
 
-The IDs in `app/src/main/res/values/ads.xml` are Google's public **test IDs**:
-they show test ads and earn nothing. Replace all three with the app ID and ad
-unit IDs from the AdMob console before releasing. The page talks to the app
+Release builds use the real AdMob IDs in `app/src/main/res/values/ads.xml`
+(publisher `pub-3615836489279250`). Debug builds use Google's public **test
+IDs** from `app/src/debug/res/values/ads.xml`, so testing never shows or taps a
+live ad (AdMob can suspend an account for that). The file also holds the three
+rewarded units (double coins, Battle revive, free booster), which the app doesn't
+load yet. `app-ads.txt` on theaob.github.io needs the line
+`google.com, pub-3615836489279250, DIRECT, f08c47fec0942fa0`. The page talks to the app
 through `window.EatInAds` (in `MainActivity.java`); in a browser that object is
 missing and the game has no ads.
 
