@@ -1,9 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- AdMob IDs. These are Google's public test IDs: they always serve test ads
-     and earn nothing. Swap in the real ones from the AdMob console before a
-     Play Store release. -->
+<!-- Real AdMob IDs (publisher pub-3615836489279250), used by release builds.
+     Debug builds use Google's test IDs from src/debug/res/values/ads.xml instead,
+     so testing never shows or taps a live ad. -->
 <resources>
-    <string name="admob_app_id" translatable="false">ca-app-pub-3940256099942544~3347511713</string>
-    <string name="admob_banner_id" translatable="false">ca-app-pub-3940256099942544/9214589741</string>
-    <string name="admob_interstitial_id" translatable="false">ca-app-pub-3940256099942544/1033173712</string>
+    <string name="admob_app_id" translatable="false">ca-app-pub-3615836489279250~7717112913</string>
+    <string name="admob_banner_id" translatable="false">ca-app-pub-3615836489279250/1895456936</string>
+    <string name="admob_interstitial_id" translatable="false">ca-app-pub-3615836489279250/1774816248</string>
+    <!-- rewarded, one unit per placement so AdMob reports them apart -->
+    <string name="admob_rewarded_double_id" translatable="false">ca-app-pub-3615836489279250/1289786428</string>
+    <string name="admob_rewarded_revive_id" translatable="false">ca-app-pub-3615836489279250/3205503325</string>
+    <!-- for the pre-round booster, once boosters exist; not loaded yet -->
+    <string name="admob_rewarded_booster_id" translatable="false">ca-app-pub-3615836489279250/3285394377</string>
 </resources>
