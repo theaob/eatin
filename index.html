@@ -105,6 +105,8 @@ h2.big { font-family: var(--font-display); font-weight: 800; font-size: 40px; ma
 .menu-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); gap: 6px; }
 .btn2 { position: relative; font: 800 15px var(--font-display); color: var(--ink); background: #fff; border: 2px solid var(--ink); border-radius: 2px; padding: 8px 6px; cursor: pointer; box-shadow: 0 3px 0 var(--ink); }
 .btn2:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+.adbtn { width: 100%; background: var(--sun, #ffd23d); margin: 8px 0 0; }
+.adbtn:disabled { opacity: .55; cursor: default; }
 .btn2 .dot { position: absolute; top: -5px; right: -5px; width: 10px; height: 10px; background: var(--hot); border: 2px solid var(--ink); }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .row2 .btn { font-size: 20px; padding: 10px 8px; }
@@ -237,6 +239,7 @@ h2.big { font-family: var(--font-display); font-weight: 800; font-size: 40px; ma
     </div>
     <p class="lede" id="stBiggest"></p>
     <p class="reward" id="stReward"></p>
+    <button class="btn2 adbtn" id="doubleBtn" type="button" hidden></button>
     <p class="reward unlock" id="stUnlock" hidden></p>
     <p class="sub" id="stNext"></p>
     <div class="ask" id="remindAsk" hidden>
@@ -246,6 +249,16 @@ h2.big { font-family: var(--font-display); font-weight: 800; font-size: 40px; ma
     <ol class="results" id="endList"></ol>
     <div class="row2"><button class="btn" id="againBtn" type="button">Play again</button><button class="btn alt" id="menuBtn" type="button">Menu</button></div>
     <button class="btn2" id="shareBtn" type="button">Share</button>
+  </div>
+</div>
+
+<div class="overlay" id="reviveScreen" hidden>
+  <div class="card">
+    <h2 class="big">Swallowed!</h2>
+    <p class="lede">Watch a short ad to jump back in with most of your size. You get one revive a round.</p>
+    <p class="sub">Revived rounds still pay coins but don't go on the leaderboards.</p>
+    <button class="btn" id="reviveYes" type="button">Watch ad and revive</button>
+    <button class="btn alt" id="reviveNo" type="button">No thanks</button>
   </div>
 </div>
 
@@ -2111,7 +2124,7 @@ const AD_EVERY = 2;        // interstitial after every 2nd round...
 const AD_GAP = 150;        // ...and no more than one per 150 s
 const nativeAds = window.EatInAds || null;
 const ads = {
-  rounds: 0, last: -1e9, next: null,
+  rounds: 0, last: -1e9, next: null, cbs: {},
   menu(on) { if (nativeAds) on ? nativeAds.showBanner() : nativeAds.hideBanner(); if (!on) ads.banner(0); },
   // Leaving the results screen: maybe show an interstitial, then go on.
   between(then) {
@@ -2124,6 +2137,22 @@ const ads = {
     if (!f) return;
     ads.rounds = 0; ads.last = performance.now();
     f();
+  },
+  // Rewarded ads, by placement: 'double' (results) and 'revive' (Battle).
+  rewardedReady(place) {
+    try { return !!(nativeAds && nativeAds.rewardedReady && nativeAds.rewardedReady(place)); } catch (e) { return false; }
+  },
+  showRewarded(place, cb) {
+    if (!ads.rewardedReady(place)) return cb(false);
+    ads.cbs[place] = cb;
+    nativeAds.showRewarded(place);
+  },
+  // The app calls this once per showRewarded: earned is true when the reward is due.
+  rewarded(place, earned) {
+    const cb = ads.cbs[place]; delete ads.cbs[place];
+    // A rewarded view counts as this stretch's ad, so no interstitial straight after.
+    ads.rounds = 0; ads.last = performance.now();
+    if (cb) cb(!!earned);
   },
   banner(h) { document.documentElement.style.setProperty('--ad-h', h + 'px'); },
   privacy(required) { $('adPrivacyBtn').hidden = !required; }
@@ -2272,6 +2301,7 @@ function startGame() {
   round.combo = 0; round.lastEat = -9; round.bonusCoins = 0; round.playT = 0; round.result = null;
   round.tips = save.rec.rounds ? [] : FIRST_TIPS.filter(t => MODE.rivals || !t.rivals);
   round.pages = []; round.best = save.best[save.mode] || 0; round.beatBest = false;
+  round.revived = false; round.reviveAsked = false; round.payout = 0; round.doubled = false;
   round.eatenPts = 0; round.totalPts = objects.reduce((n, o) => n + o.points, 0);
   round.tod = !daily && save.time === 'night' ? [1.1, 1.35] : [0, 1];
   round.rs = { count: {}, width: 0, points: 0, combo: 0, powers: 0, rivals: 0, top3: 0, map: daily ? dailyMap() : save.map, mode: save.mode, battleWin: 0, cleanWin: 0, golden: 0, landmark: 0, night: !daily && save.time === 'night' ? 1 : 0 };
@@ -2341,11 +2371,12 @@ function endGame(outcome) {
   const R = save.rec;
   R.rounds++; if (won) R.wins++;
   const opened = Object.keys(UNLOCKS).filter(id => UNLOCKS[id] === R.rounds);
-  if (player.points > R.points) { if (R.points) news.push('best score'); R.points = player.points; }
-  if (rs.width > R.width) { if (R.width) news.push('widest hole'); R.width = rs.width; }
+  if (player.points > R.points && !round.revived) { if (R.points) news.push('best score'); R.points = player.points; }
+  // Revived rounds don't count for records that go on the leaderboards.
+  if (rs.width > R.width && !round.revived) { if (R.width) news.push('widest hole'); R.width = rs.width; }
   if (rs.combo > R.combo) R.combo = rs.combo;
   if (player.biggest && player.biggest.vol > R.bigVol) { R.bigVol = player.biggest.vol; R.bigLabel = player.biggest.label; }
-  if (player.points > (save.best[save.mode] || 0)) save.best[save.mode] = player.points;
+  if (player.points > (save.best[save.mode] || 0) && !round.revived) save.best[save.mode] = player.points;
   if (!save.maps.includes(rs.map)) save.maps.push(rs.map);
   const F = save.feats;
   if (rs.battleWin) F.battle = 1;
@@ -2364,7 +2395,10 @@ function endGame(outcome) {
   if (setBonus) reward += ` All three of today's challenges done (+${setBonus}).`;
   if (round.pages.length) reward += ` Book page done: ${round.pages.join(', ')}.`;
   if (weekPrize) reward += ` ${weekEvent().name} goal done (+${weekPrize})!`;
+  if (round.revived) reward += " Revived rounds don't go on the leaderboards.";
   $('stReward').textContent = reward;
+  round.payout = coins;
+  offerDouble();
   const names = { cleanup: 'Clean-up mode', battle: 'Battle mode', daily: 'the Daily city', night: 'night rounds' };
   $('stUnlock').hidden = !opened.length;
   $('stUnlock').textContent = `Unlocked: ${opened.map(id => names[id] || MAPS[id].name).join(', ')}!`;
@@ -2400,7 +2434,7 @@ function pauseGame() {
   setTimeout(() => $('resumeBtn').focus(), 50);
 }
 function resumeGame() {
-  if (!paused) return;
+  if (!paused || !$('reviveScreen').hidden) return;
   paused = false;
   $('pauseScreen').hidden = true;
   $('pauseBtn').hidden = false;
@@ -2437,11 +2471,62 @@ window.eatInPause = pauseGame;   // the Android app calls this from onPause()
 // results for the menu. Returns false on the menu, and the app then goes to the background.
 window.eatInBack = () => {
   if (!$('panelScreen').hidden) { $('panelBack').click(); return true; }
+  if (!$('reviveScreen').hidden) { $('reviveNo').click(); return true; }
   if (state === 'play') { paused ? resumeGame() : pauseGame(); return true; }
   if (!$('endScreen').hidden) { $('menuBtn').click(); return true; }
   return false;
 };
 $('againBtn').addEventListener('click', () => ads.between(startGame));
+
+// ---------- rewarded ads (Android app only) ----------
+// Double coins: one button on the results screen, shown only when an ad is loaded.
+function offerDouble() {
+  const b = $('doubleBtn');
+  b.hidden = !(round.payout > 0 && !round.doubled && ads.rewardedReady('double'));
+  b.disabled = false;
+  b.textContent = `Watch an ad: +${round.payout.toLocaleString()} more coins`;
+}
+$('doubleBtn').addEventListener('click', () => {
+  const b = $('doubleBtn');
+  if (b.disabled || round.doubled) return;
+  b.disabled = true;
+  ads.showRewarded('double', earned => {
+    if (!earned || round.doubled) { offerDouble(); return; }
+    round.doubled = true;
+    save.coins += round.payout; persist();
+    $('stReward').textContent += ` Doubled: +${round.payout.toLocaleString()} more coins!`;
+    b.hidden = true;
+    chime();
+  });
+});
+// Battle revive: when you're swallowed, once a round, if an ad is loaded.
+function offerRevive() {
+  round.reviveAsked = true;
+  if (!ads.rewardedReady('revive')) return endGame('lost');
+  paused = true;
+  stopMusic();
+  keys.clear(); ptr.touch = false; ptr.id = null; stick.hidden = knob.hidden = true;
+  $('pauseBtn').hidden = true;
+  $('reviveScreen').hidden = false;
+  setTimeout(() => $('reviveYes').focus(), 50);
+}
+function closeRevive() { $('reviveScreen').hidden = true; $('reviveYes').disabled = false; }
+$('reviveNo').addEventListener('click', () => { closeRevive(); endGame('lost'); });
+$('reviveYes').addEventListener('click', () => {
+  if ($('reviveYes').disabled) return;
+  $('reviveYes').disabled = true;
+  ads.showRewarded('revive', earned => {
+    closeRevive();
+    if (!earned || state !== 'play') { if (state === 'play') endGame('lost'); return; }
+    round.revived = true;
+    player.out = false; player.respawn = 0;   // back on the next frame, with the usual shield
+    paused = false;
+    $('pauseBtn').hidden = false;
+    if (audio && audio.state === 'suspended') audio.resume();
+    startMusic();
+    canvas.focus();
+  });
+});
 $('menuBtn').addEventListener('click', () => ads.between(() => { $('endScreen').hidden = true; state = 'menu'; renderMenu(); $('startScreen').hidden = false; }));
 
 // ---------- simulation ----------
@@ -2855,7 +2940,7 @@ function step(dt) {
       }
     }
     if (MODE === MODES.battle) {
-      if (player.out) endGame('lost');
+      if (player.out) { if (!round.reviveAsked) offerRevive(); }
       else if (holes.every(h => h.player || !h.inGame || h.out)) endGame('won');
     }
     updatePowers(dt);

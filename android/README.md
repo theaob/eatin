@@ -13,6 +13,12 @@ AdMob, through the Google Mobile Ads SDK:
   results, panels); the menus get extra bottom padding so nothing hides under it
 - an interstitial when leaving the results screen, after every 2nd round and at
   most once per 150 s (`AD_EVERY` and `AD_GAP` in `../index.html`)
+- rewarded ads, only shown when one is loaded: a "+N more coins" button on the
+  results screen that doubles the round's coins, and one revive per Battle round
+  when you're swallowed. Revived rounds pay coins but skip the leaderboard
+  records. A rewarded view also resets the interstitial timer. The page asks
+  `EatInAds.rewardedReady(place)` / `showRewarded(place)` and hears back through
+  `window.eatInAds.rewarded(place, earned)`
 - Google's consent form (UMP) where the law needs one, and an "Ad privacy"
   button on the menu when users must be able to change their choice
 
@@ -20,8 +26,8 @@ Release builds use the real AdMob IDs in `app/src/main/res/values/ads.xml`
 (publisher `pub-3615836489279250`). Debug builds use Google's public **test
 IDs** from `app/src/debug/res/values/ads.xml`, so testing never shows or taps a
 live ad (AdMob can suspend an account for that). The file also holds the three
-rewarded units (double coins, Battle revive, free booster), which the app doesn't
-load yet. `app-ads.txt` on theaob.github.io needs the line
+rewarded units: double coins and Battle revive are live (see below); free booster
+waits until boosters exist. `app-ads.txt` on theaob.github.io needs the line
 `google.com, pub-3615836489279250, DIRECT, f08c47fec0942fa0`. The page talks to the app
 through `window.EatInAds` (in `MainActivity.java`); in a browser that object is
 missing and the game has no ads.

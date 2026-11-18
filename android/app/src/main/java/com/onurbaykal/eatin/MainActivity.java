@@ -30,6 +30,8 @@ import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
+import com.google.android.gms.ads.rewarded.RewardedAd;
+import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback;
 import com.google.android.gms.games.AuthenticationResult;
 import com.google.android.gms.games.PlayGames;
 import com.google.android.gms.games.PlayGamesSdk;
@@ -42,13 +44,16 @@ import com.google.android.ump.UserMessagingPlatform;
 import java.io.File;
 import java.io.FileOutputStream;
 import org.json.JSONObject;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Full-screen WebView that loads assets/index.html (the game), plus AdMob.
  *
  * The page drives the ads through window.EatInAds (see Bridge) and hears back
- * through window.eatInAds.banner(heightPx), .done() and .privacy(required).
+ * through window.eatInAds.banner(heightPx), .done(), .rewarded(place, earned)
+ * and .privacy(required).
  * Ads only start after the UMP consent flow says they may be requested.
  *
  * Google Play Games Services goes through window.EatInGames (see Games) and
@@ -64,6 +69,15 @@ public class MainActivity extends Activity {
     private final AtomicBoolean adsStarted = new AtomicBoolean(false);
     private boolean wantBanner;
     private boolean interstitialShowing;
+    /** Rewarded placements the page may ask for: place -> ad unit string. */
+    private static final String[][] REWARDED = {
+        { "double", "admob_rewarded_double_id" },
+        { "revive", "admob_rewarded_revive_id" },
+    };
+    private final Map<String, RewardedAd> rewarded = new ConcurrentHashMap<>();
+    private final Map<String, Boolean> rewardedLoading = new ConcurrentHashMap<>();
+    private boolean fullScreenShowing() { return interstitialShowing || rewardedShowing; }
+    private volatile boolean rewardedShowing;
     private Games games;
 
     @Override
@@ -160,6 +174,7 @@ public class MainActivity extends Activity {
                 if (isFinishing() || isDestroyed()) return;
                 if (wantBanner) loadBanner();
                 loadInterstitial();
+                for (String[] r : REWARDED) loadRewarded(r[0]);
             });
         }).start();
     }
@@ -220,7 +235,7 @@ public class MainActivity extends Activity {
     /** Returns false when no ad is ready; then the page carries on at once. */
     private boolean showInterstitial() {
         InterstitialAd ad = interstitial;
-        if (ad == null || interstitialShowing) return false;
+        if (ad == null || fullScreenShowing()) return false;
         interstitial = null;
         interstitialShowing = true;
         ad.setFullScreenContentCallback(new FullScreenContentCallback() {
@@ -239,6 +254,50 @@ public class MainActivity extends Activity {
         return true;
     }
 
+    private String rewardedUnit(String place) {
+        for (String[] r : REWARDED) if (r[0].equals(place)) return getString(getResources().getIdentifier(r[1], "string", getPackageName()));
+        return null;
+    }
+
+    private void loadRewarded(String place) {
+        String unit = rewardedUnit(place);
+        if (!adsStarted.get() || unit == null || rewarded.get(place) != null || Boolean.TRUE.equals(rewardedLoading.get(place))) return;
+        rewardedLoading.put(place, true);
+        RewardedAd.load(this, unit, new AdRequest.Builder().build(), new RewardedAdLoadCallback() {
+            @Override
+            public void onAdLoaded(@NonNull RewardedAd ad) { rewardedLoading.put(place, false); rewarded.put(place, ad); }
+            @Override
+            public void onAdFailedToLoad(@NonNull LoadAdError e) { rewardedLoading.put(place, false); rewarded.remove(place); }
+        });
+    }
+
+    /**
+     * Shows the rewarded ad for a placement. The page always hears back once through
+     * window.eatInAds.rewarded(place, earned): earned is true only when the player
+     * watched long enough for the reward.
+     */
+    private void showRewarded(String place) {
+        if (rewardedUnit(place) == null) return;   // only known placements, which are plain words
+        RewardedAd ad = rewarded.get(place);
+        if (ad == null || fullScreenShowing()) { tellPage("rewarded('" + place + "',false)"); return; }
+        rewarded.remove(place);
+        rewardedShowing = true;
+        final boolean[] earned = { false };
+        ad.setFullScreenContentCallback(new FullScreenContentCallback() {
+            @Override
+            public void onAdDismissedFullScreenContent() { finished(); }
+            @Override
+            public void onAdFailedToShowFullScreenContent(@NonNull com.google.android.gms.ads.AdError e) { finished(); }
+            private void finished() {
+                rewardedShowing = false;
+                hideBars();
+                tellPage("rewarded('" + place + "'," + earned[0] + ")");
+                loadRewarded(place);
+            }
+        });
+        ad.show(this, item -> earned[0] = true);
+    }
+
     private void tellPage(String call) {
         if (web != null) web.evaluateJavascript("window.eatInAds && window.eatInAds." + call, null);
     }
@@ -252,7 +311,14 @@ public class MainActivity extends Activity {
         public void hideBanner() { runOnUiThread(() -> setBanner(false)); }
 
         @JavascriptInterface
-        public boolean interstitialReady() { return interstitial != null && !interstitialShowing; }
+        public boolean interstitialReady() { return interstitial != null && !fullScreenShowing(); }
+
+        /** Is a rewarded ad loaded for this placement ("double", "revive")? */
+        @JavascriptInterface
+        public boolean rewardedReady(String place) { return rewarded.get(place) != null && !fullScreenShowing(); }
+
+        @JavascriptInterface
+        public void showRewarded(String place) { runOnUiThread(() -> MainActivity.this.showRewarded(place)); }
 
         @JavascriptInterface
         public void showInterstitial() {
