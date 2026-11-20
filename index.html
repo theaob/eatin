@@ -297,6 +297,7 @@ const FIT = 0.92;               // an object fits if its radius < hole radius * 
 // Big holes grow more slowly, so one hole can't snowball across the whole map:
 // food is worth 1 / (1 + (r / taper)^2) of its growth at radius r (taper from EASY).
 const growTaper = (r, taper) => 1 / (1 + (r / taper) ** 2);
+const taperOf = h => growTaper(h.r, h.player ? EASY.playerTaper : EASY.botTaper);   // every way a hole grows eases off the same way
 // Size adds speed, but past a radius of 8 only a little, or a huge hole sweeps the map in seconds.
 const sizeSpeed = r => 0.9 * Math.min(r, 8) + 0.25 * Math.max(0, r - 8);
 // Difficulty: the player gets a head start over the rival holes.
@@ -2561,7 +2562,7 @@ function spawnPower(kind) {
 function clearPowers() { for (const p of pups) scene.remove(p.g); pups = []; }
 function grantPower(h, kind) {
   const P = POWERS[kind];
-  if (kind === 'grow') h.r2 *= 1.15;
+  if (kind === 'grow') h.r2 *= 1 + 0.15 * taperOf(h);
   const t = P.time * (h.player && round.ev === 'power' ? 1.5 : 1);
   if (kind !== 'grow') h.buffs[kind] = t;
   if (kind === 'shield') h.shield = Math.max(h.shield || 0, t);
@@ -2932,7 +2933,7 @@ function step(dt) {
         b.buffs = {};
         if (a.player) round.rs.rivals++;
         if (!MODE.respawn) { b.respawn = Infinity; b.out = true; b.outAt = round.playT; }
-        a.r2 += b.r2 * 0.5; a.points += 20 + Math.round(b.points * 0.25);
+        a.r2 += b.r2 * 0.5 * taperOf(a); a.points += 20 + Math.round(b.points * 0.25);
         b.r2 = Math.max(START_R * START_R, b.r2 * (b.player ? EASY.respawnKeep : 0.36)); b.r = Math.sqrt(b.r2);
         b.vx = b.vz = 0;
         if (b.player) showToast(`${a.name} swallowed you`, 2.8);
